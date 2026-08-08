@@ -12,10 +12,18 @@ private let starters = [
     "Write me a haiku about Mondays",
 ]
 
+struct SearchSource: Equatable, Identifiable {
+    let id = UUID()
+    let title: String
+    let url: String
+    let snippet: String?
+}
+
 struct ChatLine: Identifiable, Equatable {
     let id = UUID()
     let role: String
     let text: String
+    var sources: [SearchSource] = []
 }
 
 struct UsageStats: Equatable {
@@ -23,9 +31,11 @@ struct UsageStats: Equatable {
     var contextLimit: Int?
     var budgetUsed: Int?
     var budgetLimit: Int?
+    var searched: Bool = false
 
     var label: String {
         var parts: [String] = []
+        if searched { parts.append("Web search") }
         if let u = contextUsed, let l = contextLimit, l > 0 {
             parts.append("Context \(Self.fmt(u))/\(Self.fmt(l))")
         }
@@ -64,7 +74,7 @@ final class ChatModel: ObservableObject {
     private var welcomeLine: ChatLine {
         ChatLine(
             role: "assistant",
-            text: "Hi, I'm chopsticksAI.\n\nAsk me anything — general questions, code, writing, or anything about the Chopsticks apps. Type /compact for a tighter layout."
+            text: "Hi, I'm chopsticksAI.\n\nAsk me anything — I search Wikipedia, Wikidata, DuckDuckGo, Stack Overflow, Hacker News, GitHub, MDN, npm, and arXiv on every question, plus I know the Chopsticks apps inside out. Type /compact for a tighter layout."
         )
     }
 
@@ -85,14 +95,43 @@ final class ChatModel: ObservableObject {
             draft = ""
             return
         }
+        if lower == "/search" {
+            lines.append(ChatLine(
+                role: "assistant",
+                text: "Type `/search` followed by your question to force a web lookup, e.g.\n/search latest Python release notes"
+            ))
+            draft = ""
+            return
+        }
 
         busy = true
         lines.append(ChatLine(role: "user", text: text))
         draft = ""
-        let (reply, stats) = await fetchReply(for: text)
-        usage = stats
-        lines.append(ChatLine(role: "assistant", text: reply))
+        let result = await fetchReply(for: text)
+        usage = result.usage
+        lines.append(ChatLine(role: "assistant", text: result.text, sources: result.sources))
         busy = false
+    }
+
+    private struct ReplyResult {
+        let text: String
+        let usage: UsageStats
+        let sources: [SearchSource]
+    }
+
+    private func searchRequest(for text: String) -> (query: String, force: Bool) {
+        if text.lowercased().hasPrefix("/search ") {
+            return (String(text.dropFirst(8)).trimmingCharacters(in: .whitespacesAndNewlines), true)
+        }
+        return (text, false)
+    }
+
+    private func apiMessages(forcingSearch query: String) -> [[String: String]] {
+        var msgs = history()
+        if !msgs.isEmpty, msgs[msgs.count - 1]["role"] == "user" {
+            msgs[msgs.count - 1]["content"] = query
+        }
+        return msgs
     }
 
     private func history() -> [[String: String]] {
@@ -106,8 +145,19 @@ final class ChatModel: ObservableObject {
         return result.confident ? result.answer : nil
     }
 
+    private func parseSources(_ obj: [String: Any]) -> [SearchSource] {
+        guard let arr = obj["sources"] as? [[String: Any]] else { return [] }
+        return arr.compactMap { item in
+            guard let title = item["title"] as? String else { return nil }
+            let url = item["url"] as? String ?? ""
+            let snippet = item["snippet"] as? String
+            return SearchSource(title: title, url: url, snippet: snippet)
+        }
+    }
+
     private func parseUsage(_ obj: [String: Any]) -> UsageStats {
         var stats = UsageStats()
+        stats.searched = (obj["searched"] as? Bool) == true
         if let cw = obj["contextWindow"] as? [String: Any] {
             stats.contextUsed = cw["used"] as? Int
             stats.contextLimit = cw["limit"] as? Int
@@ -119,12 +169,15 @@ final class ChatModel: ObservableObject {
         return stats
     }
 
-    private func fetchReply(for userText: String) async -> (String, UsageStats) {
+    private func fetchReply(for userText: String) async -> ReplyResult {
+        let (query, _) = searchRequest(for: userText)
+        let payload: [String: Any] = ["messages": apiMessages(forcingSearch: query), "tier": "ultra"]
+
         var req = URLRequest(url: apiURL)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.timeoutInterval = 30
-        req.httpBody = try? JSONSerialization.data(withJSONObject: ["messages": history(), "tier": "ultra"])
+        req.timeoutInterval = 35
+        req.httpBody = try? JSONSerialization.data(withJSONObject: payload)
 
         do {
             let (data, resp) = try await URLSession.shared.data(for: req)
@@ -133,19 +186,20 @@ final class ChatModel: ObservableObject {
                   let reply = obj["reply"] as? String,
                   !reply.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             else {
-                return (kbFallback(userText) ?? offlineMessage, UsageStats())
+                return ReplyResult(text: kbFallback(userText) ?? offlineMessage, usage: UsageStats(), sources: [])
             }
             let stats = parseUsage(obj)
+            let sources = parseSources(obj)
             let mode = obj["mode"] as? String ?? "live"
             if mode != "live", let local = kbFallback(userText) {
-                return (local, stats)
+                return ReplyResult(text: local, usage: stats, sources: [])
             }
             if mode == "error", let local = kbFallback(userText) {
-                return (local, stats)
+                return ReplyResult(text: local, usage: stats, sources: [])
             }
-            return (reply, stats)
+            return ReplyResult(text: reply, usage: stats, sources: sources)
         } catch {
-            return (kbFallback(userText) ?? offlineMessage, UsageStats())
+            return ReplyResult(text: kbFallback(userText) ?? offlineMessage, usage: UsageStats(), sources: [])
         }
     }
 
@@ -285,24 +339,55 @@ struct MessageBubble: View {
     var body: some View {
         HStack(alignment: .top) {
             if isUser { Spacer(minLength: compact ? 40 : 56) }
-            Text(line.text)
-                .font(.system(size: compact ? 12.5 : 13.5))
-                .lineSpacing(compact ? 2 : 3)
-                .textSelection(.enabled)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, compact ? 10 : 12)
-                .padding(.vertical, compact ? 7 : 9)
-                .background(
-                    RoundedRectangle(cornerRadius: compact ? 9 : 11)
-                        .fill(isUser ? Color.primary : Color(nsColor: .controlBackgroundColor))
-                )
-                .foregroundStyle(isUser ? Color(nsColor: .windowBackgroundColor) : Color.primary)
-                .overlay(
-                    RoundedRectangle(cornerRadius: compact ? 9 : 11)
-                        .strokeBorder(isUser ? Color.clear : Color.secondary.opacity(0.25))
-                )
+            VStack(alignment: .leading, spacing: compact ? 6 : 8) {
+                Text(line.text)
+                    .font(.system(size: compact ? 12.5 : 13.5))
+                    .lineSpacing(compact ? 2 : 3)
+                    .textSelection(.enabled)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, compact ? 10 : 12)
+                    .padding(.vertical, compact ? 7 : 9)
+                    .background(
+                        RoundedRectangle(cornerRadius: compact ? 9 : 11)
+                            .fill(isUser ? Color.primary : Color(nsColor: .controlBackgroundColor))
+                    )
+                    .foregroundStyle(isUser ? Color(nsColor: .windowBackgroundColor) : Color.primary)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: compact ? 9 : 11)
+                            .strokeBorder(isUser ? Color.clear : Color.secondary.opacity(0.25))
+                    )
+                if !isUser, !line.sources.isEmpty {
+                    SourcesView(sources: line.sources, compact: compact)
+                }
+            }
             if !isUser { Spacer(minLength: compact ? 40 : 56) }
         }
+    }
+}
+
+struct SourcesView: View {
+    let sources: [SearchSource]
+    var compact: Bool = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Sources")
+                .font(.system(size: compact ? 9 : 10, weight: .semibold, design: .monospaced))
+                .foregroundStyle(.secondary)
+            ForEach(sources) { source in
+                if let link = URL(string: source.url), !source.url.isEmpty {
+                    Link(source.title, destination: link)
+                        .font(.system(size: compact ? 10 : 11))
+                        .lineLimit(2)
+                } else {
+                    Text(source.title)
+                        .font(.system(size: compact ? 10 : 11))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+            }
+        }
+        .padding(.horizontal, compact ? 4 : 6)
     }
 }
 
