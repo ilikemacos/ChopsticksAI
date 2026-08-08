@@ -24,6 +24,10 @@ Regenerate the offline knowledge base from `kb/kb.source.json`:
 python3 kb/build-kb.py
 ```
 
+## How it was built:
+ChopsticksAI is built on Nvidia Nemotron 3 Ultra/Super
+
+
 ## Site
 
 https://chopstickshq.com/chopsticks-ai/
