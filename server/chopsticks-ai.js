@@ -1,5 +1,4 @@
 
-
 const TIERS = {
   low: {
     label: "Low",
@@ -200,10 +199,8 @@ function fnv1a32(str) {
 function verifyFathomProUnlock(raw) {
   const key = String(raw || "").trim().toLowerCase();
   if (!key) return false;
-  
   if (FATHOM_PRO_SITE_KEYS.has(key)) return true;
   if (key.includes("c0ffee")) return false;
-  
   if (/^sk-or-/i.test(key) || /^sk-[a-z0-9]/i.test(key)) return false;
   const m = key.match(/^oi-pl-([0-9a-f]{6,16})-([0-9a-f]{6,16})-([0-9a-f]{8})$/);
   if (!m) return false;
@@ -297,8 +294,6 @@ function resolveCredits(rawKeys) {
   for (const t of CREDIT_TIERS) {
     if (valid.length >= t.keysRequired) tier = t;
   }
-  
-  
   const bucketId = tier.keysRequired === 0
     ? "global"
     : ("credits-" + fnv1a32(valid.slice().sort().join("|")).toString(16).padStart(8, "0"));
@@ -349,8 +344,6 @@ async function resolveAccount(accessToken) {
     const email = String(user.email || "").trim().toLowerCase();
     if (!email || !user.id) return null;
 
-    
-    
     let entitlement = null;
     try {
       const profRes = await fetch(
@@ -387,7 +380,7 @@ async function resolveAccount(accessToken) {
           }
         }
       }
-    } catch (e) {  }
+    } catch (e) { /* profiles columns optional until SQL is applied */ }
 
     return {
       id: user.id,
@@ -399,6 +392,7 @@ async function resolveAccount(accessToken) {
   }
 }
 
+/** Merge Fathom Pro credit tier with signed-in account entitlements (best wins). */
 function resolvePlan(rawKeys, account) {
   const credits = resolveCredits(rawKeys);
   const ent = account && account.entitlement;
@@ -451,10 +445,8 @@ const REFINE_SYSTEM = [
   "the review, or yourself as a reviewer - output only the final reply text.",
 ].join("");
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-
 const TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_TIMEOUT_MS || 20000);
 const REFINE_MIN_MS = 5000;
-
 const LONG_REPLY_TOKENS = 800;
 const REFINE_RESERVE_MS = 6000;
 const draftBudgetMs = (replyTokens, msLeft) =>
@@ -463,21 +455,19 @@ const draftBudgetMs = (replyTokens, msLeft) =>
 const MAX_CONTEXT_TOKENS = Number(process.env.CHOPSTICKS_AI_MAX_CONTEXT || 48000);
 const contextFor = (effortTier, plan) => {
   const cap = (plan && plan.contextLimit) || MAX_CONTEXT_TOKENS;
-  
   return Math.min(cap, Math.max(effortTier.context || MAX_CONTEXT_TOKENS, cap));
 };
 const MAX_REPLY_TOKENS = 400;
-
 const MAX_REPLY_TOKENS_CEILING = 2000;
 
-const MAX_MESSAGES = 12;        
+const MAX_MESSAGES = 12;        // trailing turns kept from the client
 const MAX_CHARS_PER_MSG = 2000;
 const GROUNDING_INTENTS = 6;
 
 const TOKEN_BUDGET = FREE_USAGE.limit;
 const COOLDOWN_MS = FREE_USAGE.cooldownMs;
 const SB_TIMEOUT_MS = 5000;
-const budgets = new Map(); 
+const budgets = new Map(); // bucketId -> { used, windowStart, cooldownUntil }
 function budgetBucket(id) {
   const key = id || "global";
   let row = budgets.get(key);
@@ -487,7 +477,6 @@ function budgetBucket(id) {
   }
   return row;
 }
-
 const budget = budgetBucket("global");
 let budgetMode = "memory";
 
@@ -495,9 +484,13 @@ const RATE_WINDOW_MS = 60000;
 const RATE_MAX = 20;
 const hits = new Map();
 
+/** ~4 chars per token, deliberately an over-estimate so trimming fires early
+ *  rather than letting OpenRouter reject an oversized request. */
 const estimateTokens = (text) => Math.max(1, Math.ceil(String(text || "").length / 4));
 const messageTokens = (m) => estimateTokens(m.content) + 4;
 
+/** Drops the oldest turns until system prompt + history fits the window. The
+ *  system prompt is never trimmed - it carries the grounding facts. */
 function fitContext(system, turns, contextTokens) {
   const budgetTokens = (contextTokens || MAX_CONTEXT_TOKENS) - MAX_REPLY_TOKENS - messageTokens(system);
   const kept = [];
@@ -597,7 +590,6 @@ async function budgetPeek(now, opts = {}) {
         p_id: bucketId,
       }),
     });
-    
     if ((!res.ok || !res.body || typeof res.body !== "object") && bucketId === "global") {
       res = await sb("rpc/chopsticks_ai_budget_peek", {
         method: "POST",
@@ -691,7 +683,6 @@ let KB = null;
 function knowledgeBase() {
   if (KB) return KB;
   try {
-    
     KB = require("./chopsticks-ai-kb.json");
   } catch (e) {
     KB = { intents: [] };
@@ -707,6 +698,8 @@ function normalise(text) {
     .trim();
 }
 
+/** Last few user turns, joined — follow-ups like "how do I install it?" keep
+ *  product context from earlier in the thread. */
 function retrievalQuery(turns) {
   return turns
     .filter((m) => m.role === "user")
@@ -739,6 +732,8 @@ function scoreQuery(query) {
   return scored;
 }
 
+/** Same word-boundary scoring as the offline engine, used purely to pick
+ *  which facts to hand the model. */
 function retrieve(query, limit = GROUNDING_INTENTS) {
   return scoreQuery(query).slice(0, limit).map((s) => s.intent);
 }
@@ -762,6 +757,7 @@ function wantsSearch(text) {
   return String(text || "").trim().length >= SEARCH_MIN_LEN;
 }
 
+/** Strips an optional `/search` prefix; search runs either way. */
 function parseSearchRequest(text) {
   const raw = String(text || "").trim();
   if (/^\/search\b/i.test(raw)) {
@@ -773,8 +769,8 @@ function parseSearchRequest(text) {
 
 function normUrl(src) {
   if (!src) return "";
-  if (/^https?:\/\
-  return "https://" + String(src).replace(/^\/\
+  if (/^https?:\/\//i.test(src)) return src;
+  return "https://" + String(src).replace(/^\/\//, "");
 }
 
 async function fetchJson(url, signal, init) {
@@ -828,7 +824,7 @@ function decodeDdgRedirect(href) {
   if (href.includes("uddg=")) {
     try {
       return decodeURIComponent(href.match(/uddg=([^&]+)/)[1]);
-    } catch (e) {  }
+    } catch (e) { /* fall through */ }
   }
   return href;
 }
@@ -875,6 +871,7 @@ async function searchDuckDuckGoJson(query, signal) {
   return out;
 }
 
+/** DuckDuckGo lite HTML — organic links to real websites (no API key). */
 async function searchDuckDuckGoWeb(query, signal) {
   const html = await fetchText("https://lite.duckduckgo.com/lite/", signal, {
     method: "POST",
@@ -907,7 +904,7 @@ async function searchDuckDuckGoWeb(query, signal) {
 /** Stack Overflow / Stack Exchange — good for technical questions, no key. */
 async function searchStackExchange(query, signal) {
   const data = await fetchJson(
-    "https:
+    "https://api.stackexchange.com/2.3/search/advanced?order=desc&sort=relevance" +
       "&site=stackoverflow&pagesize=4&q=" + encodeURIComponent(query),
     signal
   ).catch(() => null);
@@ -919,6 +916,7 @@ async function searchStackExchange(query, signal) {
   }));
 }
 
+/** Hacker News — tech news and discussions via Algolia (no key). */
 async function searchHackerNews(query, signal) {
   const data = await fetchJson(
     "https://hn.algolia.com/api/v1/search?query=" + encodeURIComponent(query) + "&hitsPerPage=4",
@@ -935,6 +933,7 @@ async function searchHackerNews(query, signal) {
   }));
 }
 
+/** GitHub repositories — open-source projects and docs (no key, rate-limited). */
 async function searchGitHub(query, signal) {
   const data = await fetchJson(
     "https://api.github.com/search/repositories?q=" + encodeURIComponent(query) +
@@ -952,6 +951,7 @@ async function searchGitHub(query, signal) {
   }));
 }
 
+/** Wikidata — structured facts and entity descriptions (no key). */
 async function searchWikidata(query, signal) {
   const data = await fetchJson(
     "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=" +
@@ -966,6 +966,7 @@ async function searchWikidata(query, signal) {
   }));
 }
 
+/** MDN Web Docs — JavaScript, HTML, CSS, and web APIs (no key). */
 async function searchMdn(query, signal) {
   const data = await fetchJson(
     "https://developer.mozilla.org/api/v1/search?q=" + encodeURIComponent(query) +
@@ -980,6 +981,10 @@ async function searchMdn(query, signal) {
   }));
 }
 
+/**
+ * Mozilla engine — MDN + Wikipedia + DuckDuckGo (privacy-friendly defaults).
+ * Used by the public search action on /chopsticks-ai/ and preferred in chat grounding.
+ */
 async function mozillaEngine(query, signal, maxSources) {
   const cap = Math.max(1, Math.min(MAX_SOURCES, Number(maxSources) || 8));
   const batches = await Promise.allSettled([
@@ -1000,6 +1005,7 @@ async function mozillaEngine(query, signal, maxSources) {
   return dedupeSources(found).slice(0, cap);
 }
 
+/** npm registry — JavaScript packages (no key). */
 async function searchNpm(query, signal) {
   const data = await fetchJson(
     "https://registry.npmjs.org/-/v1/search?text=" + encodeURIComponent(query) + "&size=3",
@@ -1013,6 +1019,7 @@ async function searchNpm(query, signal) {
   }));
 }
 
+/** arXiv — research papers (no key). */
 async function searchArxiv(query, signal) {
   const xml = await fetchText(
     "https://export.arxiv.org/api/query?search_query=all:" +
@@ -1036,6 +1043,7 @@ async function searchArxiv(query, signal) {
   return out;
 }
 
+/** Brave Search — general web results (optional BRAVE_SEARCH_API_KEY, free tier). */
 async function searchBrave(query, signal) {
   const key = env("BRAVE_SEARCH_API_KEY");
   if (!key) return [];
@@ -1052,6 +1060,7 @@ async function searchBrave(query, signal) {
   }));
 }
 
+/** Up to three Wikipedia articles matching the query. */
 async function searchWikipedia(query, signal, limit) {
   const hit = await fetchJson(
     "https://en.wikipedia.org/w/api.php?action=query&list=search&format=json" +
@@ -1077,6 +1086,7 @@ async function searchWikipedia(query, signal, limit) {
   return summaries.filter(Boolean);
 }
 
+/** Google results via serper.dev (optional SERPER_API_KEY — free tier available). */
 async function searchSerper(query, signal) {
   const key = env("SERPER_API_KEY");
   if (!key) return [];
@@ -1104,6 +1114,7 @@ async function searchSerper(query, signal) {
   return organic;
 }
 
+/** Google Programmable Search (optional GOOGLE_CSE_API_KEY + GOOGLE_CSE_CX). */
 async function searchGoogleCse(query, signal) {
   const key = env("GOOGLE_CSE_API_KEY");
   const cx = env("GOOGLE_CSE_CX");
@@ -1121,12 +1132,12 @@ async function searchGoogleCse(query, signal) {
   }));
 }
 
+/** Returns prompt context plus structured sources for the client UI. */
 async function webSearch(query, maxSources) {
   const cap = Math.max(1, Math.min(MAX_SOURCES, Number(maxSources) || MAX_SOURCES));
   const c = new AbortController();
   const timer = setTimeout(() => c.abort(), SEARCH_TIMEOUT_MS);
   try {
-    
     const batches = await Promise.allSettled([
       mozillaEngine(query, c.signal, Math.min(6, cap)),
       searchSerper(query, c.signal),
@@ -1168,6 +1179,8 @@ async function webSearch(query, maxSources) {
   }
 }
 
+/** Facts chopsticksAI knows about itself. Built from the live config so the
+ *  numbers can never drift from what the endpoint actually enforces. */
 function selfFacts(tier) {
   const t = tier || TIERS[DEFAULT_TIER];
   return [
@@ -1196,8 +1209,6 @@ function selfFacts(tier) {
 }
 
 function systemPrompt(grounding, mode, web, tier) {
-  
-  
   const agent = mode === "agent" || tier.chopCode ? [
     "\n\nYou are running as the ChopsticksAI agent",
     tier.stickerCoder
@@ -1297,6 +1308,7 @@ const json = (status, body) => ({
   body: JSON.stringify(body),
 });
 
+/** OpenAI-compatible tools for agent file creation. */
 const AGENT_TOOLS = [
   {
     type: "function",
@@ -1343,6 +1355,7 @@ function langFromName(name) {
   return map[ext] || "text";
 }
 
+/** Pull ```lang filename … ``` fences into structured files. */
 function extractFencedFiles(text) {
   const out = [];
   const re = /```([^\n`]*)\n([\s\S]*?)```/g;
@@ -1390,7 +1403,6 @@ function ensureFileFences(text, files) {
   for (const f of files || []) {
     const needle = f.name;
     if (out.includes(needle) && out.includes("```")) {
-      // Likely already fenced; still ok to skip duplicate
       const hasFence = new RegExp("```[^\\n]*\\b" + needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b").test(out);
       if (hasFence) continue;
     }
@@ -1505,8 +1517,6 @@ function messageText(msg) {
 
 /** One chat completion. Supports optional OpenAI-style tools. */
 async function callModel({ model, messages, key, signal, maxTokens, temperature, tools, toolChoice }) {
-  // Reasoning-capable free models often burn a small max_tokens budget on
-  // chain-of-thought and return content:null — pad the ceiling a bit.
   const asked = maxTokens ?? MAX_REPLY_TOKENS;
   const body = {
     model,
@@ -1537,7 +1547,6 @@ async function callModel({ model, messages, key, signal, maxTokens, temperature,
   const msg = choice.message || {};
   let text = messageText(msg);
   const toolCalls = Array.isArray(msg.tool_calls) ? msg.tool_calls : [];
-  // If the model spent the budget on reasoning only, retry once with a larger cap.
   if (!text && !toolCalls.length && /length|max_tokens/i.test(String(choice.finish_reason || choice.native_finish_reason || ""))) {
     if (!signal || !signal.aborted) {
       try {
@@ -1573,7 +1582,6 @@ async function callModel({ model, messages, key, signal, maxTokens, temperature,
           }
         }
       } catch (e) {
-        // fall through to empty completion
       }
     }
   }
@@ -1734,7 +1742,6 @@ async function handler(event) {
     cooldownMs: plan.cooldownMs,
   };
 
-  // Usage / upgrade status without spending a chat turn.
   if (payload.action === "usage" || payload.mode === "usage") {
     const nowU = Date.now();
     const stateU = await budgetPeek(nowU, budgetOpts);
@@ -1746,7 +1753,6 @@ async function handler(event) {
     });
   }
 
-  // Public Mozilla-engine search (no LLM spend). Same sources the AI prefers.
   if (payload.action === "search" || payload.mode === "search") {
     const q = String(payload.q || payload.query || "").trim().slice(0, 240);
     if (q.length < SEARCH_MIN_LEN) {
@@ -1815,8 +1821,6 @@ async function handler(event) {
   const lastUser = [...turns].reverse().find((m) => m.role === "user");
   if (!lastUser) return json(400, { error: "no user message" });
 
-  // Attachments uploaded to Supabase Storage (signed URLs + optional text previews).
-  // Large binaries are not inlined into the model context — only metadata + small text.
   const rawAtt = Array.isArray(payload.attachments) ? payload.attachments : [];
   const attachments = rawAtt.slice(0, 40).map((a) => ({
     name: String((a && a.name) || "file").slice(0, 200),
@@ -1846,8 +1850,6 @@ async function handler(event) {
       }
       return block;
     });
-    // Attachments are appended after the normal per-message slice so text
-    // previews are not cut to MAX_CHARS_PER_MSG (still bounded for context fit).
     lastUser.content = (String(lastUser.content || "") +
       "\n\nATTACHED FILES (uploaded by the user for this turn):\n" + lines.join("\n"))
       .slice(0, 220000);
@@ -1880,13 +1882,9 @@ async function handler(event) {
     ? Math.max(100, Math.min(tierCap, MAX_REPLY_TOKENS_CEILING, Math.round(wanted)))
     : (payload.mode === "agent" ? tierCap : MAX_REPLY_TOKENS);
 
-  // Web search runs before the draft. Coding modes skip it unless the user
-  // forced `/search …` — search was starving the model deadline.
   const { query: searchQuery, hadPrefix } = parseSearchRequest(lastUser.content);
   const clientSearchOff = payload.disableSearch === true;
   const searchOn = wantsSearch(searchQuery) && (!tier.chopCode || hadPrefix) && (!clientSearchOff || hadPrefix);
-  // Bound wall-clock search so Netlify's ~26s function limit still leaves
-  
   const searchStarted = Date.now();
   const webBundle = searchOn
     ? await webSearch(searchQuery, Math.min(tier.searchMax || 6, 5))
@@ -1915,16 +1913,11 @@ async function handler(event) {
   };
   const messages = fitContext(system, modelTurns, contextFor(tier, plan));
 
-  
-  
   const RESCUE_RESERVE_MS = 9000;
-  
   const platformLeft = Math.max(8000, 25000 - searchMs);
   const modelWindow = Math.min(TIMEOUT_MS, platformLeft);
   const deadline = Date.now() + modelWindow;
   const modelDeadline = deadline - RESCUE_RESERVE_MS;
-  
-  
   const ATTEMPT_CAP_MS = 7000;
   const withTimeout = (ms) => {
     const c = new AbortController();
@@ -1932,23 +1925,17 @@ async function handler(event) {
     return { signal: c.signal, done: () => clearTimeout(t) };
   };
   try {
-    
-    
-    
     let draft = null;
     let draftModel = null;
     let lastStatus = 0;
     let lastDetail = "";
     let producedFiles = [];
 
-    
-    
     const ask = String(lastUser.content || "");
     const wantsFiles = /\b(write|create|generate|make|build|scaffold|implement)\b[\s\S]{0,80}\b(file|script|code|program|function|class|module|component|app)\b|\.\w{1,8}\b|```|write_file/i.test(ask);
     const useTools = payload.enableTools !== false
       && (tier.chopCode || payload.tools === true || wantsFiles);
 
-    // One primary (+ optional fast fallback). Rescue below is the safety net.
     const longRun = replyTokens > LONG_REPLY_TOKENS;
     const chain = (longRun
       ? (tier.longModels || tier.models)
@@ -1957,11 +1944,8 @@ async function handler(event) {
 
     for (let ci = 0; ci < chain.length; ci++) {
       const candidate = chain[ci];
-      // Give the first candidate most of the window; keep a reserve so a
-      // no-tools retry (and the next model) can still run after a timeout.
       const msLeft = modelDeadline - Date.now();
       if (msLeft <= 1500) break;
-      // First model gets ~75%; second only runs if the first failed quickly.
       const share = ci === 0
         ? Math.floor(msLeft * 0.75)
         : msLeft - 400;
@@ -1990,7 +1974,6 @@ async function handler(event) {
       };
 
       r = await tryCall(budgetMs, useTools);
-      // Timed-out / tool-rejected / rate-limited → plain completion with leftover time.
       if (!r.ok && useTools) {
         const left = modelDeadline - Date.now() - 300;
         if (left > 2000) {
@@ -2052,13 +2035,9 @@ async function handler(event) {
       }
       lastStatus = r.status || 0;
       lastDetail = (r.detail || "") + ` [${candidate.split("/")[1]} ${Date.now() - attemptStart}/${budgetMs}ms]`;
-      // If the first model burned most of the window, skip further chain peers
-      // and let the reserved rescue attempt run instead.
       if (ci === 0 && Date.now() - attemptStart > 8000) break;
     }
 
-    // Last-chance short completion — reserved time, no tools, slim prompt.
-    // Drop the web blob so a hung search-grounded call can still answer.
     if (!draft) {
       const slimSystem = {
         role: "system",
@@ -2068,8 +2047,6 @@ async function handler(event) {
         ),
       };
       const slimMessages = fitContext(slimSystem, modelTurns, 12000);
-      // Prefer nano — it answers quickly from Netlify. Avoid burning the
-      // rescue window on a single hung free model.
       const rescues = [
         "nvidia/nemotron-3-nano-30b-a3b:free",
         "openai/gpt-oss-20b:free",
@@ -2136,17 +2113,11 @@ async function handler(event) {
     let reply = draft.text || "";
     let refinedBy = null;
 
-    // Merge tool-created files with any fenced files in the reply text.
     producedFiles = mergeFiles(producedFiles, extractFencedFiles(reply));
     if (producedFiles.length) {
       reply = ensureFileFences(reply, producedFiles);
     }
 
-    // --- stage 2: refine ------------------------------------------------
-    // A second model reviews and rewrites the draft. Failure here is not fatal:
-    // the draft is already a complete answer, so we return it unchanged.
-    // A review pass rewrites prose safely, but can silently corrupt generated
-    // code or file contents, so drafts containing a fenced block skip it.
     const hasCodeBlock = reply.includes("```") || producedFiles.length > 0;
     const timeLeft = deadline - Date.now();
     const refineOn = REFINE_ENABLED && tier.refine !== false;
@@ -2155,8 +2126,6 @@ async function handler(event) {
         && !hasCodeBlock && timeLeft >= REFINE_MIN_MS) {
       const question = [...turns].reverse().find((m) => m.role === "user");
       const g = withTimeout(timeLeft - 500);
-      // An abort or network error here must not lose the draft, which is
-      // already a complete answer.
       let r;
       try {
       r = await callModel({
@@ -2227,7 +2196,6 @@ async function handler(event) {
       mode: "error",
     });
   } finally {
-    // per-call timers are cleared inline
   }
 }
 

@@ -540,7 +540,7 @@
   async function readTextPreview(file) {
     var mime = file.type || '';
     var name = (file.name || '').toLowerCase();
-    var texty = /^text\//.test(mime) || /\.(txt|md|json|js|ts|tsx|jsx|py|swift|html|css|csv|xml|yml|yaml|toml|sh|rs|go|java|c|cpp|h|m|rb|php|sql)$/i.test(name);
+    var texty = /^text\
     if (!texty || file.size > 512 * 1024) return '';
     try {
       var t = await file.text();
