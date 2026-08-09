@@ -2,7 +2,7 @@
 
 **Fully open source** (MIT) — native macOS Agents app, web Lab, and Netlify API for [Chopsticks HQ](https://chopstickshq.com/).
 
-Latest release: **v2.2.8-Final**
+Latest release: **v2.2.9**
 
 ## Repositories
 
@@ -28,7 +28,7 @@ Or download the zip from [chopstickshq.com/chopsticks-ai/](https://chopstickshq.
 Requires macOS 14+ and Swift (`swiftc`). From `macos-app/`:
 
 ```bash
-./build-app.sh v2.2.8-Final
+./build-app.sh v2.2.9
 ```
 
 ## Run your own API

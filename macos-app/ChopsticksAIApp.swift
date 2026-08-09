@@ -304,7 +304,7 @@ final class ChatModel: ObservableObject {
     private var welcomeLine: ChatLine {
         ChatLine(
             role: "assistant",
-            text: "Hi — I'm cs.AI 2.2.8-Final.\n\nAsk anything. Pick StickerCoder+ for coding. I can create downloadable files with tools — try “write a Python script called analyse.py”. Offline fallback covers HQ product topics only."
+            text: "Hi — I'm cs.AI 2.2.9.\n\nAll messages are encrypted end-to-end. Ask anything. Pick StickerCoder+ for coding. I can create downloadable files with tools — try “write a Python script called analyse.py”. Offline fallback covers HQ product topics only."
         )
     }
 

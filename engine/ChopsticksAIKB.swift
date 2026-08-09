@@ -66,7 +66,7 @@ enum ChopsticksAIKB {
             product: "chopsticks-ai",
             label: "How do I install the ChopsticksAI macOS app?",
             priority: 70,
-            answer: "ChopsticksAI for macOS is free.\n\n1. Download the App ZIP from chopstickshq.com/chopsticks-ai/ (currently v2.2.8-Final)\n2. Or run: curl -fsSL https://chopstickshq.com/chopsticks-ai/install-chopsticks-ai.sh | bash\n3. It installs to ~/Applications/chopsticksAI.app\n\nLive chat uses chopstickshq.com — no API key from you. If the network is down, product questions fall back to the on-device knowledge base.",
+            answer: "ChopsticksAI for macOS is free.\n\n1. Download the App ZIP from chopstickshq.com/chopsticks-ai/ (currently v2.2.9)\n2. Or run: curl -fsSL https://chopstickshq.com/chopsticks-ai/install-chopsticks-ai.sh | bash\n3. It installs to ~/Applications/chopsticksAI.app\n\nLive chat uses chopstickshq.com — no API key from you. If the network is down, product questions fall back to the on-device knowledge base.",
             terms: [("apple computer app", 6), ("chopsticksai app", 6), ("chopsticksai apple computer app", 8), ("chopsticksai imac app", 8), ("chopsticksai mac app", 8), ("chopsticksai macbook app", 8), ("chopsticksai macos app", 8), ("chopsticksai os x app", 8), ("chopsticksai osx app", 8), ("download chopsticksai app", 8), ("get chopsticksai app", 8), ("get started chopsticksai", 8), ("grab chopsticksai app", 8), ("how do i download chopsticksai", 8), ("how do i get chopsticksai", 8), ("how do i grab chopsticksai", 8), ("how do i obtain chopsticksai", 8), ("imac app", 5), ("imacapp", 3), ("install chopsticksai", 8), ("installation chopsticksai", 8), ("installing chopsticksai", 8), ("mac app", 5), ("macapp", 3), ("macbook app", 5), ("macbookapp", 3), ("macos app", 5), ("macosapp", 3), ("obtain chopsticksai app", 8), ("os x app", 5), ("osx app", 5), ("osxapp", 3), ("set up chopsticksai", 8), ("setup chopsticksai", 8)]
         ),
         ChopsticksAIIntent(
@@ -282,7 +282,7 @@ enum ChopsticksAIKB {
             product: "general",
             label: "What are the current app versions?",
             priority: 75,
-            answer: "Current published builds (from the site manifests):\n\n• rNitro — v1.2.9-Final\n• Chopsticks HQ — v1.0.14\n• ChopsticksAI macOS — v2.2.8-Final\n\nDownload pages always show the live number if this drifts.",
+            answer: "Current published builds (from the site manifests):\n\n• rNitro — v1.2.9-Final\n• Chopsticks HQ — v1.0.14\n• ChopsticksAI macOS — v2.2.9\n\nDownload pages always show the live number if this drifts.",
             terms: [("current version", 8), ("evrsion", 3), ("latest release", 6), ("latest version", 8), ("latestrelease", 4), ("latestversion", 8), ("verison", 3), ("versino", 3), ("version", 3), ("versions", 3), ("versoin", 3), ("vesrion", 3), ("vresion", 3), ("what version is chopsticks hq", 8), ("what version is chopsticksai", 8), ("what version is macbar", 8), ("what version is nitro", 8), ("what version is r nitro", 8), ("what version is rnitro", 8), ("what version is rnitro app", 8)]
         ),
         ChopsticksAIIntent(
