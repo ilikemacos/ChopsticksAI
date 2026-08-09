@@ -379,7 +379,7 @@
   var cloudSyncing = false;
   var Cloud = window.ChopsticksAICloud;
 
-  // Guests: localStorage. Signed-in: also sync to Supabase chats.
+  
   function saveSession() {
     try {
       localStorage.setItem(STORE, JSON.stringify({
@@ -498,7 +498,7 @@
   var fileInput = document.getElementById('file-input');
   var attachRow = document.getElementById('attach-row');
   var composerEl = document.getElementById('composer');
-  var pendingAttach = []; // { id, name, mime, size, path, url, text, uploading, error }
+  var pendingAttach = []; 
   var MAX_BATCH = 500 * 1024 * 1024;
   var TEXT_PREVIEW = 200000;
   var compact = false;
@@ -916,8 +916,7 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
 
-  /** Renders assistant text: fenced blocks become downloadable file cards,
-   *  everything else becomes paragraphs with inline code. */
+  
   function renderAssistant(text, sources) {
     var wrap = document.createElement('div');
     wrap.className = 'bubble';
@@ -936,7 +935,7 @@
         return;
       }
 
-      // fence: first line is "lang filename", remainder is the file body
+      
       var nl = part.indexOf('\n');
       var head = (nl === -1 ? part : part.slice(0, nl)).trim();
       var body = (nl === -1 ? '' : part.slice(nl + 1)).replace(/\n+$/, '');
@@ -1027,8 +1026,7 @@
     return 'The model is unreachable right now. Try again shortly.';
   }
 
-  /** Progressive reveal — Netlify sync functions can't SSE, so stream the
-   *  finished reply into the bubble for Lab UX. */
+  
   function streamReveal(targetTurn, fullText, sources, done) {
     var host = targetTurn.lastChild;
     var scratch = document.createElement('div');
@@ -1173,7 +1171,7 @@
           }
         }
         var replyText = d.reply;
-        // Materialize structured tool files as fences if the reply omitted them.
+        
         if (d.files && d.files.length) {
           d.files.forEach(function (f) {
             if (!f || !f.name || !f.content) return;
@@ -1239,7 +1237,7 @@
     });
   }
 
-  // Account modal
+  
   (function wireAuth() {
     var modal = document.getElementById('auth-modal');
     var err = document.getElementById('auth-err');
@@ -1298,7 +1296,7 @@
     });
   })();
 
-  // Restore a previous session, if there is one.
+  
   (function restore() {
     var saved = loadSession();
     if (!saved) return;

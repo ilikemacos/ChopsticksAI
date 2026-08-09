@@ -13,9 +13,6 @@ ZIP="chopsticksAI-${VERSION}.zip"
 
 [[ "$(uname)" == "Darwin" ]] || { echo "macOS only"; exit 1; }
 
-# Default /usr/bin/swiftc exits 69 when the Xcode license is not accepted,
-# which previously produced a signed .app with no executable (Gatekeeper:
-# "damaged or incomplete"). Resolve a working toolchain + SDK explicitly.
 SWIFTC=""
 SDK=""
 resolve_toolchain() {
@@ -74,23 +71,25 @@ BIN="$APP/Contents/MacOS/$EXEC"
 SDK_ARGS=()
 [[ -n "$SDK" && -d "$SDK" ]] && SDK_ARGS=(-sdk "$SDK")
 
-"$SWIFTC" -O \
-  -parse-as-library \
-  "${SDK_ARGS[@]}" \
-  -target "$TARGET" \
-  -framework SwiftUI \
-  -framework AppKit \
-  -o "$BIN" \
-  "$AI/ChopsticksAIKB.swift" \
-  "$AI/ChopsticksAIEngine.swift" \
-  "$SHARED" \
-  "$ROOT/CursorTheme.swift" \
-  "$ROOT/AppStore.swift" \
-  "$ROOT/SupabaseCloud.swift" \
-  "$ROOT/WhatsNew.swift" \
-  "$ROOT/Attachments.swift" \
-  "$ROOT/CursorPages.swift" \
+SWIFT_CMD=("$SWIFTC" -O -parse-as-library)
+if ((${#SDK_ARGS[@]})); then SWIFT_CMD+=("${SDK_ARGS[@]}"); fi
+SWIFT_CMD+=(
+  -target "$TARGET"
+  -framework SwiftUI
+  -framework AppKit
+  -o "$BIN"
+  "$AI/ChopsticksAIKB.swift"
+  "$AI/ChopsticksAIEngine.swift"
+  "$SHARED"
+  "$ROOT/CursorTheme.swift"
+  "$ROOT/AppStore.swift"
+  "$ROOT/SupabaseCloud.swift"
+  "$ROOT/WhatsNew.swift"
+  "$ROOT/Attachments.swift"
+  "$ROOT/CursorPages.swift"
   "$ROOT/ChopsticksAIApp.swift"
+)
+"${SWIFT_CMD[@]}"
 
 [[ -f "$BIN" && -s "$BIN" ]] || { echo "Build failed: $BIN missing or empty" >&2; exit 1; }
 chmod +x "$BIN"
@@ -102,7 +101,6 @@ rm -f "$BUILD/$ZIP"
 ditto -c -k --sequesterRsrc --keepParent "$APP" "$BUILD/$ZIP"
 SHA="$(shasum -a 256 "$BUILD/$ZIP" | awk '{print $1}')"
 
-# Sanity-check the zip before publishing a broken build again.
 CHECK="$(mktemp -d "${TMPDIR:-/tmp}/chopsticks-ai-check.XXXXXX")"
 trap 'rm -rf -- "$CHECK"' EXIT
 unzip -q "$BUILD/$ZIP" -d "$CHECK"

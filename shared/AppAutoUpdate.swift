@@ -10,8 +10,8 @@ struct AppUpdateConfig {
     let productName: String
     let defaultsPrefix: String
 
-    // Bumped key so older installs that defaulted auto-install on don't keep
-    // deleting the app before the staging-path fix.
+    
+    
     var autoInstallKey: String { "\(defaultsPrefix).autoInstallUpdates.v2" }
     var snoozeKey: String { "\(defaultsPrefix).updateSnoozeUntil" }
 }
@@ -37,8 +37,8 @@ final class AppAutoUpdate: ObservableObject {
         if UserDefaults.standard.object(forKey: config.autoInstallKey) != nil {
             autoInstall = UserDefaults.standard.bool(forKey: config.autoInstallKey)
         } else {
-            // Opt-in: auto-install used to delete the app when the temp
-            // staging folder was cleaned up before the replace finished.
+            
+            
             autoInstall = false
             UserDefaults.standard.set(false, forKey: config.autoInstallKey)
         }
@@ -189,8 +189,8 @@ final class AppAutoUpdate: ObservableObject {
             return .failure("\(config.bundleName) was not found inside the update archive.")
         }
 
-        // Copy out of `tmp` before defer deletes it — otherwise the replace
-        // script runs after cleanup and `rm -rf` leaves no app behind.
+        
+        
         let stagedKeep = fm.temporaryDirectory
             .appendingPathComponent("chq-keep-\(UUID().uuidString)", isDirectory: true)
             .appendingPathComponent(config.bundleName, isDirectory: true)
@@ -224,8 +224,8 @@ final class AppAutoUpdate: ObservableObject {
         productName: String,
         version: String
     ) -> InstallOutcome {
-        // Never codesign here — ad-hoc resign can prompt for the login keychain
-        // password. Clear quarantine only, then reopen.
+        
+        
         let script = """
         #!/bin/bash
         set -e
@@ -268,7 +268,7 @@ final class AppAutoUpdate: ObservableObject {
         return .success
     }
 
-    /// Always install under ~/Applications so updates never ask for an admin password.
+    
     private static func installDestination(bundleName: String) -> URL {
         let homeApps = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Applications", isDirectory: true)
@@ -333,7 +333,7 @@ final class AppAutoUpdate: ObservableObject {
                 guard let data else { return nil }
                 return try? JSONDecoder().decode(ReleaseManifest.self, from: data)
             }()
-            // AppKit (NSAlert) and @Published must run on the main thread.
+            
             DispatchQueue.main.async {
                 completion(manifest)
             }

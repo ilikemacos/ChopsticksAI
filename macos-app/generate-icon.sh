@@ -13,7 +13,6 @@ SAFE=768
 command -v sips >/dev/null || { echo "sips not found" >&2; exit 1; }
 command -v iconutil >/dev/null || { echo "iconutil not found" >&2; exit 1; }
 
-# Inset artwork ~75% so macOS squircle masking does not clip corners.
 sips -z "$SAFE" "$SAFE" "$SRC" --out "$SCALED" >/dev/null
 sips --padToHeightWidth 1024 1024 --padColor 0A0A0C "$SCALED" --out "$PADDED" >/dev/null
 

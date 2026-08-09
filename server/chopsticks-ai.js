@@ -1,29 +1,5 @@
-/**
- * chopsticksAI — LLM-backed assistant for Chopsticks HQ.
- *
- *   POST /api/chopsticks-ai  { messages: [{role, content}, ...] }
- *        -> { reply, mode: "live" | "unconfigured" | "limited" }
- *
- * The OpenRouter key comes from env (OPENROUTER_API_KEY) and is only ever used
- * here, server-side. It is never shipped to a browser or embedded in the app —
- * an OpenRouter key is account-scoped, not model-scoped, so a leaked one can be
- * spent on paid models regardless of which model this endpoint requests.
- *
- * Answers are grounded in the generated knowledge base: the most relevant
- * entries are retrieved and injected as context so the model quotes real
- * version numbers and install commands instead of inventing them.
- *
- * Live mode POSTs questions through this proxy to a language-model provider.
- * Offline clients fall back to the on-device KB for Chopsticks HQ topics only.
- * GET /api/chopsticks-ai returns a health payload (configured / cooldown).
- */
-// Verified against https://openrouter.ai/api/v1/models. OpenRouter ids change
-// between releases and a wrong one 404s every request, so check before editing.
-// Tried in order: if the first is rate-limited or erroring, the next takes over.
-// Both are zero-cost tiers, so failover never introduces spend.
-// Effort levels for C.ai (and legacy ultra/super aliases for the sidebar widget).
-// Clients send a tier NAME, never a model id - accepting an arbitrary model from
-// the browser would let anyone run a paid model on our key.
+
+
 const TIERS = {
   low: {
     label: "Low",
@@ -143,7 +119,7 @@ const TIERS = {
     grounding: 12,
     searchMax: 16,
   },
-  /** Coding specialist mode — Poolside Laguna S 2.1. Do not expose provider/pricing in UI. */
+  
   chopcode: {
     label: "ChopCode",
     models: [
@@ -163,7 +139,7 @@ const TIERS = {
     temperature: 0.2,
     chopCode: true,
   },
-  /** StickerCoder+ — North Mini Code. Do not expose provider/pricing in UI. */
+  
   stickercoderplus: {
     label: "StickerCoder+",
     models: [
@@ -221,15 +197,13 @@ function fnv1a32(str) {
   return h >>> 0;
 }
 
-/** Validates a Fathom Pro oi-pl unlock key (vault / scavenger mint).
- *  These are NOT OpenRouter keys — OpenRouter stays server-side only. */
 function verifyFathomProUnlock(raw) {
   const key = String(raw || "").trim().toLowerCase();
   if (!key) return false;
-  // Site demo keys first (contain c0ffee on purpose).
+  
   if (FATHOM_PRO_SITE_KEYS.has(key)) return true;
   if (key.includes("c0ffee")) return false;
-  // Reject anything that looks like an OpenRouter / provider secret.
+  
   if (/^sk-or-/i.test(key) || /^sk-[a-z0-9]/i.test(key)) return false;
   const m = key.match(/^oi-pl-([0-9a-f]{6,16})-([0-9a-f]{6,16})-([0-9a-f]{8})$/);
   if (!m) return false;
@@ -244,7 +218,6 @@ function verifyFathomProUnlock(raw) {
   return false;
 }
 
-/** Usage upgrades are earned by redeeming Fathom Pro oi-pl API keys as credits. */
 const FREE_USAGE = {
   id: "free",
   keysRequired: 0,
@@ -284,7 +257,6 @@ const CREDIT_TIERS = [
   },
 ];
 
-/** Format plan detail from profile budget numbers. */
 function entitlementDetail(limit, contextLimit, cooldownMs) {
   const toks = (n) => {
     if (n >= 1_000_000) {
@@ -325,8 +297,8 @@ function resolveCredits(rawKeys) {
   for (const t of CREDIT_TIERS) {
     if (valid.length >= t.keysRequired) tier = t;
   }
-  // Free traffic shares the global bucket; credit upgrades get a personal bucket
-  // derived from the redeemed key set so one upgrade doesn't raise everyone.
+  
+  
   const bucketId = tier.keysRequired === 0
     ? "global"
     : ("credits-" + fnv1a32(valid.slice().sort().join("|")).toString(16).padStart(8, "0"));
@@ -377,8 +349,8 @@ async function resolveAccount(accessToken) {
     const email = String(user.email || "").trim().toLowerCase();
     if (!email || !user.id) return null;
 
-    // Account plans live on public.profiles (token_budget / context_limit / plan_label).
-    // Seed via netlify/functions/chopsticks-ai-profile-entitlements.sql — no hard-coded emails.
+    
+    
     let entitlement = null;
     try {
       const profRes = await fetch(
@@ -415,7 +387,7 @@ async function resolveAccount(accessToken) {
           }
         }
       }
-    } catch (e) { /* profiles columns optional until SQL is applied */ }
+    } catch (e) {  }
 
     return {
       id: user.id,
@@ -427,7 +399,6 @@ async function resolveAccount(accessToken) {
   }
 }
 
-/** Merge Fathom Pro credit tier with signed-in account entitlements (best wins). */
 function resolvePlan(rawKeys, account) {
   const credits = resolveCredits(rawKeys);
   const ent = account && account.entitlement;
@@ -467,9 +438,6 @@ function normalizeOpenRouterKey(raw) {
 const MODELS = TIERS[DEFAULT_TIER].models;
 const MODEL = MODELS[0];
 
-// Two models collaborate on each answer: Nemotron Ultra drafts, Gemma
-// reviews and rewrites. Both are zero-cost tiers, so the second pass adds
-// quality without adding spend. Set CHOPSTICKS_AI_REFINE=off to disable.
 const REFINE_MODEL = process.env.CHOPSTICKS_AI_REFINE_MODEL || "openai/gpt-oss-20b:free";
 const REFINE_ENABLED = (process.env.CHOPSTICKS_AI_REFINE || "on") !== "off";
 
@@ -483,41 +451,33 @@ const REFINE_SYSTEM = [
   "the review, or yourself as a reviewer - output only the final reply text.",
 ].join("");
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-// Netlify caps a synchronous function at ~26s. Web search runs BEFORE the
-// model deadline (see handler), so TIMEOUT_MS is the model-phase budget only.
-// Stay under the platform kill so clients get a JSON reply, not a 504.
+
 const TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_TIMEOUT_MS || 20000);
 const REFINE_MIN_MS = 5000;
-// Long generations (the /chopailab agent asking for whole files) need most of
-// the window for the draft. Short widget replies leave room for a review pass.
+
 const LONG_REPLY_TOKENS = 800;
 const REFINE_RESERVE_MS = 6000;
 const draftBudgetMs = (replyTokens, msLeft) =>
   replyTokens > LONG_REPLY_TOKENS ? msLeft - 800 : Math.max(8000, msLeft - REFINE_RESERVE_MS);
 
-// Default context ceiling for free / unsigned traffic. Credit tiers and account
-// entitlements raise this via resolvePlan().contextLimit.
 const MAX_CONTEXT_TOKENS = Number(process.env.CHOPSTICKS_AI_MAX_CONTEXT || 48000);
 const contextFor = (effortTier, plan) => {
   const cap = (plan && plan.contextLimit) || MAX_CONTEXT_TOKENS;
-  // Plan sets the available window; effort tier cannot exceed it.
+  
   return Math.min(cap, Math.max(effortTier.context || MAX_CONTEXT_TOKENS, cap));
 };
 const MAX_REPLY_TOKENS = 400;
-// The /chopailab agent generates files and code, which needs far more room than
-// the sidebar widget. Callers may request more, within a hard ceiling.
+
 const MAX_REPLY_TOKENS_CEILING = 2000;
 
-const MAX_MESSAGES = 12;        // trailing turns kept from the client
+const MAX_MESSAGES = 12;        
 const MAX_CHARS_PER_MSG = 2000;
 const GROUNDING_INTENTS = 6;
 
-// Free-tier budget (overridable). Credit upgrades raise limit / shorten cooldown
-// via redeemed Fathom Pro oi-pl keys — see resolveCredits / CREDIT_TIERS.
 const TOKEN_BUDGET = FREE_USAGE.limit;
 const COOLDOWN_MS = FREE_USAGE.cooldownMs;
 const SB_TIMEOUT_MS = 5000;
-const budgets = new Map(); // bucketId -> { used, windowStart, cooldownUntil }
+const budgets = new Map(); 
 function budgetBucket(id) {
   const key = id || "global";
   let row = budgets.get(key);
@@ -527,24 +487,17 @@ function budgetBucket(id) {
   }
   return row;
 }
-// Back-compat alias used by fixtures / exports.
+
 const budget = budgetBucket("global");
 let budgetMode = "memory";
 
-// Simple in-memory throttle. Serverless instances are short-lived so this is a
-// speed bump against casual abuse, not a guarantee; it costs nothing and stops
-// a single tab hammering the endpoint.
 const RATE_WINDOW_MS = 60000;
 const RATE_MAX = 20;
 const hits = new Map();
 
-/** ~4 chars per token, deliberately an over-estimate so trimming fires early
- *  rather than letting OpenRouter reject an oversized request. */
 const estimateTokens = (text) => Math.max(1, Math.ceil(String(text || "").length / 4));
 const messageTokens = (m) => estimateTokens(m.content) + 4;
 
-/** Drops the oldest turns until system prompt + history fits the window. The
- *  system prompt is never trimmed - it carries the grounding facts. */
 function fitContext(system, turns, contextTokens) {
   const budgetTokens = (contextTokens || MAX_CONTEXT_TOKENS) - MAX_REPLY_TOKENS - messageTokens(system);
   const kept = [];
@@ -644,7 +597,7 @@ async function budgetPeek(now, opts = {}) {
         p_id: bucketId,
       }),
     });
-    // Older schemas only had the 2-arg global RPC — fall back for free tier.
+    
     if ((!res.ok || !res.body || typeof res.body !== "object") && bucketId === "global") {
       res = await sb("rpc/chopsticks_ai_budget_peek", {
         method: "POST",
@@ -738,7 +691,7 @@ let KB = null;
 function knowledgeBase() {
   if (KB) return KB;
   try {
-    // Generated by chopsticks-ai/build-kb.py, shared with the website widget.
+    
     KB = require("./chopsticks-ai-kb.json");
   } catch (e) {
     KB = { intents: [] };
@@ -754,8 +707,6 @@ function normalise(text) {
     .trim();
 }
 
-/** Last few user turns, joined — follow-ups like "how do I install it?" keep
- *  product context from earlier in the thread. */
 function retrievalQuery(turns) {
   return turns
     .filter((m) => m.role === "user")
@@ -788,8 +739,6 @@ function scoreQuery(query) {
   return scored;
 }
 
-/** Same word-boundary scoring as the offline engine, used purely to pick
- *  which facts to hand the model. */
 function retrieve(query, limit = GROUNDING_INTENTS) {
   return scoreQuery(query).slice(0, limit).map((s) => s.intent);
 }
@@ -802,10 +751,6 @@ function kbFallbackAnswer(query) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// ------------------------------------------------------------- web search ---
-// Runs on every question (unless CHOPSTICKS_AI_SEARCH=off). Sources run in
-// parallel: Wikipedia, Wikidata, DuckDuckGo, Stack Overflow, Hacker News,
-// GitHub, MDN, npm, arXiv, and Google/Brave when API keys are configured.
 const SEARCH_ENABLED = (process.env.CHOPSTICKS_AI_SEARCH || "on") !== "off";
 const SEARCH_TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_SEARCH_TIMEOUT_MS || 4500);
 const SEARCH_MIN_LEN = 3;
@@ -817,7 +762,6 @@ function wantsSearch(text) {
   return String(text || "").trim().length >= SEARCH_MIN_LEN;
 }
 
-/** Strips an optional `/search` prefix; search runs either way. */
 function parseSearchRequest(text) {
   const raw = String(text || "").trim();
   if (/^\/search\b/i.test(raw)) {
@@ -829,8 +773,8 @@ function parseSearchRequest(text) {
 
 function normUrl(src) {
   if (!src) return "";
-  if (/^https?:\/\//i.test(src)) return src;
-  return "https://" + String(src).replace(/^\/\//, "");
+  if (/^https?:\/\
+  return "https://" + String(src).replace(/^\/\
 }
 
 async function fetchJson(url, signal, init) {
@@ -884,7 +828,7 @@ function decodeDdgRedirect(href) {
   if (href.includes("uddg=")) {
     try {
       return decodeURIComponent(href.match(/uddg=([^&]+)/)[1]);
-    } catch (e) { /* fall through */ }
+    } catch (e) {  }
   }
   return href;
 }
@@ -931,7 +875,6 @@ async function searchDuckDuckGoJson(query, signal) {
   return out;
 }
 
-/** DuckDuckGo lite HTML — organic links to real websites (no API key). */
 async function searchDuckDuckGoWeb(query, signal) {
   const html = await fetchText("https://lite.duckduckgo.com/lite/", signal, {
     method: "POST",
@@ -964,7 +907,7 @@ async function searchDuckDuckGoWeb(query, signal) {
 /** Stack Overflow / Stack Exchange — good for technical questions, no key. */
 async function searchStackExchange(query, signal) {
   const data = await fetchJson(
-    "https://api.stackexchange.com/2.3/search/advanced?order=desc&sort=relevance" +
+    "https:
       "&site=stackoverflow&pagesize=4&q=" + encodeURIComponent(query),
     signal
   ).catch(() => null);
@@ -976,7 +919,6 @@ async function searchStackExchange(query, signal) {
   }));
 }
 
-/** Hacker News — tech news and discussions via Algolia (no key). */
 async function searchHackerNews(query, signal) {
   const data = await fetchJson(
     "https://hn.algolia.com/api/v1/search?query=" + encodeURIComponent(query) + "&hitsPerPage=4",
@@ -993,7 +935,6 @@ async function searchHackerNews(query, signal) {
   }));
 }
 
-/** GitHub repositories — open-source projects and docs (no key, rate-limited). */
 async function searchGitHub(query, signal) {
   const data = await fetchJson(
     "https://api.github.com/search/repositories?q=" + encodeURIComponent(query) +
@@ -1011,7 +952,6 @@ async function searchGitHub(query, signal) {
   }));
 }
 
-/** Wikidata — structured facts and entity descriptions (no key). */
 async function searchWikidata(query, signal) {
   const data = await fetchJson(
     "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=" +
@@ -1026,7 +966,6 @@ async function searchWikidata(query, signal) {
   }));
 }
 
-/** MDN Web Docs — JavaScript, HTML, CSS, and web APIs (no key). */
 async function searchMdn(query, signal) {
   const data = await fetchJson(
     "https://developer.mozilla.org/api/v1/search?q=" + encodeURIComponent(query) +
@@ -1041,10 +980,6 @@ async function searchMdn(query, signal) {
   }));
 }
 
-/**
- * Mozilla engine — MDN + Wikipedia + DuckDuckGo (privacy-friendly defaults).
- * Used by the public search action on /chopsticks-ai/ and preferred in chat grounding.
- */
 async function mozillaEngine(query, signal, maxSources) {
   const cap = Math.max(1, Math.min(MAX_SOURCES, Number(maxSources) || 8));
   const batches = await Promise.allSettled([
@@ -1065,7 +1000,6 @@ async function mozillaEngine(query, signal, maxSources) {
   return dedupeSources(found).slice(0, cap);
 }
 
-/** npm registry — JavaScript packages (no key). */
 async function searchNpm(query, signal) {
   const data = await fetchJson(
     "https://registry.npmjs.org/-/v1/search?text=" + encodeURIComponent(query) + "&size=3",
@@ -1079,7 +1013,6 @@ async function searchNpm(query, signal) {
   }));
 }
 
-/** arXiv — research papers (no key). */
 async function searchArxiv(query, signal) {
   const xml = await fetchText(
     "https://export.arxiv.org/api/query?search_query=all:" +
@@ -1103,7 +1036,6 @@ async function searchArxiv(query, signal) {
   return out;
 }
 
-/** Brave Search — general web results (optional BRAVE_SEARCH_API_KEY, free tier). */
 async function searchBrave(query, signal) {
   const key = env("BRAVE_SEARCH_API_KEY");
   if (!key) return [];
@@ -1120,7 +1052,6 @@ async function searchBrave(query, signal) {
   }));
 }
 
-/** Up to three Wikipedia articles matching the query. */
 async function searchWikipedia(query, signal, limit) {
   const hit = await fetchJson(
     "https://en.wikipedia.org/w/api.php?action=query&list=search&format=json" +
@@ -1146,7 +1077,6 @@ async function searchWikipedia(query, signal, limit) {
   return summaries.filter(Boolean);
 }
 
-/** Google results via serper.dev (optional SERPER_API_KEY — free tier available). */
 async function searchSerper(query, signal) {
   const key = env("SERPER_API_KEY");
   if (!key) return [];
@@ -1174,7 +1104,6 @@ async function searchSerper(query, signal) {
   return organic;
 }
 
-/** Google Programmable Search (optional GOOGLE_CSE_API_KEY + GOOGLE_CSE_CX). */
 async function searchGoogleCse(query, signal) {
   const key = env("GOOGLE_CSE_API_KEY");
   const cx = env("GOOGLE_CSE_CX");
@@ -1192,13 +1121,12 @@ async function searchGoogleCse(query, signal) {
   }));
 }
 
-/** Returns prompt context plus structured sources for the client UI. */
 async function webSearch(query, maxSources) {
   const cap = Math.max(1, Math.min(MAX_SOURCES, Number(maxSources) || MAX_SOURCES));
   const c = new AbortController();
   const timer = setTimeout(() => c.abort(), SEARCH_TIMEOUT_MS);
   try {
-    // Mozilla engine first, then the wider web.
+    
     const batches = await Promise.allSettled([
       mozillaEngine(query, c.signal, Math.min(6, cap)),
       searchSerper(query, c.signal),
@@ -1240,8 +1168,6 @@ async function webSearch(query, maxSources) {
   }
 }
 
-/** Facts chopsticksAI knows about itself. Built from the live config so the
- *  numbers can never drift from what the endpoint actually enforces. */
 function selfFacts(tier) {
   const t = tier || TIERS[DEFAULT_TIER];
   return [
@@ -1270,8 +1196,8 @@ function selfFacts(tier) {
 }
 
 function systemPrompt(grounding, mode, web, tier) {
-  // The agent at /chopailab produces files and code; the sidebar widget answers
-  // conversationally. Same knowledge, different output contract.
+  
+  
   const agent = mode === "agent" || tier.chopCode ? [
     "\n\nYou are running as the ChopsticksAI agent",
     tier.stickerCoder
@@ -1371,7 +1297,6 @@ const json = (status, body) => ({
   body: JSON.stringify(body),
 });
 
-/** OpenAI-compatible tools for agent file creation. */
 const AGENT_TOOLS = [
   {
     type: "function",
@@ -1418,7 +1343,6 @@ function langFromName(name) {
   return map[ext] || "text";
 }
 
-/** Pull ```lang filename … ``` fences into structured files. */
 function extractFencedFiles(text) {
   const out = [];
   const re = /```([^\n`]*)\n([\s\S]*?)```/g;
@@ -1962,7 +1886,7 @@ async function handler(event) {
   const clientSearchOff = payload.disableSearch === true;
   const searchOn = wantsSearch(searchQuery) && (!tier.chopCode || hadPrefix) && (!clientSearchOff || hadPrefix);
   // Bound wall-clock search so Netlify's ~26s function limit still leaves
-  // room for the model phase.
+  
   const searchStarted = Date.now();
   const webBundle = searchOn
     ? await webSearch(searchQuery, Math.min(tier.searchMax || 6, 5))
@@ -1991,16 +1915,16 @@ async function handler(event) {
   };
   const messages = fitContext(system, modelTurns, contextFor(tier, plan));
 
-  // Model deadline starts AFTER search so Mozilla lookups can't starve the LLM.
-  // Keep a hard rescue slice so a busy primary model cannot burn the whole window.
+  
+  
   const RESCUE_RESERVE_MS = 9000;
-  // Shrink model budget if search already ate into the platform window.
+  
   const platformLeft = Math.max(8000, 25000 - searchMs);
   const modelWindow = Math.min(TIMEOUT_MS, platformLeft);
   const deadline = Date.now() + modelWindow;
   const modelDeadline = deadline - RESCUE_RESERVE_MS;
-  // Cap each attempt — datacenter IPs to OpenRouter free models often hang
-  // until abort; failing fast lets the rescue path answer.
+  
+  
   const ATTEMPT_CAP_MS = 7000;
   const withTimeout = (ms) => {
     const c = new AbortController();
@@ -2008,17 +1932,17 @@ async function handler(event) {
     return { signal: c.signal, done: () => clearTimeout(t) };
   };
   try {
-    // --- stage 1: draft -------------------------------------------------
-    // Walk the model chain; a rate-limited or erroring model hands off to the
-    // next rather than failing the request.
+    
+    
+    
     let draft = null;
     let draftModel = null;
     let lastStatus = 0;
     let lastDetail = "";
     let producedFiles = [];
 
-    // Tools only when coding tiers / explicit tools / the user asks for files.
-    // Enabling tools on every agent turn made free models time out constantly.
+    
+    
     const ask = String(lastUser.content || "");
     const wantsFiles = /\b(write|create|generate|make|build|scaffold|implement)\b[\s\S]{0,80}\b(file|script|code|program|function|class|module|component|app)\b|\.\w{1,8}\b|```|write_file/i.test(ask);
     const useTools = payload.enableTools !== false

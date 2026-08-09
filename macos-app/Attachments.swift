@@ -16,7 +16,7 @@ struct PendingAttachment: Identifiable, Equatable {
 }
 
 enum AttachLimits {
-    static let maxBatch: Int64 = 500 * 1024 * 1024 // 500 MiB
+    static let maxBatch: Int64 = 500 * 1024 * 1024 
     static let textPreview = 200_000
     static let bucket = "cs-ai-attachments"
 }
@@ -219,7 +219,7 @@ enum StorageUpload {
             + (signed.hasPrefix("/") ? signed : "/\(signed)")
     }
 
-    /// Minimal TUS resumable upload for large files.
+    
     private static func tusUpload(
         data: Data,
         path: String,
