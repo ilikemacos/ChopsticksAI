@@ -87,7 +87,6 @@ struct UsageStats: Equatable {
     }
 }
 
-/// Centered context / allowance meters above the agent composer.
 struct ChatUsageBar: View {
     let stats: UsageStats
     var webSearchEnabled: Bool = true
@@ -269,7 +268,7 @@ final class ChatModel: ObservableObject {
                 lines: session.lines.filter { $0.role == "user" || $0.role == "assistant" }
             )
         } catch {
-            // Non-fatal — local chat still works.
+            
         }
     }
 
@@ -298,7 +297,7 @@ final class ChatModel: ObservableObject {
                 activeSessionId = loaded.first?.id
             }
         } catch {
-            // Keep local sessions
+            
         }
     }
 
@@ -481,7 +480,7 @@ final class ChatModel: ObservableObject {
         if let token = AuthStore.shared.session?.accessToken {
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
-        // Server model phase is ~20s after search; leave headroom for tools.
+        
         req.timeoutInterval = 75
         req.httpBody = try? JSONSerialization.data(withJSONObject: payload)
 
@@ -512,8 +511,8 @@ final class ChatModel: ObservableObject {
                 budget: obj["budget"] as? [String: Any],
                 mode: obj["budgetMode"] as? String
             )
-            // Live / cooldown / limited are online. Only sticky-offline when the
-            // host says the model was unavailable (or unconfigured).
+            
+            
             let stickyOffline = mode == "offline" || mode == "unconfigured"
             if mode == "live" || mode == "cooldown" || mode == "limited" || mode == "error" || mode == "empty" {
                 return ReplyResult(
@@ -625,8 +624,6 @@ final class ChatModel: ObservableObject {
     }
 }
 
-// MARK: - Root shell
-
 struct RootShell: View {
     @ObservedObject private var store = AppStore.shared
     @StateObject private var chat = ChatModel()
@@ -670,7 +667,7 @@ struct RootShell: View {
         }
     }
 
-    // MARK: Icon / labeled rail
+    
 
     private var iconRail: some View {
         VStack(alignment: store.railLabels ? .leading : .center, spacing: 6) {
@@ -753,7 +750,7 @@ struct RootShell: View {
         .help(item.title)
     }
 
-    // MARK: Secondary sidebar
+    
 
     @ViewBuilder
     private var secondarySidebar: some View {
@@ -905,7 +902,7 @@ struct RootShell: View {
         }
     }
 
-    // MARK: Main pane
+    
 
     @ViewBuilder
     private var mainPane: some View {
@@ -933,8 +930,6 @@ struct RootShell: View {
         }
     }
 }
-
-// MARK: - Agent chat
 
 struct AgentChatView: View {
     @ObservedObject var model: ChatModel
@@ -1513,7 +1508,7 @@ struct ChopsticksAIApp: App {
             RootShell()
                 .onAppear {
                     AppAutoUpdate.shared.checkOnLaunch()
-                    // Delay so update alerts don't stack with What’s New.
+                    
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
                         WhatsNew.presentIfNeeded()
                     }

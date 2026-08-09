@@ -1,7 +1,6 @@
 import Combine
 import Foundation
 
-/// Public Supabase config (anon key is safe to ship; RLS protects data).
 enum SupabasePublic {
     static let url = URL(string: "https://bohvvkpvnnqigfdcuhnp.supabase.co")!
     static let anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJvaHZ2a3B2bm5xaWdmZGN1aG5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1Njk3NjEsImV4cCI6MjEwMTE0NTc2MX0.oVanbpY_NPRGG9B4YIHNx1cYbnZddpDCMpYDsumtl2s"
@@ -244,7 +243,7 @@ enum ChatCloud {
         let token = try await AuthStore.shared.ensureFreshToken()
         let path = "chat_messages?chat_id=eq.\(chatId)&select=role,content,sources,seq&order=seq.asc"
         let data = try await rest(path, method: "GET", token: token)
-        // sources may be JSON arrays of objects — decode loosely
+        
         guard let arr = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] else { return [] }
         return arr.compactMap { row in
             guard let role = row["role"] as? String,

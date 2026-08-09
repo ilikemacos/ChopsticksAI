@@ -1,8 +1,6 @@
 import AppKit
 import SwiftUI
 
-// MARK: - Shared chrome helpers
-
 struct PageHeader: View {
     let title: String
     var subtitle: String? = nil
@@ -172,8 +170,6 @@ struct SettingsToggleRow: View {
     }
 }
 
-// MARK: - Automations
-
 struct AutomationsView: View {
     @ObservedObject var store: AppStore
     @State private var selectedId: String?
@@ -328,8 +324,6 @@ struct AutomationsView: View {
     }
 }
 
-// MARK: - Repositories
-
 struct ReposView: View {
     @ObservedObject var store: AppStore
 
@@ -405,8 +399,6 @@ struct ReposView: View {
         .background(Cursor.bg)
     }
 }
-
-// MARK: - Account (Supabase)
 
 struct AccountView: View {
     @ObservedObject var auth = AuthStore.shared
@@ -513,8 +505,6 @@ struct AccountView: View {
         }
     }
 }
-
-// MARK: - Usage & upgrades
 
 struct UsageView: View {
     @ObservedObject var store: AppStore
@@ -734,8 +724,6 @@ struct UsageView: View {
     }
 }
 
-// MARK: - Mozilla search engine
-
 struct MozillaSearchHit: Identifiable, Equatable {
     let id = UUID()
     let title: String
@@ -916,8 +904,6 @@ struct MozillaSearchView: View {
     }
 }
 
-// MARK: - Cloud Agents / Marketplace stubs
-
 struct CloudAgentsView: View {
     var body: some View {
         VStack(spacing: 0) {
@@ -979,8 +965,6 @@ struct MarketplaceView: View {
         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Cursor.hairline))
     }
 }
-
-// MARK: - Settings + Customize / Custom Modes
 
 struct SettingsView: View {
     @ObservedObject var store: AppStore

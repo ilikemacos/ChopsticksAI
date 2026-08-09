@@ -1,14 +1,13 @@
 import SwiftUI
 
-/// Cursor Agents Window surface tokens (dark).
 enum Cursor {
-    static let bg = Color(red: 0.086, green: 0.086, blue: 0.086)          // #161616
-    static let sidebar = Color(red: 0.075, green: 0.075, blue: 0.075)     // #131313
-    static let rail = Color(red: 0.067, green: 0.067, blue: 0.067)        // #111111
-    static let panel = Color(red: 0.110, green: 0.110, blue: 0.110)       // #1c1c1c
-    static let composer = Color(red: 0.129, green: 0.129, blue: 0.129)    // #212121
-    static let hover = Color(red: 0.165, green: 0.165, blue: 0.165)       // #2a2a2a
-    static let selected = Color(red: 0.188, green: 0.188, blue: 0.188)    // #303030
+    static let bg = Color(red: 0.086, green: 0.086, blue: 0.086)          
+    static let sidebar = Color(red: 0.075, green: 0.075, blue: 0.075)     
+    static let rail = Color(red: 0.067, green: 0.067, blue: 0.067)        
+    static let panel = Color(red: 0.110, green: 0.110, blue: 0.110)       
+    static let composer = Color(red: 0.129, green: 0.129, blue: 0.129)    
+    static let hover = Color(red: 0.165, green: 0.165, blue: 0.165)       
+    static let selected = Color(red: 0.188, green: 0.188, blue: 0.188)    
     static let hairline = Color.white.opacity(0.07)
     static let border = Color.white.opacity(0.11)
     static let muted = Color.white.opacity(0.42)
@@ -19,7 +18,7 @@ enum Cursor {
     static let accentFg = Color.black
     static let blue = Color(red: 0.35, green: 0.55, blue: 0.98)
     static let green = Color(red: 0.35, green: 0.72, blue: 0.48)
-    static let mozilla = Color(red: 1.0, green: 0.443, blue: 0.224) // #FF7139
+    static let mozilla = Color(red: 1.0, green: 0.443, blue: 0.224) 
 }
 
 enum AppNav: String, CaseIterable, Identifiable {

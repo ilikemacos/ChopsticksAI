@@ -115,24 +115,24 @@ final class AppStore: ObservableObject {
     @Published var nav: AppNav = .agents
     @Published var settingsSection: SettingsSection = .general
     @Published var compact = UserDefaults.standard.bool(forKey: compactKey)
-    /// Secondary sidebar (agents list / page blurb). Animated expand/collapse.
+    
     @Published var sidebarExpanded: Bool = UserDefaults.standard.object(forKey: sidebarExpandedKey) as? Bool ?? true
-    /// Show text labels on the left nav rail (not icon-only).
+    
     @Published var railLabels: Bool = UserDefaults.standard.object(forKey: railLabelsKey) as? Bool ?? true
     @Published var tier: String = UserDefaults.standard.string(forKey: tierKey) ?? "high"
     @Published var userRules: String = UserDefaults.standard.string(forKey: rulesKey) ?? ""
     @Published var privacyMode = UserDefaults.standard.bool(forKey: privacyModeKey)
     @Published var autoRun = UserDefaults.standard.object(forKey: autoRunKey) as? Bool ?? true
     @Published var maxMode = UserDefaults.standard.bool(forKey: maxModeKey)
-    /// Allow the model to call write_file (and similar) tools.
+    
     @Published var enableTools: Bool = UserDefaults.standard.object(forKey: enableToolsKey) as? Bool ?? true
-    /// Automatic Mozilla web search on each question (off = model-only; `/search …` still forces lookup).
+    
     @Published var webSearchEnabled: Bool = UserDefaults.standard.object(forKey: webSearchKey) as? Bool ?? true
-    /// Ask with a save panel before writing agent-created files to disk.
+    
     @Published var confirmFileSave: Bool = UserDefaults.standard.object(forKey: confirmFileSaveKey) as? Bool ?? true
-    /// Folder used when confirm-before-save is off (empty = ~/Downloads/cs.AI).
+    
     @Published var defaultWriteFolder: String = UserDefaults.standard.string(forKey: defaultWriteFolderKey) ?? ""
-    /// Show inline previews for generated files in chat.
+    
     @Published var betaFilePreview: Bool = UserDefaults.standard.object(forKey: betaFilePreviewKey) as? Bool ?? true
     @Published var customModes: [CustomMode] = []
     @Published var automations: [AutomationItem] = []
@@ -228,7 +228,7 @@ final class AppStore: ObservableObject {
         UserDefaults.standard.set(on, forKey: betaFilePreviewKey)
     }
 
-    /// Resolved folder for quiet saves (creates if needed).
+    
     func resolvedWriteFolder() -> URL {
         let path = defaultWriteFolder.trimmingCharacters(in: .whitespacesAndNewlines)
         let url: URL

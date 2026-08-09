@@ -1,7 +1,6 @@
 import SwiftUI
 import AppKit
 
-/// Shows changelog.json once after each version bump.
 @MainActor
 enum WhatsNew {
     private static let seenKey = "chopsticksAI.whatsNew.seenVersion"
@@ -57,7 +56,7 @@ enum WhatsNew {
                 UserDefaults.standard.set(current, forKey: seenKey)
             }
         } catch {
-            // Offline / first install — skip quietly.
+            
         }
     }
 
