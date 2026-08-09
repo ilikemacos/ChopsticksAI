@@ -66,7 +66,7 @@ enum ChopsticksAIKB {
             product: "chopsticks-ai",
             label: "How do I install the ChopsticksAI macOS app?",
             priority: 70,
-            answer: "ChopsticksAI for macOS is free.\n\n1. Download the App ZIP from chopstickshq.com/chopsticks-ai/ (currently v1.0.8)\n2. Or run: curl -fsSL https://chopstickshq.com/chopsticks-ai/install-chopsticks-ai.sh | bash\n3. It installs to ~/Applications/chopsticksAI.app\n\nLive chat uses chopstickshq.com — no API key from you. If the network is down, product questions fall back to the on-device knowledge base.",
+            answer: "ChopsticksAI for macOS is free.\n\n1. Download the App ZIP from chopstickshq.com/chopsticks-ai/ (currently v2.2.8-Final)\n2. Or run: curl -fsSL https://chopstickshq.com/chopsticks-ai/install-chopsticks-ai.sh | bash\n3. It installs to ~/Applications/chopsticksAI.app\n\nLive chat uses chopstickshq.com — no API key from you. If the network is down, product questions fall back to the on-device knowledge base.",
             terms: [("apple computer app", 6), ("chopsticksai app", 6), ("chopsticksai apple computer app", 8), ("chopsticksai imac app", 8), ("chopsticksai mac app", 8), ("chopsticksai macbook app", 8), ("chopsticksai macos app", 8), ("chopsticksai os x app", 8), ("chopsticksai osx app", 8), ("download chopsticksai app", 8), ("get chopsticksai app", 8), ("get started chopsticksai", 8), ("grab chopsticksai app", 8), ("how do i download chopsticksai", 8), ("how do i get chopsticksai", 8), ("how do i grab chopsticksai", 8), ("how do i obtain chopsticksai", 8), ("imac app", 5), ("imacapp", 3), ("install chopsticksai", 8), ("installation chopsticksai", 8), ("installing chopsticksai", 8), ("mac app", 5), ("macapp", 3), ("macbook app", 5), ("macbookapp", 3), ("macos app", 5), ("macosapp", 3), ("obtain chopsticksai app", 8), ("os x app", 5), ("osx app", 5), ("osxapp", 3), ("set up chopsticksai", 8), ("setup chopsticksai", 8)]
         ),
         ChopsticksAIIntent(
@@ -90,7 +90,7 @@ enum ChopsticksAIKB {
             product: "chopsticks-hq",
             label: "What is the Chopsticks HQ macOS app?",
             priority: 65,
-            answer: "Chopsticks HQ is a free macOS catalog app (currently v1.0.3) that lists Chopsticks products and opens their pages.\n\nInstall from chopstickshq.com or the downloads on the HQ site. It uses a WebView for product pages and links into ChopsticksAI Lab — it is not a separate AI model.",
+            answer: "Chopsticks HQ is a free macOS catalog app (currently v1.0.14) that lists Chopsticks products and opens their pages.\n\nInstall from chopstickshq.com or the downloads on the HQ site. It uses a WebView for product pages and links into ChopsticksAI Lab — it is not a separate AI model.",
             terms: [("actalog", 3), ("caatlog", 3), ("catalgo", 3), ("catalog", 3), ("catalogs", 3), ("cataolg", 3), ("catlaog", 3), ("chopsticks hq catalog", 8), ("chopstickshq app", 6), ("ctaalog", 3), ("get started chopsticks hq", 8), ("hq launcher", 7), ("hqlauncher", 7), ("install chopsticks hq", 8), ("installation chopsticks hq", 8), ("installing chopsticks hq", 8), ("set up chopsticks hq", 8), ("setup chopsticks hq", 8), ("what is chopsticks hq app", 8)]
         ),
         ChopsticksAIIntent(
@@ -218,7 +218,7 @@ enum ChopsticksAIKB {
             product: "general",
             label: "Is the source code available?",
             priority: 55,
-            answer: "rNitro is open source: https://github.com/ilikemacos/rNitro\n\nThe shell installers also contain the full app source inline — you can read every line before running them.\n\nFathom and ARENA are distributed as builds rather than source.",
+            answer: "Chopsticks HQ publishes open-source software under the MIT license.\n\n• cs.AI / chopsticksAI (macOS app, API, Lab): https://github.com/ilikemacos/ChopsticksAI\n• rNitro: https://github.com/ilikemacos/rNitro\n• Fathom: https://github.com/ilikemacos/Fathom\n• This website mirror: https://github.com/ilikemacos/chopstickshq-mirror\n\nOverview: https://chopstickshq.com/opensource/\n\nShell installers embed readable source. ARENA game builds are distributed as binaries only.",
             terms: [("aource", 3), ("can i see the code", 8), ("code", 2), ("codes", 2), ("erpository", 3), ("fithub", 3), ("gihtub", 3), ("githbu", 3), ("github", 3), ("githubs", 3), ("gituhb", 3), ("gtihub", 3), ("igthub", 3), ("is it on github", 8), ("is it open source", 8), ("oepnsource", 3), ("openosurce", 3), ("opensource", 3), ("opensources", 3), ("opensuorce", 3), ("opesnource", 3), ("opnesource", 3), ("osurce", 3), ("poensource", 3), ("reopsitory", 3), ("repo", 2), ("repoistory", 3), ("repos", 2), ("repository", 3), ("repostiory", 3), ("repsoitory", 3), ("rpeository", 3), ("soruce", 3), ("soucre", 3), ("source", 3), ("sources", 3), ("sourec", 3), ("suorce", 3), ("where is the source", 8)]
         ),
         ChopsticksAIIntent(
@@ -282,7 +282,7 @@ enum ChopsticksAIKB {
             product: "general",
             label: "What are the current app versions?",
             priority: 75,
-            answer: "Current published builds (from the site manifests):\n\n• rNitro — v1.2.9-Final\n• Chopsticks HQ — v1.0.3\n• ChopsticksAI macOS — v1.0.8\n\nDownload pages always show the live number if this drifts.",
+            answer: "Current published builds (from the site manifests):\n\n• rNitro — v1.2.9-Final\n• Chopsticks HQ — v1.0.14\n• ChopsticksAI macOS — v2.2.8-Final\n\nDownload pages always show the live number if this drifts.",
             terms: [("current version", 8), ("evrsion", 3), ("latest release", 6), ("latest version", 8), ("latestrelease", 4), ("latestversion", 8), ("verison", 3), ("versino", 3), ("version", 3), ("versions", 3), ("versoin", 3), ("vesrion", 3), ("vresion", 3), ("what version is chopsticks hq", 8), ("what version is chopsticksai", 8), ("what version is macbar", 8), ("what version is nitro", 8), ("what version is r nitro", 8), ("what version is rnitro", 8), ("what version is rnitro app", 8)]
         ),
         ChopsticksAIIntent(
