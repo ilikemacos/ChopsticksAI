@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Remove comments from source files (string-aware for C-like syntax)."""
+"""Remove comments from source files (string-aware; JS-safe for regex literals)."""
 from __future__ import annotations
 
 import re
@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 
-def strip_c_like(text: str) -> str:
+def strip_c_like(text: str, strip_line_comments: bool = True) -> str:
     out: list[str] = []
     i = 0
     n = len(text)
@@ -29,7 +29,7 @@ def strip_c_like(text: str) -> str:
             out.append(ch)
             i += 1
             continue
-        if text.startswith("//", i):
+        if strip_line_comments and text.startswith("//", i):
             while i < n and text[i] != "\n":
                 i += 1
             continue
@@ -42,6 +42,16 @@ def strip_c_like(text: str) -> str:
         out.append(ch)
         i += 1
     return re.sub(r"\n{3,}", "\n\n", "".join(out))
+
+
+def strip_js(text: str) -> str:
+    text = strip_c_like(text, strip_line_comments=False)
+    lines: list[str] = []
+    for line in text.splitlines(keepends=True):
+        if re.match(r"^\s*//", line):
+            continue
+        lines.append(line)
+    return re.sub(r"\n{3,}", "\n\n", "".join(lines))
 
 
 def strip_shell(text: str) -> str:
@@ -61,8 +71,7 @@ def strip_html(text: str) -> str:
     text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
 
     def strip_script(m: re.Match[str]) -> str:
-        open_tag, body, close_tag = m.group(1), m.group(2), m.group(3)
-        return open_tag + strip_c_like(body) + close_tag
+        return m.group(1) + strip_js(m.group(2)) + m.group(3)
 
     text = re.sub(
         r"(<script\b[^>]*>)([\s\S]*?)(</script>)",
@@ -76,7 +85,9 @@ def strip_html(text: str) -> str:
 def process(path: Path) -> bool:
     raw = path.read_text(encoding="utf-8")
     suffix = path.suffix.lower()
-    if suffix in {".swift", ".js", ".ts", ".mjs"}:
+    if suffix == ".js" or suffix == ".mjs":
+        cleaned = strip_js(raw)
+    elif suffix in {".swift", ".ts"}:
         cleaned = strip_c_like(raw)
     elif suffix == ".sh":
         cleaned = strip_shell(raw)
