@@ -1185,7 +1185,7 @@ function selfFacts(tier) {
   const t = tier || TIERS[DEFAULT_TIER];
   return [
     "ABOUT YOURSELF (answer questions about your own capabilities from this):",
-    `- You are cs.AI 2.2.8-Final (chopsticksAI), built and run by Chopsticks HQ.`,
+    `- You are cs.AI 2.2.9 (chopsticksAI), built and run by Chopsticks HQ.`,
     `- You run on selectable effort levels in ChopsticksAI: Low, Medium, High, Xhigh, Xhigh+, Insane, Chopsticks, ChopCode, and StickerCoder+ (coding specialists).`,
     `- Current effort: ${t.label}, with a ${contextFor(t).toLocaleString()} token context window.`,
     t.stickerCoder
@@ -1249,7 +1249,7 @@ function systemPrompt(grounding, mode, web, tier) {
         "Be precise and practical. Prefer working solutions over theory.\n\n",
       ].join("")
     : [
-        "You are cs.AI 2.2.8-Final (chopsticksAI), a helpful and knowledgeable general-purpose assistant, ",
+        "You are cs.AI 2.2.9 (chopsticksAI), a helpful and knowledgeable general-purpose assistant, ",
         "made by Chopsticks HQ.\n\n",
         "Answer ANY question the user asks — general knowledge, science, history, coding, ",
         "writing, maths, recommendations, advice, casual conversation, anything. You are a ",
@@ -2168,7 +2168,7 @@ async function handler(event) {
     return json(200, {
       reply,
       mode: "live",
-      model: "cs.AI 2.2.8-Final",
+      model: "cs.AI 2.2.9",
       tier: tier.label,
       context: ctxLimit,
       contextWindow: contextWindowUsage(messages, ctxLimit, turns.length),
