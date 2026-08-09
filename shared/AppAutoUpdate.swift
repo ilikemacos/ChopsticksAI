@@ -10,7 +10,9 @@ struct AppUpdateConfig {
     let productName: String
     let defaultsPrefix: String
 
-    var autoInstallKey: String { "\(defaultsPrefix).autoInstallUpdates" }
+    // Bumped key so older installs that defaulted auto-install on don't keep
+    // deleting the app before the staging-path fix.
+    var autoInstallKey: String { "\(defaultsPrefix).autoInstallUpdates.v2" }
     var snoozeKey: String { "\(defaultsPrefix).updateSnoozeUntil" }
 }
 
@@ -327,12 +329,14 @@ final class AppAutoUpdate: ObservableObject {
         req.cachePolicy = .reloadIgnoringLocalCacheData
         req.timeoutInterval = 12
         URLSession.shared.dataTask(with: req) { data, _, _ in
-            guard let data,
-                  let manifest = try? JSONDecoder().decode(ReleaseManifest.self, from: data) else {
-                completion(nil)
-                return
+            let manifest: ReleaseManifest? = {
+                guard let data else { return nil }
+                return try? JSONDecoder().decode(ReleaseManifest.self, from: data)
+            }()
+            // AppKit (NSAlert) and @Published must run on the main thread.
+            DispatchQueue.main.async {
+                completion(manifest)
             }
-            completion(manifest)
         }.resume()
     }
 
