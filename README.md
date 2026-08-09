@@ -1,33 +1,46 @@
-# chopsticksAI
+# cs.AI / chopsticksAI
 
-Native macOS assistant for [Chopsticks HQ](https://chopstickshq.com/) — live model via chopstickshq.com, offline knowledge-base fallback, auto-updates.
+**Fully open source** (MIT) — native macOS Agents app, web Lab, and Netlify API for [Chopsticks HQ](https://chopstickshq.com/).
 
-## Install
+Latest release: **v2.2.8-Final**
+
+## Repositories
+
+| Component | Path in this repo |
+|-----------|-------------------|
+| macOS app (SwiftUI) | [`macos-app/`](macos-app/) |
+| Offline KB + engine | [`engine/`](engine/) |
+| Auto-update helper | [`shared/AppAutoUpdate.swift`](shared/) |
+| API handler | [`server/chopsticks-ai.js`](server/chopsticks-ai.js) |
+| Web Lab | [`lab/index.html`](lab/) |
+| Site mirror (full HQ pages) | [chopstickshq-mirror](https://github.com/ilikemacos/chopstickshq-mirror) |
+
+## Install (macOS)
 
 ```bash
 curl -fsSL https://chopstickshq.com/chopsticks-ai/install-chopsticks-ai.sh | bash
 ```
 
-Or download the App ZIP from [Releases](https://github.com/ilikemacos/chopsticks/releases).
+Or download the zip from [chopstickshq.com/chopsticks-ai/](https://chopstickshq.com/chopsticks-ai/) or [Releases](https://github.com/ilikemacos/ChopsticksAI/releases).
 
-## Build
+## Build macOS app
 
-Requires macOS 14+ and Xcode Command Line Tools (`swiftc`, `iconutil`).
-
-```bash
-./scripts/build-app.sh v1.0.3
-```
-
-Regenerate the offline knowledge base from `kb/kb.source.json`:
+Requires macOS 14+ and Swift (`swiftc`). From `macos-app/`:
 
 ```bash
-python3 kb/build-kb.py
+./build-app.sh v2.2.8-Final
 ```
 
-## How it was built:
-ChopsticksAI is built on Nvidia Nemotron 3 Ultra/Super
+## Run your own API
 
+Deploy `server/chopsticks-ai.js` as a Netlify/serverless function (see [chopstickshq-mirror](https://github.com/ilikemacos/chopstickshq-mirror) for `netlify.toml` reference). Set `OPENROUTER_API_KEY` in the host environment — **never commit keys**.
 
-## Site
+## License
 
-https://chopstickshq.com/chopsticks-ai/
+MIT — see [LICENSE](LICENSE). Copyright Chopsticks HQ / ilikemacos.
+
+## Links
+
+- Product page: https://chopstickshq.com/chopsticks-ai/
+- Lab: https://chopstickshq.com/chopailab/
+- Open-source hub: https://chopstickshq.com/opensource/

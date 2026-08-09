@@ -1,0 +1,180 @@
+{
+  "product": "cs.AI",
+  "latest": "cs.AI 2.2.8-Final",
+  "entries": [
+    {
+      "version": "cs.AI 2.2.8-Final",
+      "date": "2026-08-09",
+      "title": "Final",
+      "changes": [
+        "Toggle web search off in Settings or from the composer Search chip",
+        "Dynamic usage meters — context and allowance progress bars update live",
+        "Web search off badge, placeholder, and header update when search is disabled",
+        "`/search …` still forces a one-off Mozilla lookup when search is off",
+        "Lab matches macOS: Search toggle and centered progress bars in the composer"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.5",
+      "date": "2026-08-08",
+      "title": "Rescue path actually fires after search",
+      "changes": [
+        "After web search, rescue uses the fast nano model in short slices instead of one hung attempt",
+        "Model budget shrinks when search used part of the platform time limit"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.4",
+      "date": "2026-08-08",
+      "title": "Fix empty/hung free-model replies",
+      "changes": [
+        "Handle reasoning models that return empty content by retrying with a larger token budget",
+        "Fail fast per attempt (8s cap) so rescue models can answer instead of hanging Offline",
+        "Prefer the faster nano model on High effort"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.3",
+      "date": "2026-08-08",
+      "title": "Slim rescue for search-heavy answers",
+      "changes": [
+        "If the main model times out after web search, a slim rescue call answers without the search blob",
+        "Tighter search snippets so grounded questions stop starving the model"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.2",
+      "date": "2026-08-08",
+      "title": "Harder fix for model reachability",
+      "changes": [
+        "Reserved rescue model attempt so busy free models can’t burn the whole request",
+        "write_file tools only when coding / file requests (not every chat turn)",
+        "StickerCoder+/ChopCode skip web search unless you use /search"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.1",
+      "date": "2026-08-08",
+      "title": "Fix model timeouts / sticky Offline",
+      "changes": [
+        "Model deadline no longer includes web-search time — stops “couldn't reach its model” on normal questions",
+        "Coding tiers fall back to another model when the primary is busy; short rescue completion as last resort",
+        "macOS Offline badge only sticks when the host is actually offline (not on transient errors)"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.0",
+      "date": "2026-08-08",
+      "title": "StickerCoder+",
+      "changes": [
+        "New StickerCoder+ effort — coding specialist mode in Lab and the macOS app",
+        "Pick StickerCoder+ alongside ChopCode for agentic coding and file creation"
+      ]
+    },
+    {
+      "version": "cs.AI 2.0.5",
+      "date": "2026-08-08",
+      "title": "Tool-call files · labeled sidebar · more settings",
+      "changes": [
+        "Agent can create files via write_file tool-calls (Lab + macOS); replies include downloadable file cards",
+        "macOS nav rail shows text labels (toggle in Settings → General)",
+        "More settings: Tools (write_file, confirm save, default folder), Agents (file tools), Beta (file previews)"
+      ]
+    },
+    {
+      "version": "cs.AI 2.0.4",
+      "date": "2026-08-08",
+      "title": "Expandable sidebar · 500 MB uploads",
+      "changes": [
+        "macOS Agents Window: animated expand/collapse for the secondary sidebar (rail toggle)",
+        "Attachment limit set to 500 MB per batch (Lab + macOS)"
+      ]
+    },
+    {
+      "version": "cs.AI 2.0.3",
+      "date": "2026-08-08",
+      "title": "File & image attachments",
+      "changes": [
+        "Attach files and images in Lab and the macOS app when signed in",
+        "Uploads go to private Supabase Storage (resumable for large files); text previews reach the model, large binaries by link"
+      ]
+    },
+    {
+      "version": "cs.AI 2.0.2",
+      "date": "2026-08-08",
+      "title": "ChopCode mode",
+      "changes": [
+        "New ChopCode effort — coding specialist mode in Lab and the macOS app",
+        "SEO keywords for cs.AI / ChopCode on HQ homepage and product page"
+      ]
+    },
+    {
+      "version": "cs.AI 2.0.1",
+      "date": "2026-08-08",
+      "title": "Mozilla Search in the macOS app",
+      "changes": [
+        "New Search rail in the Agents Window — same Mozilla engine as the website (MDN, Wikipedia, DuckDuckGo)",
+        "Results open in your browser; no API key required"
+      ]
+    },
+    {
+      "version": "cs.AI 2.0",
+      "date": "2026-08-08",
+      "title": "Mozilla engine, profile plans, What’s New",
+      "changes": [
+        "Branding: chopsticksAI is now cs.AI 2.0",
+        "Mozilla search engine on /chopsticks-ai/#search (MDN, Wikipedia, DuckDuckGo) — same path the AI uses first",
+        "Account plans read from Supabase profiles (token_budget / context_limit / plan_label) — no hard-coded emails",
+        "Usage soft warning at 80% allowance + live cooldown countdown",
+        "macOS app shows What’s New from changelog.json after an update"
+      ]
+    },
+    {
+      "version": "v1.0.14",
+      "date": "2026-08-08",
+      "title": "Accounts, Usage, and Cursor-style Agents",
+      "changes": [
+        "Cursor-style Agents Window UI (Agents, Automations, Repos, Marketplace, Usage, Account, Settings)",
+        "Optional Supabase accounts — sign in to sync chats across Lab and the macOS app",
+        "Usage tab with Fathom Pro oi-pl credit upgrades (not OpenRouter keys)",
+        "Credit tiers: 2 keys → 800k / 64k context; 5 → 900k / 96k; 10 → 1m / 128k",
+        "Homepage scavenger mint cooldown: 10 minutes",
+        "Auto-update crash fix (NSAlert on main thread) and safer install staging"
+      ]
+    },
+    {
+      "version": "v1.0.13",
+      "date": "2026-08-08",
+      "title": "Cloud chat sync",
+      "changes": [
+        "Account rail and email/password auth via Supabase",
+        "Chats saved to private RLS-backed tables when signed in"
+      ]
+    },
+    {
+      "version": "v1.0.12",
+      "date": "2026-08-08",
+      "title": "Usage upgrades",
+      "changes": [
+        "Usage tab and Fathom Pro API key redemption for higher allowances"
+      ]
+    },
+    {
+      "version": "v1.0.10",
+      "date": "2026-08-08",
+      "title": "Stability",
+      "changes": [
+        "Fixed launch crash when checking for updates"
+      ]
+    },
+    {
+      "version": "v1.0.9",
+      "date": "2026-08-08",
+      "title": "Safer auto-update",
+      "changes": [
+        "Install updates only under ~/Applications",
+        "Staging path fix so updates cannot delete the app mid-install"
+      ]
+    }
+  ]
+}
