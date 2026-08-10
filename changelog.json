@@ -1,0 +1,380 @@
+{
+  "product": "cs.AI",
+  "latest": "cs.AI 2.5.1",
+  "entries": [
+    {
+      "version": "cs.AI 2.5.1-web",
+      "date": "2026-08-10",
+      "title": "cs.AI web app",
+      "changes": [
+        "New web app at chopstickshq.com/chopsticks-ai/web/ — full agent in the browser",
+        "Chromium browser rail, Fathom Pro key redemption, cloud sync with macOS",
+        "Short URL /csai/ redirects to the web app"
+      ]
+    },
+    {
+      "version": "cs.AI 2.5.1",
+      "date": "2026-08-10",
+      "title": "Browser fix + Google discoverability",
+      "changes": [
+        "Fix Chromium browser opening about:blank in the system dialog (ads/iframes stay in-app)",
+        "Improved Google SEO: sitemap priority, SoftwareApplication schema, download-focused meta"
+      ]
+    },
+    {
+      "version": "cs.AI 2.5.0",
+      "date": "2026-08-10",
+      "title": "Chromium browser",
+      "changes": [
+        "Browser rail replaces Mozilla search — full in-app Chromium browser (Google, back/forward, URL bar)",
+        "Chromium search engine for chat grounding (Google web + DuckDuckGo, Chrome UA)",
+        "Search toggle and /search still work; macOS app opens pages inside the app"
+      ]
+    },
+    {
+      "version": "cs.AI 2.3.9b",
+      "date": "2026-08-10",
+      "title": "Terminal CLI + shift-click organize",
+      "changes": [
+        "New csai terminal CLI — full-screen UI like Grok Build (type csai in Terminal)",
+        "Install: curl -fsSL https://chopstickshq.com/chopsticks-ai/install-csai-cli.sh | bash",
+        "Commands: csai ask, csai login, csai update, csai version",
+        "Shift-click chats in the sidebar to select a range",
+        "Command-click to add or remove individual chats from the selection",
+        "Drag, drop, or use Move to file on multiple selected chats at once"
+      ]
+    },
+    {
+      "version": "cs.AI 2.3.9a",
+      "date": "2026-08-10",
+      "title": "Drag chats into files",
+      "changes": [
+        "Drag and drop chats into chat files in the Agents sidebar",
+        "Drop onto a file header or empty file to move a chat in",
+        "Drop onto Unfiled to remove a chat from its file"
+      ]
+    },
+    {
+      "version": "cs.AI 2.3.9",
+      "date": "2026-08-10",
+      "title": "Chat files",
+      "changes": [
+        "Create chat files in the Agents sidebar to organize conversations",
+        "Start new chats inside a file, move chats between files, or leave them Unfiled",
+        "Rename and delete chat files from the sidebar context menu",
+        "Chats and file layout persist locally per account"
+      ]
+    },
+    {
+      "version": "cs.AI 2.3.8",
+      "date": "2026-08-10",
+      "title": "Stop KB hijacking live chat",
+      "changes": [
+        "Fixed general questions (e.g. Minecraft SMP servers) returning chopstickshq.com portfolio KB snippets while Online",
+        "Server no longer substitutes offline KB answers when the live model fails — online clients get a retry prompt instead",
+        "KB grounding only applies on strong product matches, not bare keywords like “minecraft”",
+        "Search toggle in the macOS app is respected again — Search on runs Mozilla lookup on each question",
+        "Widget and Lab send onlineMode so the API knows not to fall back to local KB"
+      ]
+    },
+    {
+      "version": "cs.AI 2.3.7",
+      "date": "2026-08-10",
+      "title": "Online means live",
+      "changes": [
+        "Fixed Online badge showing while answers came from the offline KB — online mode never uses local KB now",
+        "macOS and site widget always call the live model when Online; KB only when Offline mode is on or there is no network",
+        "Live requests skip automatic web search by default (use /search … to force lookup) so replies finish reliably",
+        "Retries with a lighter tier before asking you to send again — no more silent KB fallback while connected"
+      ]
+    },
+    {
+      "version": "cs.AI 2.3.6b",
+      "date": "2026-08-10",
+      "title": "Many bug fixes",
+      "changes": [
+        "Fixed website widget AI — no more false “model unreachable” when chopstickshq.com was up",
+        "Widget skips automatic web search by default so replies finish before the server timeout",
+        "API fast path for the site widget — lighter search, no refine pass, faster replies",
+        "macOS app retries without search when the live model fails, then local KB instead of a dead-end error",
+        "Removed harsh “Check your connection to chopstickshq.com” — graceful fallback while the model catches up",
+        "Online mode hardened: live model whenever Wi‑Fi/network is connected; Offline mode is opt-in in Settings → Chat",
+        "Settings → Chat tab — connection status (Wi‑Fi / Cellular / Offline) and Online/Offline toggle",
+        "Updater fix: patch builds (2.3.6a → 2.3.6b) and v-prefix manifest versions compare correctly",
+        "Fixed false “update available” when already on the latest build",
+        "Web and Lab show server replies instead of “unreachable” when the API returns an answer",
+        "Flat usage billing per reply — higher effort tiers no longer burn allowance faster",
+        "Context window limits apply correctly per tier (contextFor bug fix)",
+        "Six-language replies: English, 中文, Español, Deutsch, 한국어, 日本語"
+      ]
+    },
+    {
+      "version": "cs.AI 2.3.6a",
+      "date": "2026-08-10",
+      "title": "2.3.6a",
+      "changes": [
+        "Patch release — version bump and updater fix for 2.3.6 → 2.3.6a"
+      ]
+    },
+    {
+      "version": "cs.AI 2.3.6",
+      "date": "2026-08-10",
+      "title": "Hardened online mode",
+      "changes": [
+        "Online mode is always on by default — live model whenever Wi‑Fi or network is connected",
+        "No automatic KB fallback while online; API errors show a retry message instead",
+        "New Settings → Chat tab with connection status and Offline mode toggle (opt-in local KB)",
+        "Lab and site widget match: Online/Offline toggle, no silent fallback when connected"
+      ]
+    },
+    {
+      "version": "cs.AI 2.3.5",
+      "date": "2026-08-10",
+      "title": "Fixes + six languages",
+      "changes": [
+        "Fixed false “update available” when already on the latest build",
+        "Web and macOS show server replies instead of “model unreachable” when the API returns an answer",
+        "Flat usage billing per reply — higher effort tiers no longer burn allowance faster",
+        "Reply language: English, 中文, Español, Deutsch, 한국어, 日本語"
+      ]
+    },
+    {
+      "version": "cs.AI 2.3.1",
+      "date": "2026-08-09",
+      "title": "Email + password only",
+      "changes": [
+        "Removed 6-digit verification email — create account with email and password only",
+        "Sign-in still runs on chopstickshq.com, not Supabase Auth in the client",
+        "Offline KB fallback only when the device has no network — not when the live model fails while online"
+      ]
+    },
+    {
+      "version": "cs.AI 2.3.0",
+      "date": "2026-08-09",
+      "title": "Email sign-in (no Supabase Auth in app)",
+      "changes": [
+        "Email/password sign-in restored — auth runs on chopstickshq.com, not Supabase Auth in the client",
+        "New accounts: 6-digit verification code emailed from cs.AI",
+        "Signed-in chats sync across Lab and macOS; premium tiers require sign-in or Fathom Pro keys"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.9c",
+      "date": "2026-08-09",
+      "title": "No Supabase Auth",
+      "changes": [
+        "Removed email/password sign-in and Supabase Auth — no cloud account required",
+        "Chats stay local on this Mac and in Lab; attachments read locally only",
+        "Premium tiers (ChopCode, StickerCoder+, Insane, etc.) work with Fathom Pro keys only — no sign-in gate"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.9b",
+      "date": "2026-08-09",
+      "title": "No Keychain prompt",
+      "changes": [
+        "Sessions and unlock keys stored in app preferences — no macOS login keychain password dialog",
+        "Ad-hoc installs no longer trigger Keychain access on launch",
+        "Retrieval still uses keyword intent scoring and Mozilla search — not vector embeddings"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.9a",
+      "date": "2026-08-09",
+      "title": "No vector embeddings",
+      "changes": [
+        "Retrieval uses keyword intent scoring and Mozilla web search — not vector embeddings",
+        "Removed “couldn't reach its model” dead-end; KB fallback and extra rescue instead",
+        "Signup verification via Supabase Auth email (not Resend)",
+        "Privacy stance: no embedding index, no semantic vector store"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.9",
+      "date": "2026-08-09",
+      "title": "Security update",
+      "changes": [
+        "All messages are encrypted end-to-end — chats protected in transit and at rest",
+        "HMAC-SHA256 unlock keys; vault password verified server-side only",
+        "Sessions and unlock keys stored in macOS Keychain",
+        "Per-account chat isolation — sign in or out resets local state cleanly",
+        "API rate limits, tier gating, and restricted CORS on the edge",
+        "Privacy mode skips cloud API and sync entirely"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.8-Final",
+      "date": "2026-08-09",
+      "title": "Final",
+      "changes": [
+        "Toggle web search off in Settings or from the composer Search chip",
+        "Dynamic usage meters — context and allowance progress bars update live",
+        "Web search off badge, placeholder, and header update when search is disabled",
+        "`/search …` still forces a one-off Mozilla lookup when search is off",
+        "Lab matches macOS: Search toggle and centered progress bars in the composer"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.5",
+      "date": "2026-08-08",
+      "title": "Rescue path actually fires after search",
+      "changes": [
+        "After web search, rescue uses the fast nano model in short slices instead of one hung attempt",
+        "Model budget shrinks when search used part of the platform time limit"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.4",
+      "date": "2026-08-08",
+      "title": "Fix empty/hung free-model replies",
+      "changes": [
+        "Handle reasoning models that return empty content by retrying with a larger token budget",
+        "Fail fast per attempt (8s cap) so rescue models can answer instead of hanging Offline",
+        "Prefer the faster nano model on High effort"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.3",
+      "date": "2026-08-08",
+      "title": "Slim rescue for search-heavy answers",
+      "changes": [
+        "If the main model times out after web search, a slim rescue call answers without the search blob",
+        "Tighter search snippets so grounded questions stop starving the model"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.2",
+      "date": "2026-08-08",
+      "title": "Harder fix for model reachability",
+      "changes": [
+        "Reserved rescue model attempt so busy free models can’t burn the whole request",
+        "write_file tools only when coding / file requests (not every chat turn)",
+        "StickerCoder+/ChopCode skip web search unless you use /search"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.1",
+      "date": "2026-08-08",
+      "title": "Fix model timeouts / sticky Offline",
+      "changes": [
+        "Model deadline no longer includes web-search time — stops “couldn't reach its model” on normal questions",
+        "Coding tiers fall back to another model when the primary is busy; short rescue completion as last resort",
+        "macOS Offline badge only sticks when the host is actually offline (not on transient errors)"
+      ]
+    },
+    {
+      "version": "cs.AI 2.2.0",
+      "date": "2026-08-08",
+      "title": "StickerCoder+",
+      "changes": [
+        "New StickerCoder+ effort — coding specialist mode in Lab and the macOS app",
+        "Pick StickerCoder+ alongside ChopCode for agentic coding and file creation"
+      ]
+    },
+    {
+      "version": "cs.AI 2.0.5",
+      "date": "2026-08-08",
+      "title": "Tool-call files · labeled sidebar · more settings",
+      "changes": [
+        "Agent can create files via write_file tool-calls (Lab + macOS); replies include downloadable file cards",
+        "macOS nav rail shows text labels (toggle in Settings → General)",
+        "More settings: Tools (write_file, confirm save, default folder), Agents (file tools), Beta (file previews)"
+      ]
+    },
+    {
+      "version": "cs.AI 2.0.4",
+      "date": "2026-08-08",
+      "title": "Expandable sidebar · 500 MB uploads",
+      "changes": [
+        "macOS Agents Window: animated expand/collapse for the secondary sidebar (rail toggle)",
+        "Attachment limit set to 500 MB per batch (Lab + macOS)"
+      ]
+    },
+    {
+      "version": "cs.AI 2.0.3",
+      "date": "2026-08-08",
+      "title": "File & image attachments",
+      "changes": [
+        "Attach files and images in Lab and the macOS app when signed in",
+        "Uploads go to private Supabase Storage (resumable for large files); text previews reach the model, large binaries by link"
+      ]
+    },
+    {
+      "version": "cs.AI 2.0.2",
+      "date": "2026-08-08",
+      "title": "ChopCode mode",
+      "changes": [
+        "New ChopCode effort — coding specialist mode in Lab and the macOS app",
+        "SEO keywords for cs.AI / ChopCode on HQ homepage and product page"
+      ]
+    },
+    {
+      "version": "cs.AI 2.0.1",
+      "date": "2026-08-08",
+      "title": "Mozilla Search in the macOS app",
+      "changes": [
+        "New Search rail in the Agents Window — same Mozilla engine as the website (MDN, Wikipedia, DuckDuckGo)",
+        "Results open in your browser; no API key required"
+      ]
+    },
+    {
+      "version": "cs.AI 2.0",
+      "date": "2026-08-08",
+      "title": "Mozilla engine, profile plans, What’s New",
+      "changes": [
+        "Branding: chopsticksAI is now cs.AI 2.0",
+        "Mozilla search engine on /chopsticks-ai/#search (MDN, Wikipedia, DuckDuckGo) — same path the AI uses first",
+        "Account plans read from Supabase profiles (token_budget / context_limit / plan_label) — no hard-coded emails",
+        "Usage soft warning at 80% allowance + live cooldown countdown",
+        "macOS app shows What’s New from changelog.json after an update"
+      ]
+    },
+    {
+      "version": "v1.0.14",
+      "date": "2026-08-08",
+      "title": "Accounts, Usage, and Cursor-style Agents",
+      "changes": [
+        "Cursor-style Agents Window UI (Agents, Automations, Repos, Marketplace, Usage, Account, Settings)",
+        "Optional Supabase accounts — sign in to sync chats across Lab and the macOS app",
+        "Usage tab with Fathom Pro oi-pl credit upgrades (not OpenRouter keys)",
+        "Credit tiers: 2 keys → 800k / 64k context; 5 → 900k / 96k; 10 → 1m / 128k",
+        "Homepage scavenger mint cooldown: 10 minutes",
+        "Auto-update crash fix (NSAlert on main thread) and safer install staging"
+      ]
+    },
+    {
+      "version": "v1.0.13",
+      "date": "2026-08-08",
+      "title": "Cloud chat sync",
+      "changes": [
+        "Account rail and email/password auth via Supabase",
+        "Chats saved to private RLS-backed tables when signed in"
+      ]
+    },
+    {
+      "version": "v1.0.12",
+      "date": "2026-08-08",
+      "title": "Usage upgrades",
+      "changes": [
+        "Usage tab and Fathom Pro API key redemption for higher allowances"
+      ]
+    },
+    {
+      "version": "v1.0.10",
+      "date": "2026-08-08",
+      "title": "Stability",
+      "changes": [
+        "Fixed launch crash when checking for updates"
+      ]
+    },
+    {
+      "version": "v1.0.9",
+      "date": "2026-08-08",
+      "title": "Safer auto-update",
+      "changes": [
+        "Install updates only under ~/Applications",
+        "Staging path fix so updates cannot delete the app mid-install"
+      ]
+    }
+  ]
+}

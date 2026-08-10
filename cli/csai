@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# cs.AI CLI launcher — finds Python 3.9+ and runs csai.py
+set -euo pipefail
+SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "$SOURCE" ]]; do
+  LINK_DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ "$SOURCE" != /* ]] && SOURCE="$LINK_DIR/$SOURCE"
+done
+DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
+pick_python() {
+  local candidate
+  for candidate in "${PYTHON:-}" "${CS_AI_PYTHON:-}" python3.13 python3.12 python3.11 python3.10 python3; do
+    [[ -n "$candidate" ]] || continue
+    if command -v "$candidate" >/dev/null 2>&1 \
+      && "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 9) else 1)' 2>/dev/null; then
+      printf '%s' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+PY="$(pick_python)" || {
+  echo "cs.AI CLI needs Python 3.9+. Install python3 or set CS_AI_PYTHON." >&2
+  exit 1
+}
+exec "$PY" "$DIR/csai.py" "$@"

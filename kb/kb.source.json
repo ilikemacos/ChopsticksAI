@@ -1,0 +1,1273 @@
+{
+  "meta": {
+    "name": "chopsticksAI",
+    "tagline": "The Chopsticks HQ assistant — runs entirely on your device.",
+    "version": "1.0.0"
+  },
+  "synonyms": {
+    "rnitro": [
+      "r nitro",
+      "rnitro app",
+      "nitro",
+      "macbar"
+    ],
+    "fathom": [
+      "fathom air",
+      "fathom battery"
+    ],
+    "fathompro": [
+      "fathom pro",
+      "pro version",
+      "fathom plus"
+    ],
+    "arena": [
+      "arena fps",
+      "the shooter",
+      "the game"
+    ],
+    "mac": [
+      "macos",
+      "macbook",
+      "imac",
+      "apple computer",
+      "osx",
+      "os x"
+    ],
+    "install": [
+      "installing",
+      "installation",
+      "set up",
+      "setup",
+      "get started"
+    ],
+    "uninstall": [
+      "remove",
+      "delete",
+      "get rid of"
+    ],
+    "temperature": [
+      "temp",
+      "thermal",
+      "heat",
+      "hot",
+      "celsius",
+      "degrees"
+    ],
+    "cpu": [
+      "processor",
+      "chip",
+      "silicon"
+    ],
+    "ram": [
+      "memory",
+      "mem"
+    ],
+    "gpu": [
+      "graphics",
+      "video card",
+      "metal"
+    ],
+    "battery": [
+      "charge",
+      "power",
+      "juice"
+    ],
+    "download": [
+      "get",
+      "grab",
+      "obtain"
+    ],
+    "free": [
+      "cost",
+      "price",
+      "pay",
+      "paid",
+      "money"
+    ],
+    "error": [
+      "bug",
+      "problem",
+      "issue",
+      "broken",
+      "fail",
+      "failing"
+    ],
+    "keyboard shortcut": [
+      "hotkey",
+      "shortcut",
+      "key combo"
+    ],
+    "menu bar": [
+      "menubar",
+      "status bar",
+      "top bar"
+    ],
+    "terminal": [
+      "command line",
+      "shell",
+      "console",
+      "cli"
+    ]
+  },
+  "intents": [
+    {
+      "id": "meta.identity",
+      "product": "general",
+      "priority": 90,
+      "label": "What is chopsticksAI?",
+      "phrases": [
+        "who are you",
+        "what are you",
+        "what is chopsticksai",
+        "are you chatgpt",
+        "are you an ai"
+      ],
+      "keywords": [
+        "chopsticksai"
+      ],
+      "answer": "I'm chopsticksAI v1.0 — the assistant built by Chopsticks HQ.\n\nAsk me anything: general knowledge, code, writing, or anything about the Chopsticks apps. Product answers come from a maintained knowledge base, so version numbers and install commands are the real ones.\n\nNo account, no API key, and nothing you type is stored."
+    },
+    {
+      "id": "meta.capabilities",
+      "product": "general",
+      "priority": 80,
+      "label": "What can you help with?",
+      "phrases": [
+        "what can you do",
+        "what can you help",
+        "help me",
+        "what do you know"
+      ],
+      "keywords": [
+        "capabilities",
+        "commands"
+      ],
+      "answer": "I can answer general questions — coding, writing, science, recommendations, casual chat — and I'm also the in-house expert on Chopsticks HQ software:\n\n• rNitro — install, features, troubleshooting, CLI, Linux, Windows, Homebrew\n• Fathom Air — battery monitor, install, uninstall\n• Fathom Pro — weather, AI chat, unlock keys\n• ARENA — the FPS game\n• Guides, privacy, licensing, and downloads\n\nJust ask in plain English."
+    },
+    {
+      "id": "meta.how-it-works",
+      "product": "general",
+      "priority": 85,
+      "label": "How does chopsticksAI work?",
+      "phrases": [
+        "how do you work",
+        "how does chopsticksai work",
+        "live vs offline",
+        "do you use a cloud model",
+        "what model do you use"
+      ],
+      "keywords": [
+        "openrouter",
+        "offline mode"
+      ],
+      "answer": "chopsticksAI answers in two layers:\n\n1. Live answers — your question goes to chopstickshq.com/api/chopsticks-ai, which retrieves facts from a knowledge base (version numbers, install commands, unlock steps), then calls a language model to answer naturally. No account and no API key on your side.\n\n2. Offline fallback — if the endpoint is unreachable, on cooldown, or errors out, chopsticksAI answers from the compiled knowledge base on your device for Chopsticks HQ topics.\n\nInside rNitro's Chat tab, chopsticksAI is the default provider and works the same way."
+    },
+    {
+      "id": "meta.privacy",
+      "product": "general",
+      "priority": 70,
+      "label": "Do you send my questions anywhere?",
+      "phrases": [
+        "do you track me",
+        "is this private",
+        "where do my questions go",
+        "do you store"
+      ],
+      "keywords": [
+        "telemetry",
+        "tracking",
+        "analytics",
+        "privacy"
+      ],
+      "answer": "No. chopsticksAI runs locally — in your browser on the website, and on-device inside rNitro.\n\nYour questions are never uploaded, logged, or sent to any server. There's no account, no cookie tracking, and no analytics on what you ask.\n\nThe same applies to the apps: rNitro and Fathom send no usage telemetry."
+    },
+    {
+      "id": "hq.what",
+      "product": "general",
+      "priority": 60,
+      "label": "What is Chopsticks HQ?",
+      "phrases": [
+        "what is chopsticks",
+        "who makes these",
+        "what is this site",
+        "who are chopsticks"
+      ],
+      "keywords": [
+        "chopstickshq"
+      ],
+      "answer": "Chopsticks HQ is the home for a small set of macOS apps and side projects, made by chopsticks.\n\nMain apps:\n• rNitro — menu bar system monitor\n• Fathom Air — battery monitor\n• Fathom Pro — battery + weather + AI\n• ARENA — an FPS game\n\nEverything is free, with no accounts and no telemetry."
+    },
+    {
+      "id": "hq.guides",
+      "product": "general",
+      "priority": 55,
+      "label": "Where are the guides?",
+      "phrases": [
+        "where are the guides",
+        "what guides do you have",
+        "read the guides"
+      ],
+      "keywords": [
+        "guides",
+        "tutorials"
+      ],
+      "answer": "Guides live at chopstickshq.com/guides/\n\nCurrent topics:\n• Free Mac menu bar monitor\n• rNitro battery readings on Apple Silicon\n• Minecraft gens Skript checklist\n\nThe index always lists what's there — more get added as they are written."
+    },
+    {
+      "id": "hq.products",
+      "product": "general",
+      "priority": 60,
+      "label": "What apps are there?",
+      "phrases": [
+        "what apps",
+        "list of products",
+        "what do you make",
+        "all products",
+        "what else"
+      ],
+      "keywords": [
+        "products",
+        "apps",
+        "lineup",
+        "catalogue",
+        "catalog"
+      ],
+      "answer": "The Chopsticks HQ lineup:\n\n• rNitro — CPU, temperature, RAM, GPU, battery and network in your menu bar\n• Fathom Air — battery drain and power draw, local only\n• Fathom Pro — Fathom Air plus local weather and AI chat\n• ARENA — a procedurally generated FPS for macOS\n• Chopsticks Shaders — an Iris shader pack for Minecraft\n\nAll free."
+    },
+    {
+      "id": "hq.free",
+      "product": "general",
+      "priority": 60,
+      "label": "Is it free?",
+      "phrases": [
+        "is it free",
+        "how much does it cost",
+        "do i have to pay",
+        "is there a subscription"
+      ],
+      "keywords": [
+        "free",
+        "pricing",
+        "cost",
+        "subscription",
+        "trial",
+        "licence",
+        "license"
+      ],
+      "answer": "Yes — everything on Chopsticks HQ is free.\n\nNo subscriptions, no trials, no ads, no in-app purchases. Fathom Pro needs an unlock key, but those are free too (see the vault).\n\nIf an app asks you for money, it isn't ours."
+    },
+    {
+      "id": "hq.contact",
+      "product": "general",
+      "priority": 60,
+      "label": "How do I get in touch?",
+      "phrases": [
+        "contact you",
+        "email you",
+        "get in touch",
+        "report a bug",
+        "support"
+      ],
+      "keywords": [
+        "contact",
+        "email",
+        "feedback",
+        "reach"
+      ],
+      "answer": "Email mzx+chopsticks@lam.ws.\n\nFor bugs in rNitro specifically, opening a GitHub issue is faster:\nhttps://github.com/ilikemacos/rNitro/issues/new"
+    },
+    {
+      "id": "hq.opensource",
+      "product": "general",
+      "priority": 55,
+      "label": "Is the source code available?",
+      "phrases": [
+        "is it open source",
+        "can i see the code",
+        "where is the source",
+        "is it on github"
+      ],
+      "keywords": [
+        "source",
+        "opensource",
+        "github",
+        "repository",
+        "repo",
+        "code"
+      ],
+      "answer": "rNitro is open source: https://github.com/ilikemacos/rNitro\n\nThe shell installers also contain the full app source inline — you can read every line before running them.\n\nFathom and ARENA are distributed as builds rather than source."
+    },
+    {
+      "id": "hq.terms",
+      "product": "general",
+      "priority": 50,
+      "label": "Where are the terms and privacy policy?",
+      "phrases": [
+        "terms and conditions",
+        "privacy policy",
+        "legal",
+        "terms of service"
+      ],
+      "keywords": [
+        "terms",
+        "eula",
+        "agreement",
+        "disclaimer"
+      ],
+      "answer": "Each product has its own terms:\n\n• rNitro — chopstickshq.com/rnitro/terms.html (plus a privacy page)\n• Fathom Air — chopstickshq.com/fathom/terms.html\n• Fathom Pro — chopstickshq.com/fathom-pro/terms.html\n\nThere's also a general software disclaimer at chopstickshq.com/disclaimer/."
+    },
+    {
+      "id": "rnitro.what",
+      "product": "rnitro",
+      "priority": 70,
+      "label": "What is rNitro?",
+      "phrases": [
+        "what is rnitro",
+        "what does rnitro do",
+        "tell me about rnitro"
+      ],
+      "keywords": [
+        "rnitro"
+      ],
+      "answer": "rNitro is a free, open-source system monitor that lives in your Mac's menu bar.\n\nIt shows live CPU usage, temperature, memory, GPU, battery, and network — plus per-core breakdowns, a built-in benchmark, a game overlay, and an optional Bitcoin price readout.\n\nFree, no account, no telemetry. macOS 14+ (Sonoma or later)."
+    },
+    {
+      "id": "rnitro.install.macos",
+      "product": "rnitro",
+      "priority": 75,
+      "label": "How do I install rNitro on macOS?",
+      "phrases": [
+        "how do i install rnitro",
+        "install on mac",
+        "which download should i pick",
+        "how do i get rnitro"
+      ],
+      "keywords": [
+        "install"
+      ],
+      "answer": "The Terminal install is the recommended path — it installs to ~/Applications and clears the quarantine flag, so Gatekeeper never blocks it.\n\nCopy the Terminal command from chopstickshq.com/rnitro and paste it into Terminal.\n\nThe App ZIP is a fallback. Because browser downloads get macOS's quarantine flag, Gatekeeper will block it on first launch — right-click the app, choose Open, then Open again."
+    },
+    {
+      "id": "rnitro.install.homebrew",
+      "product": "rnitro",
+      "priority": 72,
+      "label": "Install rNitro with Homebrew",
+      "phrases": [
+        "install with homebrew",
+        "brew install rnitro",
+        "homebrew rnitro"
+      ],
+      "keywords": [
+        "homebrew"
+      ],
+      "answer": "If you use Homebrew:\n\nbrew tap ilikemacos/rnitro\nbrew install rnitro\n\nThat installs the stable formula. For the latest experimental build with the full feature set, use the Terminal installer from chopstickshq.com/rnitro instead.\n\nNo Homebrew? The curl one-liner on the rNitro page works without it."
+    },
+    {
+      "id": "rnitro.gatekeeper",
+      "product": "rnitro",
+      "priority": 78,
+      "label": "macOS says the app can't be opened",
+      "phrases": [
+        "cant be opened",
+        "cannot be opened",
+        "unidentified developer",
+        "move to trash",
+        "damaged and cant be opened",
+        "apple could not verify"
+      ],
+      "keywords": [
+        "gatekeeper",
+        "quarantine",
+        "blocked",
+        "malware",
+        "unverified",
+        "notarized",
+        "notarised"
+      ],
+      "answer": "That's macOS quarantining anything downloaded through a browser — normal for indie apps.\n\nDon't click Move to Trash. Either:\n\n1. Right-click the app → Open → Open again, or\n2. System Settings → Privacy & Security → press Open at the bottom, or\n3. In Terminal: xattr -cr ~/Applications/rNitro.app\n\nThe Terminal installer avoids this entirely — it clears the flag for you."
+    },
+    {
+      "id": "rnitro.uninstall",
+      "product": "rnitro",
+      "priority": 60,
+      "label": "How do I uninstall rNitro?",
+      "phrases": [
+        "how do i uninstall",
+        "how do i remove rnitro",
+        "delete rnitro"
+      ],
+      "keywords": [
+        "uninstall"
+      ],
+      "answer": "macOS: quit rNitro from the menu bar, then delete rNitro.app from ~/Applications (or /Applications).\n\nTo remove settings too:\ndefaults delete com.chopsticks.rnitro\n\nLinux: rm -rf ~/.local/share/rnitro ~/.local/bin/rnitro ~/.local/share/applications/rnitro.desktop\n\nWindows: right-click the tray icon → Exit, then delete the folder you unzipped."
+    },
+    {
+      "id": "rnitro.update",
+      "product": "rnitro",
+      "priority": 55,
+      "label": "How do updates work?",
+      "phrases": [
+        "how do i update",
+        "is there a new version",
+        "how do updates work",
+        "check for updates"
+      ],
+      "keywords": [
+        "update",
+        "upgrade",
+        "newer"
+      ],
+      "answer": "rNitro checks for updates when it launches and can fetch the latest build in-app.\n\nYou can also just re-run the Terminal install command — it always resolves whatever version.json lists as current, so it upgrades you in place.\n\nOld releases are kept on the Archives page."
+    },
+    {
+      "id": "rnitro.version",
+      "product": "rnitro",
+      "priority": 55,
+      "label": "What version is current?",
+      "phrases": [
+        "what version",
+        "latest version",
+        "current release",
+        "whats new",
+        "changelog"
+      ],
+      "keywords": [
+        "version",
+        "release",
+        "build"
+      ],
+      "answer": "The current macOS build is v1.4.0-Final.\n\nOther platforms:\n• CLI — v0.2-cli\n• Linux — v0.1 Beta pre-release\n• Windows — v6.0.2 (deprecated)\n\nThe live numbers always come from chopstickshq.com/rnitro/version.json."
+    },
+    {
+      "id": "rnitro.requirements",
+      "product": "rnitro",
+      "priority": 60,
+      "label": "What are the system requirements?",
+      "phrases": [
+        "system requirements",
+        "what macos do i need",
+        "will it run on my mac",
+        "minimum macos"
+      ],
+      "keywords": [
+        "requirements",
+        "compatible",
+        "compatibility",
+        "supported",
+        "sonoma",
+        "sequoia",
+        "ventura"
+      ],
+      "answer": "rNitro needs macOS 14 (Sonoma) or later.\n\nIt uses SwiftUI APIs introduced in macOS 14, so Big Sur, Monterey, and Ventura can't run the current build. There's an info pack on the site describing the older-macOS situation.\n\nApple Silicon is the primary target; Intel builds exist but stopped receiving updates after v1.2.5-Beta."
+    },
+    {
+      "id": "rnitro.intel",
+      "product": "rnitro",
+      "priority": 60,
+      "label": "Does it work on Intel Macs?",
+      "phrases": [
+        "does it work on intel",
+        "intel mac support",
+        "is intel supported"
+      ],
+      "keywords": [
+        "intel",
+        "x86"
+      ],
+      "answer": "Intel Macs are no longer receiving updates. The last Intel build is v1.2.5-Beta, still downloadable from the Intel Mac tab on the rNitro page.\n\nApple Silicon (M1 and newer) gets all current development."
+    },
+    {
+      "id": "rnitro.temperature",
+      "product": "rnitro",
+      "priority": 65,
+      "label": "How accurate is the temperature?",
+      "phrases": [
+        "how accurate is the temperature",
+        "where does the temperature come from",
+        "is the temp reading real"
+      ],
+      "keywords": [
+        "temperature",
+        "smc",
+        "sensor"
+      ],
+      "answer": "rNitro reads real sensor data from your Mac's SMC — the same controller iStat Menus, TG Pro, and Macs Fan Control use.\n\nIf the SMC can't be reached or your chip's sensor keys aren't recognised, it falls back to macOS's own thermal state (Nominal / Fair / Serious / Critical), smoothed using live CPU load so the gauge never goes blank.\n\nThese are informational readings, not a substitute for hardware diagnostics."
+    },
+    {
+      "id": "rnitro.cpu",
+      "product": "rnitro",
+      "priority": 60,
+      "label": "What CPU information does it show?",
+      "phrases": [
+        "what cpu info",
+        "does it show cpu usage",
+        "per core usage",
+        "cpu monitoring"
+      ],
+      "keywords": [
+        "cpu",
+        "cores",
+        "percore",
+        "load",
+        "clock",
+        "ghz",
+        "mhz"
+      ],
+      "answer": "rNitro shows total CPU load with a 60-second history graph, colour-coded by intensity, plus:\n\n• Per-core usage bars and clock speeds for every logical core\n• Base and boost clock estimates\n• Package power draw in watts\n• Load average\n\nOpen the Monitor tab and click any stat for a detail view."
+    },
+    {
+      "id": "rnitro.memory",
+      "product": "rnitro",
+      "priority": 55,
+      "label": "Does it monitor RAM?",
+      "phrases": [
+        "does it show ram",
+        "memory usage",
+        "memory pressure"
+      ],
+      "keywords": [
+        "ram",
+        "swap"
+      ],
+      "answer": "Yes — used vs total memory in GB, a percentage, and macOS memory pressure.\n\nThe Advisor tab will tell you whether your current usage is above the RAM threshold you've set, and suggest checking Activity Monitor when it is."
+    },
+    {
+      "id": "rnitro.gpu",
+      "product": "rnitro",
+      "priority": 55,
+      "label": "Does it monitor the GPU?",
+      "phrases": [
+        "does it show gpu",
+        "graphics usage",
+        "gpu monitoring"
+      ],
+      "keywords": [
+        "gpu"
+      ],
+      "answer": "Yes — GPU utilisation as a percentage, with its own alert threshold.\n\nHigh GPU usage during games, video export, or Metal work is normal; the Advisor tab flags it only when it crosses the limit you set."
+    },
+    {
+      "id": "rnitro.battery",
+      "product": "rnitro",
+      "priority": 55,
+      "label": "What battery info does rNitro show?",
+      "phrases": [
+        "battery percentage",
+        "battery health",
+        "time remaining",
+        "charge limit"
+      ],
+      "keywords": [
+        "battery",
+        "charging",
+        "cycles"
+      ],
+      "answer": "rNitro shows battery percentage, whether you're on AC or battery, charging state, and a low-battery alert at a threshold you choose.\n\nFor deeper battery work — power draw in watts, per-process energy attribution, and drain explanations — Fathom Air is the dedicated tool, and it's also free."
+    },
+    {
+      "id": "rnitro.network",
+      "product": "rnitro",
+      "priority": 50,
+      "label": "Does it show network speed?",
+      "phrases": [
+        "network speed",
+        "upload download speed",
+        "bandwidth monitor"
+      ],
+      "keywords": [
+        "network",
+        "wifi",
+        "ethernet",
+        "mbps",
+        "bandwidth"
+      ],
+      "answer": "Yes — live download and upload throughput in Mbps, sampled continuously.\n\nIt measures throughput on your active interface; it isn't a speed test, so numbers reflect what your Mac is actually transferring right now."
+    },
+    {
+      "id": "rnitro.benchmark",
+      "product": "rnitro",
+      "priority": 55,
+      "label": "Is there a benchmark?",
+      "phrases": [
+        "is there a benchmark",
+        "how do i benchmark",
+        "cinebench score"
+      ],
+      "keywords": [
+        "benchmark",
+        "score",
+        "stress",
+        "stresstest"
+      ],
+      "answer": "Yes — a Cinebench-style benchmark built into the popover, giving single-core and multi-core scores from a fixed, repeatable render workload.\n\nThere's also a stress test for pushing the CPU deliberately. Both will heat your Mac up; that's expected."
+    },
+    {
+      "id": "rnitro.overlay",
+      "product": "rnitro",
+      "priority": 55,
+      "label": "What is the game overlay / FPS HUD?",
+      "phrases": [
+        "game overlay",
+        "fps counter",
+        "fps hud",
+        "in game overlay"
+      ],
+      "keywords": [
+        "overlay",
+        "fps",
+        "hud",
+        "gaming"
+      ],
+      "answer": "Press ⌥⇧O to toggle an overlay showing CPU%, GPU%, temperature and RAM on top of fullscreen games.\n\nFor true frame rates, use \"Launch App with FPS HUD\" from the right-click menu — that enables Apple's native Metal performance HUD for that game."
+    },
+    {
+      "id": "rnitro.bitcoin",
+      "product": "rnitro",
+      "priority": 45,
+      "label": "Why is there a Bitcoin price?",
+      "phrases": [
+        "bitcoin price",
+        "btc ticker",
+        "crypto price"
+      ],
+      "keywords": [
+        "bitcoin",
+        "btc",
+        "crypto"
+      ],
+      "answer": "It's an optional menu bar extra — live BTC/USD refreshed every 30 seconds from CoinGecko's public API. No API key, and you can turn it off in Settings.\n\nIt's the one feature that makes a network request; everything else is local."
+    },
+    {
+      "id": "rnitro.tabs",
+      "product": "rnitro",
+      "priority": 55,
+      "label": "What are the tabs in the app?",
+      "phrases": [
+        "what are the tabs",
+        "what is the monitor tab",
+        "what is the lab tab",
+        "what is the cleaner tab"
+      ],
+      "keywords": [
+        "tabs",
+        "monitor",
+        "cleaner",
+        "lab",
+        "popover"
+      ],
+      "answer": "Click the menu bar icon to open the popover:\n\n• Monitor — live stats and detail views\n• Advisor — asks about YOUR Mac using live readings, sets alert thresholds\n• Chat — AI chat, including chopsticksAI and bring-your-own-key providers\n• Cleaner — reclaim disk space\n• Lab — experimental toys (Beta builds)\n• Settings — appearance, menu bar items, alerts"
+    },
+    {
+      "id": "rnitro.advisor",
+      "product": "rnitro",
+      "priority": 60,
+      "label": "What is the Advisor tab?",
+      "phrases": [
+        "what is the advisor",
+        "advisor tab",
+        "is my temp ok",
+        "my specs"
+      ],
+      "keywords": [
+        "advisor"
+      ],
+      "answer": "The Advisor is a built-in assistant that reads your live CPU, temperature, RAM, GPU, battery, disk and network — no API key needed.\n\nAsk it things like \"my specs\" or \"is my temp ok?\". Tap ⚙ to set custom warning thresholds, and it will post proactive alerts in the chat when values cross them.\n\nIt answers about your hardware; chopsticksAI answers about the apps themselves."
+    },
+    {
+      "id": "rnitro.thresholds",
+      "product": "rnitro",
+      "priority": 50,
+      "label": "How do I set alerts and thresholds?",
+      "phrases": [
+        "set a warning",
+        "custom threshold",
+        "alert me when",
+        "notification when hot"
+      ],
+      "keywords": [
+        "threshold",
+        "alert",
+        "warning",
+        "notification",
+        "banner"
+      ],
+      "answer": "Advisor tab → ⚙. You can set:\n\n• Temperature warning and critical levels\n• CPU, RAM, and GPU percentage limits\n• Low-battery percentage\n• Proactive alerts on or off\n• macOS notification banners for critical temperatures\n\nAlerts have a 90-second cooldown per type so they don't spam you."
+    },
+    {
+      "id": "rnitro.chat.providers",
+      "product": "rnitro",
+      "priority": 55,
+      "label": "What AI providers does rNitro support?",
+      "phrases": [
+        "which ai providers",
+        "can i use my own api key",
+        "does it support ollama",
+        "local llm"
+      ],
+      "keywords": [
+        "provider",
+        "openrouter",
+        "gemini",
+        "anthropic",
+        "deepseek",
+        "ollama",
+        "lmstudio",
+        "hermes",
+        "apikey"
+      ],
+      "answer": "The Chat tab supports chopsticksAI (built in, no key), plus bring-your-own-key providers:\n\n• Cloud — Gemini, OpenAI, Anthropic, Grok, DeepSeek, OpenRouter\n• Local — LM Studio, Ollama, Hermes (no key, runs on your machine)\n\nCloud keys are AES-256 encrypted in your Keychain and only ever sent to that provider."
+    },
+    {
+      "id": "rnitro.safety",
+      "product": "rnitro",
+      "priority": 55,
+      "label": "Is rNitro safe to run?",
+      "phrases": [
+        "is it safe",
+        "is it a virus",
+        "can i trust it",
+        "is it malware"
+      ],
+      "keywords": [
+        "safe",
+        "virus",
+        "trust",
+        "trustworthy",
+        "legit"
+      ],
+      "answer": "The installers verify their own SHA-256 checksum before running, and refuse to continue if it doesn't match.\n\nThe full app source is included inline in the shell installers, so you can read everything before executing. rNitro is also on GitHub.\n\nNo telemetry, no account, no data collection."
+    },
+    {
+      "id": "rnitro.cli",
+      "product": "rnitro",
+      "priority": 60,
+      "label": "Is there a command line version?",
+      "phrases": [
+        "command line version",
+        "terminal version",
+        "is there a cli",
+        "ssh monitoring"
+      ],
+      "keywords": [
+        "cli",
+        "btop",
+        "htop",
+        "tui",
+        "headless"
+      ],
+      "answer": "Yes — rNitro CLI (v0.2-cli), a btop-style terminal dashboard for when you're on SSH or don't want a menu bar app.\n\nIt shows CPU, memory, disk I/O, network, battery, and top processes. Keys: q quits, r refreshes. Use rnitro --once for one-shot JSON output.\n\nRuns on macOS and Linux, Python 3, no GUI required."
+    },
+    {
+      "id": "rnitro.linux",
+      "product": "rnitro",
+      "priority": 60,
+      "label": "Is there a Linux version?",
+      "phrases": [
+        "linux version",
+        "does it work on linux",
+        "ubuntu support",
+        "fedora support"
+      ],
+      "keywords": [
+        "linux",
+        "ubuntu",
+        "fedora",
+        "debian",
+        "gtk",
+        "libadwaita",
+        "tarball"
+      ],
+      "answer": "There's a Linux pre-release: v0.1-Linux-Beta-Pre-release-x64.\n\nIt's a GTK 4 + libadwaita desktop app needing Python 3.10+. Download the tarball or install-rNitro-linux.sh from the Linux page and run:\nbash install-rNitro-linux.sh\n\nIt installs to ~/.local/share/rnitro. Apple-only sensors (SMC, Low Power Mode) show as N/A."
+    },
+    {
+      "id": "rnitro.windows",
+      "product": "rnitro",
+      "priority": 60,
+      "label": "Is there a Windows version?",
+      "phrases": [
+        "windows version",
+        "does it work on windows",
+        "windows 11 support",
+        "pc version"
+      ],
+      "keywords": [
+        "windows",
+        "win10",
+        "win11",
+        "exe",
+        "msi",
+        "tray"
+      ],
+      "answer": "Windows is no longer actively developed, but the last build stays available: v6.0.2-Windows-x64, shipped as a portable ZIP.\n\nUnzip it anywhere and run rNitro.exe — it lives in the system tray. Needs 64-bit Windows 10 or 11 and the .NET 8 Desktop Runtime. Windows 8.1 and earlier aren't supported.\n\nRun as administrator if you want CPU temperatures; Windows hides thermal sensors from unelevated apps."
+    },
+    {
+      "id": "rnitro.archives",
+      "product": "rnitro",
+      "priority": 45,
+      "label": "Where are older versions?",
+      "phrases": [
+        "older versions",
+        "previous releases",
+        "downgrade",
+        "old build"
+      ],
+      "keywords": [
+        "archives",
+        "archive",
+        "history",
+        "rollback"
+      ],
+      "answer": "The Archives page lists every hosted macOS DMG: chopstickshq.com/rnitro/archives.html\n\nOlder PKG, ZIP and shell installers are also still hosted, and GitHub Releases keeps a full history."
+    },
+    {
+      "id": "fathom.what",
+      "product": "fathom",
+      "priority": 70,
+      "label": "What is Fathom Air?",
+      "phrases": [
+        "what is fathom",
+        "what is fathom air",
+        "what does fathom do"
+      ],
+      "keywords": [
+        "fathom"
+      ],
+      "answer": "Fathom Air is a free macOS menu bar app focused entirely on battery and power.\n\nIt shows charge percentage, time remaining, package watts, power distribution, which apps are draining you, and an experimental charge limit — all read locally from your Mac.\n\nNo accounts, no telemetry, no AI. macOS 14+."
+    },
+    {
+      "id": "fathom.install",
+      "product": "fathom",
+      "priority": 65,
+      "label": "How do I install Fathom Air?",
+      "phrases": [
+        "install fathom",
+        "how do i get fathom",
+        "download fathom air"
+      ],
+      "keywords": [
+        "installfathom"
+      ],
+      "answer": "Use the curl installer from chopstickshq.com/fathom — it resolves the current version, verifies the download's SHA-256, and installs to ~/Applications without tripping Gatekeeper:\n\ncurl -fsSL https://chopstickshq.com/fathom/install-fathom.sh | bash\n\nThe App ZIP is a fallback, but Gatekeeper will block it on first launch (right-click → Open, then Open again)."
+    },
+    {
+      "id": "fathom.version",
+      "product": "fathom",
+      "priority": 50,
+      "label": "What version is Fathom Air?",
+      "phrases": [
+        "fathom version",
+        "latest fathom"
+      ],
+      "keywords": [
+        "fathomversion"
+      ],
+      "answer": "Fathom Air is on v0.3.8-Beta.\n\nThe installer always resolves whatever chopstickshq.com/fathom/version.json lists, so re-running it upgrades you."
+    },
+    {
+      "id": "fathom.uninstall",
+      "product": "fathom",
+      "priority": 58,
+      "label": "How do I uninstall Fathom Air?",
+      "phrases": [
+        "uninstall fathom",
+        "remove fathom air",
+        "delete fathom"
+      ],
+      "keywords": [
+        "uninstallfathom"
+      ],
+      "answer": "Quit Fathom Air from the menu bar, then delete Fathom Air.app from ~/Applications (or /Applications).\n\nTo remove saved settings:\ndefaults delete com.chopstickshq.fathom"
+    },
+    {
+      "id": "fathom.vs.rnitro",
+      "product": "fathom",
+      "priority": 60,
+      "label": "What's the difference between Fathom and rNitro?",
+      "phrases": [
+        "difference between fathom and rnitro",
+        "fathom vs rnitro",
+        "which one should i use",
+        "do i need both"
+      ],
+      "keywords": [
+        "difference",
+        "versus",
+        "compare",
+        "comparison"
+      ],
+      "answer": "They overlap a little but aim at different things:\n\n• rNitro — the whole system: CPU, temperature, GPU, RAM, network, benchmarks, game overlay\n• Fathom Air — battery and power specifically: watts, per-process energy, drain attribution, charge limits\n\nMany people run both. Both are free."
+    },
+    {
+      "id": "fathom.battery.accuracy",
+      "product": "fathom",
+      "priority": 55,
+      "label": "How accurate are Fathom's battery numbers?",
+      "phrases": [
+        "accurate battery",
+        "is the wattage accurate",
+        "battery estimate accuracy"
+      ],
+      "keywords": [
+        "watts",
+        "wattage",
+        "drain",
+        "estimate"
+      ],
+      "answer": "Charge percentage aims to match the macOS menu bar exactly.\n\nRemaining time, wattage, power distribution and per-process attribution are estimates derived from system APIs — they vary with workload and can be briefly wrong after you plug or unplug.\n\nThey're informational, not a substitute for manufacturer diagnostics."
+    },
+    {
+      "id": "fathompro.what",
+      "product": "fathom-pro",
+      "priority": 70,
+      "label": "What is Fathom Pro?",
+      "phrases": [
+        "what is fathom pro",
+        "what does fathom pro add",
+        "fathom pro features"
+      ],
+      "keywords": [
+        "fathompro"
+      ],
+      "answer": "Fathom Pro is Fathom Air plus two things:\n\n• Local weather — from Open-Meteo using your Mac's location; the menu bar can show % and °C together\n• AI chat and Explain drain — using your own OpenRouter, Gemini, OpenAI or Anthropic key\n\nIt's also a regular Cmd+Tab app with a full window. Free, unlocked with a key."
+    },
+    {
+      "id": "fathompro.unlock",
+      "product": "fathom-pro",
+      "priority": 75,
+      "label": "How do I unlock Fathom Pro?",
+      "phrases": [
+        "how do i unlock",
+        "unlock key",
+        "where do i get a key",
+        "activation code",
+        "oi pl key"
+      ],
+      "keywords": [
+        "unlock",
+        "vault",
+        "scavenger",
+        "activate",
+        "activation",
+        "oipl"
+      ],
+      "answer": "You need an oi-pl key. It's free and there are two ways to get one:\n\n1. The vault at chopstickshq.com/vault/ — a password-gated generator; each Generate mints a new random key\n2. The homepage scavenger hunt — on the \"Small lab.\" headline, click the first L after the A in \"Small\"\n\nThen paste it into Fathom Pro → Activate.\n\nAn oi-pl key is a client-side unlock token only — not an OpenAI or OpenRouter API key, and it carries no credit."
+    },
+    {
+      "id": "fathompro.keys",
+      "product": "fathom-pro",
+      "priority": 65,
+      "label": "Do I need my own AI keys for Fathom Pro?",
+      "phrases": [
+        "api key needed",
+        "do i need an api key",
+        "do i need my own api key",
+        "does it come with ai",
+        "my own keys",
+        "who pays for the ai"
+      ],
+      "keywords": [
+        "api key",
+        "keychain",
+        "providerkey"
+      ],
+      "answer": "Yes — Fathom Pro's AI features need your own API key from a supported provider (OpenRouter, Gemini, OpenAI, or Anthropic).\n\nKeys are stored in your macOS Keychain and are never sent to us. You contract directly with that provider and pay their charges; we receive nothing and have no control over their pricing or availability.\n\nAdd them under Customize → AI → API Config."
+    },
+    {
+      "id": "fathompro.privacy",
+      "product": "fathom-pro",
+      "priority": 65,
+      "label": "What data does Fathom Pro send out?",
+      "phrases": [
+        "what data leaves my mac",
+        "does it send my location",
+        "is my location shared",
+        "what gets sent to the ai"
+      ],
+      "keywords": [
+        "location",
+        "openmeteo",
+        "weather",
+        "geolocation"
+      ],
+      "answer": "Two things leave your Mac, both only when you use those features:\n\n• Weather — approximate location coordinates go to Open-Meteo to fetch a forecast\n• AI chat / Explain drain — your message plus a battery and system snapshot go to whichever provider you configured\n\nNothing goes to Chopsticks HQ. Don't use the AI features with anything you wouldn't share with that provider."
+    },
+    {
+      "id": "fathompro.explaindrain",
+      "product": "fathom-pro",
+      "priority": 55,
+      "label": "What is Explain drain?",
+      "phrases": [
+        "explain drain",
+        "why is my battery draining",
+        "what is killing my battery"
+      ],
+      "keywords": [
+        "explaindrain"
+      ],
+      "answer": "Explain drain sends a live snapshot of your battery and power state to your configured AI provider and asks it to explain what's using the most energy.\n\nBecause it's generated by a language model it can be wrong or misattribute usage — treat it as a hint, not a diagnosis. The raw per-process energy numbers in the app are the reliable part."
+    },
+    {
+      "id": "fathompro.weather",
+      "product": "fathom-pro",
+      "priority": 50,
+      "label": "How does the weather feature work?",
+      "phrases": [
+        "how does weather work",
+        "weather in the menu bar",
+        "show temperature outside"
+      ],
+      "keywords": [
+        "forecast",
+        "celsius",
+        "outside"
+      ],
+      "answer": "Fathom Pro asks Open-Meteo for a forecast based on your Mac's approximate location, and can display the outside temperature next to your battery percentage in the menu bar.\n\nIt's third-party data with no guarantee of accuracy or availability, and it isn't suitable for navigation or any safety-critical use."
+    },
+    {
+      "id": "arena.what",
+      "product": "arena",
+      "priority": 70,
+      "label": "What is ARENA?",
+      "phrases": [
+        "what is arena",
+        "what is the game",
+        "tell me about arena"
+      ],
+      "keywords": [
+        "arena"
+      ],
+      "answer": "ARENA is a first-person shooter for macOS, written in C++17 with OpenGL 4.1.\n\nEvery run generates a fresh 5 km × 5 km world from a compact seed using spectral synthesis — the terrain is a summed waveform turned into a heightmap — then populates it with buildings, structures, and movable furniture.\n\nFree, from chopstickshq.com/arena-fps/."
+    },
+    {
+      "id": "arena.install",
+      "product": "arena",
+      "priority": 60,
+      "label": "How do I install ARENA?",
+      "phrases": [
+        "install arena",
+        "how do i play arena",
+        "download arena"
+      ],
+      "keywords": [
+        "installarena"
+      ],
+      "answer": "Download ARENA-macOS.zip from chopstickshq.com/arena-fps/, unzip it, and drag ARENA.app to Applications.\n\nGatekeeper will block it on first launch since it's downloaded through a browser — right-click → Open, then Open again, or run:\nxattr -cr /Applications/ARENA.app"
+    },
+    {
+      "id": "arena.saves",
+      "product": "arena",
+      "priority": 55,
+      "label": "Where does ARENA save progress?",
+      "phrases": [
+        "where is my save",
+        "does it save progress",
+        "save file location",
+        "lost my progress"
+      ],
+      "keywords": [
+        "save",
+        "savegame",
+        "progress",
+        "appdata"
+      ],
+      "answer": "ARENA saves to ~/Library/Application Support/ARENA/ — macOS's equivalent of AppData.\n\nsave.cfg holds your run: wave, kills, credits, weapons, position, world seed, and any furniture you've moved to build a base. settings.cfg holds graphics options.\n\nNote that dying deletes the save — bases don't outlive a run."
+    },
+    {
+      "id": "arena.controls",
+      "product": "arena",
+      "priority": 55,
+      "label": "What are the controls?",
+      "phrases": [
+        "what are the controls",
+        "how do i move",
+        "key bindings"
+      ],
+      "keywords": [
+        "controls",
+        "wasd",
+        "keybinds",
+        "mouse"
+      ],
+      "answer": "WASD to move, mouse to look, Space to jump, Shift to sprint.\n\nNumber keys switch weapons, R reloads, E interacts with and picks up furniture. Escape opens the menu.\n\nFrom the title screen, W/A/S/D or Space starts the game."
+    },
+    {
+      "id": "arena.performance",
+      "product": "arena",
+      "priority": 55,
+      "label": "ARENA runs slowly",
+      "phrases": [
+        "arena is laggy",
+        "low fps in arena",
+        "game runs slow",
+        "arena performance"
+      ],
+      "keywords": [
+        "laggy",
+        "stutter",
+        "framerate",
+        "preset"
+      ],
+      "answer": "Drop the graphics preset — Escape → Settings. MEDIUM is the default and targets a good balance; LOW disables terrain detail and shadows for much higher frame rates.\n\nMake sure only one copy is running: two instances competing for the GPU is a common cause of sudden slowness."
+    },
+    {
+      "id": "arena.furniture",
+      "product": "arena",
+      "priority": 50,
+      "label": "Can I build a base in ARENA?",
+      "phrases": [
+        "can i build a base",
+        "move furniture",
+        "building in arena"
+      ],
+      "keywords": [
+        "furniture",
+        "base",
+        "build"
+      ],
+      "answer": "Yes — furniture is scattered around the world and can be picked up and repositioned with E to barricade a spot.\n\nWhat you build persists across launches: the save records both the pieces and which chunks you've already explored, so returning to an area won't respawn a duplicate set on top of yours."
+    },
+    {
+      "id": "shaders.what",
+      "product": "shaders",
+      "priority": 60,
+      "label": "What are Chopsticks Shaders?",
+      "phrases": [
+        "what are the shaders",
+        "minecraft shaders",
+        "shader pack"
+      ],
+      "keywords": [
+        "shaders",
+        "iris",
+        "shaderpack"
+      ],
+      "answer": "Chopsticks Shaders is an Iris shader pack for Minecraft, with volumetric lighting derived from Noble.\n\nIt's licensed GPL-3.0 because of that lineage. Available from chopstickshq.com/shaders/."
+    },
+    {
+      "id": "minecraft.portfolio",
+      "product": "minecraft",
+      "priority": 50,
+      "label": "What is the Minecraft portfolio?",
+      "phrases": [
+        "minecraft portfolio",
+        "minecraft work",
+        "skript development"
+      ],
+      "keywords": [
+        "minecraft",
+        "skript",
+        "minefort",
+        "minehut",
+        "plugin"
+      ],
+      "answer": "chopstickshq.com/minecraft/ is a portfolio of Minecraft server development work — custom systems, mechanics, and Skript development across a number of servers.\n\nIt's separate from the desktop apps."
+    },
+    {
+      "id": "vault.what",
+      "product": "vault",
+      "priority": 55,
+      "label": "What is the vault?",
+      "phrases": [
+        "what is the vault",
+        "vault page",
+        "vault key generator"
+      ],
+      "keywords": [
+        "vault"
+      ],
+      "answer": "The vault at chopstickshq.com/vault/ is a password-gated generator for Fathom Pro unlock keys.\n\nEach Generate mints a new random oi-pl key entirely in your browser. These are unlock tokens for Fathom Pro only — they are not cloud API keys and carry no credit."
+    },
+    {
+      "id": "trouble.wont.launch",
+      "product": "general",
+      "priority": 60,
+      "label": "The app won't launch",
+      "phrases": [
+        "app wont open",
+        "nothing happens when i click",
+        "app crashes on launch",
+        "wont start"
+      ],
+      "keywords": [
+        "crash",
+        "crashing",
+        "launch",
+        "freeze",
+        "hang"
+      ],
+      "answer": "Try in this order:\n\n1. If macOS blocked it, right-click → Open → Open again\n2. Clear the quarantine flag: xattr -cr ~/Applications/rNitro.app\n3. Confirm you're on macOS 14 or later — older versions can't run the current build\n4. Re-run the Terminal installer to get a clean copy\n\nStill stuck? Open an issue at github.com/ilikemacos/rNitro/issues/new with your macOS version and Mac model."
+    },
+    {
+      "id": "trouble.no.temperature",
+      "product": "general",
+      "priority": 55,
+      "label": "Temperature shows N/A or looks wrong",
+      "phrases": [
+        "no sensor data",
+        "shows na",
+        "temp says na",
+        "temp shows na",
+        "temperature is wrong",
+        "temperature not showing",
+        "temperature shows na"
+      ],
+      "keywords": [
+        "na",
+        "missing",
+        "blank",
+        "zero"
+      ],
+      "answer": "If the SMC sensor keys for your chip aren't recognised, rNitro falls back to macOS's thermal state and interpolates from CPU load — so the number stays plausible but isn't a direct reading.\n\nOn Windows, temperatures need administrator rights; Windows hides thermal sensors from unelevated processes.\n\nOn Linux, Apple-only sensors always show N/A."
+    },
+    {
+      "id": "trouble.high.cpu",
+      "product": "general",
+      "priority": 50,
+      "label": "The app itself is using CPU",
+      "phrases": [
+        "using too much cpu",
+        "app is heavy",
+        "high cpu usage from the app",
+        "battery drain from the app"
+      ],
+      "keywords": [
+        "heavy",
+        "resource"
+      ],
+      "answer": "rNitro is native Swift, not Electron — the app bundle is around 3.5 MB and idles low.\n\nIf it's using more than you'd expect, lower the refresh rate in Settings, turn off the Bitcoin ticker, and close the popover when you're not reading it — the live panel refreshes several times a second while open."
+    },
+    {
+      "id": "trouble.checksum",
+      "product": "general",
+      "priority": 55,
+      "label": "The installer says checksum mismatch",
+      "phrases": [
+        "checksum mismatch",
+        "integrity check failed",
+        "hash does not match"
+      ],
+      "keywords": [
+        "checksum",
+        "sha256",
+        "integrity",
+        "mismatch"
+      ],
+      "answer": "That's the installer protecting you — it downloaded a file whose SHA-256 doesn't match what version.json publishes, so it refused to install.\n\nUsually it's a truncated or cached download. Try again; if it keeps failing, the mirror you hit may be stale. Report it at github.com/ilikemacos/rNitro/issues/new and include both hashes it printed."
+    },
+    {
+      "id": "trouble.download.blocked",
+      "product": "general",
+      "priority": 50,
+      "label": "The download won't start",
+      "phrases": [
+        "download not working",
+        "download button does nothing",
+        "cant download"
+      ],
+      "keywords": [
+        "downloadfail"
+      ],
+      "answer": "Every download shows a terms dialog first — you have to press \"I Agree & download\" for the file to start.\n\nIf nothing happens after that, try the Terminal install instead, or grab the file straight from GitHub Releases."
+    }
+  ]
+}
