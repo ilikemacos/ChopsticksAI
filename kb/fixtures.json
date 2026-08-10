@@ -1,0 +1,297 @@
+{
+  "_comment": "question -> expected intent id, or null meaning 'must not answer confidently'. Run against both the JS and Swift engines; they must agree.",
+  "cases": [
+    [
+      "who are you",
+      "meta.identity"
+    ],
+    [
+      "what is chopsticksai",
+      "meta.identity"
+    ],
+    [
+      "what can you do",
+      "meta.capabilities"
+    ],
+    [
+      "how does chopsticksai work",
+      "meta.how-it-works"
+    ],
+    [
+      "do you track me",
+      "meta.privacy"
+    ],
+    [
+      "is this private",
+      "meta.privacy"
+    ],
+    [
+      "what is chopsticks hq",
+      "hq.what"
+    ],
+    [
+      "where are the guides",
+      "hq.guides"
+    ],
+    [
+      "what apps do you make",
+      "hq.products"
+    ],
+    [
+      "is it free",
+      "hq.free"
+    ],
+    [
+      "how much does it cost",
+      "hq.free"
+    ],
+    [
+      "how do i contact you",
+      "hq.contact"
+    ],
+    [
+      "is it open source",
+      "hq.opensource"
+    ],
+    [
+      "where are the terms and conditions",
+      "hq.terms"
+    ],
+    [
+      "what is rnitro",
+      "rnitro.what"
+    ],
+    [
+      "what does r nitro do",
+      "rnitro.what"
+    ],
+    [
+      "how do i install rnitro",
+      "rnitro.install.macos"
+    ],
+    [
+      "brew install rnitro",
+      "rnitro.install.homebrew"
+    ],
+    [
+      "macos says it cant be opened",
+      "rnitro.gatekeeper"
+    ],
+    [
+      "apple could not verify",
+      "rnitro.gatekeeper"
+    ],
+    [
+      "gatekeeper blocked the app",
+      "rnitro.gatekeeper"
+    ],
+    [
+      "how do i uninstall",
+      "rnitro.uninstall"
+    ],
+    [
+      "how do i update",
+      "rnitro.update"
+    ],
+    [
+      "what version is current",
+      "rnitro.version"
+    ],
+    [
+      "what are the system requirements",
+      "rnitro.requirements"
+    ],
+    [
+      "does it work on intel",
+      "rnitro.intel"
+    ],
+    [
+      "how accurate is the temperature",
+      "rnitro.temperature"
+    ],
+    [
+      "is the temp reading real",
+      "rnitro.temperature"
+    ],
+    [
+      "does it show cpu usage",
+      "rnitro.cpu"
+    ],
+    [
+      "does it show ram",
+      "rnitro.memory"
+    ],
+    [
+      "does it show gpu",
+      "rnitro.gpu"
+    ],
+    [
+      "network speed",
+      "rnitro.network"
+    ],
+    [
+      "is there a benchmark",
+      "rnitro.benchmark"
+    ],
+    [
+      "game overlay",
+      "rnitro.overlay"
+    ],
+    [
+      "bitcoin price",
+      "rnitro.bitcoin"
+    ],
+    [
+      "what is the advisor tab",
+      "rnitro.advisor"
+    ],
+    [
+      "how do i set a warning threshold",
+      "rnitro.thresholds"
+    ],
+    [
+      "which ai providers are supported",
+      "rnitro.chat.providers"
+    ],
+    [
+      "does it support ollama",
+      "rnitro.chat.providers"
+    ],
+    [
+      "is it safe",
+      "rnitro.safety"
+    ],
+    [
+      "is there a cli",
+      "rnitro.cli"
+    ],
+    [
+      "is there a command line version",
+      "rnitro.cli"
+    ],
+    [
+      "does it work on linux",
+      "rnitro.linux"
+    ],
+    [
+      "is there a windows version",
+      "rnitro.windows"
+    ],
+    [
+      "where are older versions",
+      "rnitro.archives"
+    ],
+    [
+      "what is fathom air",
+      "fathom.what"
+    ],
+    [
+      "how do i install fathom",
+      "fathom.install"
+    ],
+    [
+      "uninstall fathom",
+      "fathom.uninstall"
+    ],
+    [
+      "difference between fathom and rnitro",
+      "fathom.vs.rnitro"
+    ],
+    [
+      "what is fathom pro",
+      "fathompro.what"
+    ],
+    [
+      "how do i unlock fathom pro",
+      "fathompro.unlock"
+    ],
+    [
+      "where do i get an unlock key",
+      "fathompro.unlock"
+    ],
+    [
+      "do i need my own api key",
+      "fathompro.keys"
+    ],
+    [
+      "does it send my location",
+      "fathompro.privacy"
+    ],
+    [
+      "what is explain drain",
+      "fathompro.explaindrain"
+    ],
+    [
+      "what is arena",
+      "arena.what"
+    ],
+    [
+      "how do i install arena",
+      "arena.install"
+    ],
+    [
+      "where is my save",
+      "arena.saves"
+    ],
+    [
+      "what are the controls",
+      "arena.controls"
+    ],
+    [
+      "arena is laggy",
+      "arena.performance"
+    ],
+    [
+      "can i build a base",
+      "arena.furniture"
+    ],
+    [
+      "what are the shaders",
+      "shaders.what"
+    ],
+    [
+      "what is the vault",
+      "vault.what"
+    ],
+    [
+      "the app wont open",
+      "trouble.wont.launch"
+    ],
+    [
+      "checksum mismatch",
+      "trouble.checksum"
+    ],
+    [
+      "temperature shows na",
+      "trouble.no.temperature"
+    ],
+    [
+      "how is the weather in paris tomorrow",
+      null
+    ],
+    [
+      "what is the capital of france",
+      null
+    ],
+    [
+      "asdfghjkl qwerty",
+      null
+    ],
+    [
+      "unzip the file",
+      null
+    ],
+    [
+      "hardcore gaming setup",
+      null
+    ],
+    [
+      "i love the packaging",
+      null
+    ],
+    [
+      "safety of my data",
+      null
+    ]
+  ]
+}
