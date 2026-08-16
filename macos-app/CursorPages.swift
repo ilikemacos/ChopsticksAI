@@ -522,7 +522,7 @@ struct UsageView: View {
         VStack(spacing: 0) {
             PageHeader(
                 title: "Usage",
-                subtitle: "Allowance, cooldown, and upgrades via Fathom Pro API keys.",
+                subtitle: "Allowance resets every 5 hours. Redeem Fathom Pro keys for higher limits.",
                 trailing: AnyView(
                     GhostButton(title: store.usageBusy ? "Refreshing…" : "Refresh", icon: "arrow.clockwise") {
                         Task { await store.refreshUsage() }
@@ -612,6 +612,12 @@ struct UsageView: View {
                 Text(msg)
                     .font(.system(size: 12.5))
                     .foregroundStyle(store.usage.warningLevel == "critical" ? Color.red.opacity(0.85) : Color.orange.opacity(0.9))
+            } else if store.usage.resetInMs > 0 {
+                TimelineView(.periodic(from: .now, by: 30)) { _ in
+                    Text("Resets at \(UsageSnapshot.fmtResetsAt(store.usage.resetInMs)) · \(UsageSnapshot.fmtCooldown(store.usage.resetInMs)) left")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Cursor.muted)
+                }
             } else {
                 Text("Cooldown after limit: \(UsageSnapshot.fmtCooldown(store.usage.cooldownMs)) · \(store.usage.keysValid) valid key\(store.usage.keysValid == 1 ? "" : "s") redeemed")
                     .font(.system(size: 12))
@@ -735,7 +741,7 @@ struct MozillaSearchHit: Identifiable, Equatable {
 struct MozillaSearchView: View {
     @State private var query = ""
     @State private var busy = false
-    @State private var status = "Same Mozilla engine cs.AI uses before every answer."
+    @State private var status = "Same Chromium engine cs.AI uses before every answer."
     @State private var results: [MozillaSearchHit] = []
     @FocusState private var focused: Bool
 
@@ -745,7 +751,7 @@ struct MozillaSearchView: View {
         VStack(spacing: 0) {
             PageHeader(
                 title: "Search",
-                subtitle: "Mozilla engine · MDN · Wikipedia · DuckDuckGo",
+                subtitle: "Chromium engine · Google · DuckDuckGo",
                 trailing: AnyView(
                     GhostButton(title: busy ? "Searching…" : "Search", icon: "magnifyingglass") {
                         Task { await runSearch() }
@@ -769,7 +775,7 @@ struct MozillaSearchView: View {
     }
 
     private var searchCard: some View {
-        SettingsCard(title: "Mozilla engine", subtitle: "No API key. Results from MDN, Wikipedia, and DuckDuckGo.") {
+        SettingsCard(title: "Chromium engine", subtitle: "No API key. Results from Google and DuckDuckGo; chopsticks queries prioritize chopstickshq.com.") {
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(Cursor.mozilla)
@@ -860,7 +866,7 @@ struct MozillaSearchView: View {
             return
         }
         busy = true
-        status = "Searching Mozilla engine…"
+        status = "Searching Chromium engine…"
         defer { busy = false }
 
         var req = URLRequest(url: apiURL)

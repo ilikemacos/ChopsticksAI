@@ -62,7 +62,8 @@ enum WhatsNew {
 
     private static func normalize(_ s: String) -> String {
         s.lowercased()
-            .replacingOccurrences(of: "cs.ai ", with: "")
+            .replacingOccurrences(of: "cs.ai", with: "")
+            .replacingOccurrences(of: "chopsticksai", with: "")
             .replacingOccurrences(of: "v", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }

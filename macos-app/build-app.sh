@@ -2,8 +2,8 @@
 set -Eeuo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-AI="$ROOT/../engine"
-SITE="$ROOT/../../chopstickshq-site/chopsticks-ai"
+AI="$ROOT/../chopsticks-ai"
+SITE="$ROOT/../chopstickshq-site/chopsticks-ai"
 BUNDLE="chopsticksAI.app"
 EXEC="chopsticksAI"
 VERSION="${1:-v2.0.0}"
@@ -65,7 +65,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$ROOT/Info.plist" "$APP/Contents/Info.plist"
 cp "$ROOT/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 
-SHARED="$ROOT/../shared/AppAutoUpdate.swift"
+SHARED="$ROOT/../macos-shared/AppAutoUpdate.swift"
 BIN="$APP/Contents/MacOS/$EXEC"
 
 SDK_ARGS=()
@@ -86,6 +86,7 @@ SWIFT_CMD+=(
   "$ROOT/AppStore.swift"
   "$ROOT/CloudAuth.swift"
   "$ROOT/NetworkStatus.swift"
+  "$ROOT/Onboarding.swift"
   "$ROOT/WhatsNew.swift"
   "$ROOT/Attachments.swift"
   "$ROOT/CursorPages.swift"
@@ -114,17 +115,19 @@ mkdir -p "$SITE"
 cp "$BUILD/$ZIP" "$SITE/"
 cp "$ROOT/install-chopsticks-ai.sh" "$SITE/"
 
-/usr/bin/python3 - "$SITE/macos-version.json" "$VERSION" "$ZIP" "$SHA" <<'PY'
+PY="$(command -v python3.11 2>/dev/null || command -v python3 2>/dev/null || echo /usr/bin/python3)"
+"$PY" - "$SITE/version.json" "$SITE/macos-version.json" "$VERSION" "$ZIP" "$SHA" <<'PY'
 import json, sys
-path, ver, zip_name, sha = sys.argv[1:5]
+path, mac_path, ver, zip_name, sha = sys.argv[1:6]
 payload = {
     "latest": ver.lstrip("v"),
     "product": "chopsticksAI",
     "releases": {"stable": {"zip": zip_name, "sha256": sha}},
 }
-with open(path, "w", encoding="utf-8") as f:
-    json.dump(payload, f, indent=2)
-    f.write("\n")
+for p in (path, mac_path):
+    with open(p, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2)
+        f.write("\n")
 PY
 
 echo "Built $BUILD/$ZIP"
