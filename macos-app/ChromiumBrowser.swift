@@ -4,9 +4,9 @@ import WebKit
 
 private let chromiumUA =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
-    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 cs.AI/2.5.1"
+    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 cs.AI/2.5.4"
 
-private let browserHome = URL(string: "https://www.google.com")!
+private let browserHome = URL(string: "https://chopstickshq.com/")!
 
 final class ChromiumWebState: ObservableObject {
     @Published var canGoBack = false
@@ -198,7 +198,7 @@ struct ChromiumBrowserView: View {
             .background(Cursor.panel)
 
             HStack {
-                Text("Chromium browser · cs.AI 2.5.1")
+                Text("Chromium browser · chopstickshq.com home")
                     .font(.system(size: 10.5, design: .monospaced))
                     .foregroundStyle(Cursor.muted)
                 Spacer()

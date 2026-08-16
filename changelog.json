@@ -1,13 +1,22 @@
 {
   "product": "cs.AI",
-  "latest": "cs.AI 2.5.1",
+  "latest": "3.3.11",
   "entries": [
+    {
+      "version": "3.3.11",
+      "date": "2026-08-16",
+      "title": "Live chat no longer dead-ends",
+      "changes": [
+        "Stopped showing \u201cthe live model is still responding\u201d when the cloud call actually failed",
+        "If the live model misses, you get a real answer or local product help instead of a stuck retry loop"
+      ]
+    },
     {
       "version": "cs.AI 2.5.1-web",
       "date": "2026-08-10",
       "title": "cs.AI web app",
       "changes": [
-        "New web app at chopstickshq.com/chopsticks-ai/web/ — full agent in the browser",
+        "New web app at chopstickshq.com/chopsticks-ai/web/ \u2014 full agent in the browser",
         "Chromium browser rail, Fathom Pro key redemption, cloud sync with macOS",
         "Short URL /csai/ redirects to the web app"
       ]
@@ -26,7 +35,7 @@
       "date": "2026-08-10",
       "title": "Chromium browser",
       "changes": [
-        "Browser rail replaces Mozilla search — full in-app Chromium browser (Google, back/forward, URL bar)",
+        "Browser rail replaces Mozilla search \u2014 full in-app Chromium browser (Google, back/forward, URL bar)",
         "Chromium search engine for chat grounding (Google web + DuckDuckGo, Chrome UA)",
         "Search toggle and /search still work; macOS app opens pages inside the app"
       ]
@@ -36,7 +45,7 @@
       "date": "2026-08-10",
       "title": "Terminal CLI + shift-click organize",
       "changes": [
-        "New csai terminal CLI — full-screen UI like Grok Build (type csai in Terminal)",
+        "New csai terminal CLI \u2014 full-screen UI like Grok Build (type csai in Terminal)",
         "Install: curl -fsSL https://chopstickshq.com/chopsticks-ai/install-csai-cli.sh | bash",
         "Commands: csai ask, csai login, csai update, csai version",
         "Shift-click chats in the sidebar to select a range",
@@ -71,9 +80,9 @@
       "title": "Stop KB hijacking live chat",
       "changes": [
         "Fixed general questions (e.g. Minecraft SMP servers) returning chopstickshq.com portfolio KB snippets while Online",
-        "Server no longer substitutes offline KB answers when the live model fails — online clients get a retry prompt instead",
-        "KB grounding only applies on strong product matches, not bare keywords like “minecraft”",
-        "Search toggle in the macOS app is respected again — Search on runs Mozilla lookup on each question",
+        "Server no longer substitutes offline KB answers when the live model fails \u2014 online clients get a retry prompt instead",
+        "KB grounding only applies on strong product matches, not bare keywords like \u201cminecraft\u201d",
+        "Search toggle in the macOS app is respected again \u2014 Search on runs Mozilla lookup on each question",
         "Widget and Lab send onlineMode so the API knows not to fall back to local KB"
       ]
     },
@@ -82,10 +91,10 @@
       "date": "2026-08-10",
       "title": "Online means live",
       "changes": [
-        "Fixed Online badge showing while answers came from the offline KB — online mode never uses local KB now",
+        "Fixed Online badge showing while answers came from the offline KB \u2014 online mode never uses local KB now",
         "macOS and site widget always call the live model when Online; KB only when Offline mode is on or there is no network",
-        "Live requests skip automatic web search by default (use /search … to force lookup) so replies finish reliably",
-        "Retries with a lighter tier before asking you to send again — no more silent KB fallback while connected"
+        "Live requests skip automatic web search by default (use /search \u2026 to force lookup) so replies finish reliably",
+        "Retries with a lighter tier before asking you to send again \u2014 no more silent KB fallback while connected"
       ]
     },
     {
@@ -93,19 +102,19 @@
       "date": "2026-08-10",
       "title": "Many bug fixes",
       "changes": [
-        "Fixed website widget AI — no more false “model unreachable” when chopstickshq.com was up",
+        "Fixed website widget AI \u2014 no more false \u201cmodel unreachable\u201d when chopstickshq.com was up",
         "Widget skips automatic web search by default so replies finish before the server timeout",
-        "API fast path for the site widget — lighter search, no refine pass, faster replies",
+        "API fast path for the site widget \u2014 lighter search, no refine pass, faster replies",
         "macOS app retries without search when the live model fails, then local KB instead of a dead-end error",
-        "Removed harsh “Check your connection to chopstickshq.com” — graceful fallback while the model catches up",
-        "Online mode hardened: live model whenever Wi‑Fi/network is connected; Offline mode is opt-in in Settings → Chat",
-        "Settings → Chat tab — connection status (Wi‑Fi / Cellular / Offline) and Online/Offline toggle",
-        "Updater fix: patch builds (2.3.6a → 2.3.6b) and v-prefix manifest versions compare correctly",
-        "Fixed false “update available” when already on the latest build",
-        "Web and Lab show server replies instead of “unreachable” when the API returns an answer",
-        "Flat usage billing per reply — higher effort tiers no longer burn allowance faster",
+        "Removed harsh \u201cCheck your connection to chopstickshq.com\u201d \u2014 graceful fallback while the model catches up",
+        "Online mode hardened: live model whenever Wi\u2011Fi/network is connected; Offline mode is opt-in in Settings \u2192 Chat",
+        "Settings \u2192 Chat tab \u2014 connection status (Wi\u2011Fi / Cellular / Offline) and Online/Offline toggle",
+        "Updater fix: patch builds (2.3.6a \u2192 2.3.6b) and v-prefix manifest versions compare correctly",
+        "Fixed false \u201cupdate available\u201d when already on the latest build",
+        "Web and Lab show server replies instead of \u201cunreachable\u201d when the API returns an answer",
+        "Flat usage billing per reply \u2014 higher effort tiers no longer burn allowance faster",
         "Context window limits apply correctly per tier (contextFor bug fix)",
-        "Six-language replies: English, 中文, Español, Deutsch, 한국어, 日本語"
+        "Six-language replies: English, \u4e2d\u6587, Espa\u00f1ol, Deutsch, \ud55c\uad6d\uc5b4, \u65e5\u672c\u8a9e"
       ]
     },
     {
@@ -113,7 +122,7 @@
       "date": "2026-08-10",
       "title": "2.3.6a",
       "changes": [
-        "Patch release — version bump and updater fix for 2.3.6 → 2.3.6a"
+        "Patch release \u2014 version bump and updater fix for 2.3.6 \u2192 2.3.6a"
       ]
     },
     {
@@ -121,9 +130,9 @@
       "date": "2026-08-10",
       "title": "Hardened online mode",
       "changes": [
-        "Online mode is always on by default — live model whenever Wi‑Fi or network is connected",
+        "Online mode is always on by default \u2014 live model whenever Wi\u2011Fi or network is connected",
         "No automatic KB fallback while online; API errors show a retry message instead",
-        "New Settings → Chat tab with connection status and Offline mode toggle (opt-in local KB)",
+        "New Settings \u2192 Chat tab with connection status and Offline mode toggle (opt-in local KB)",
         "Lab and site widget match: Online/Offline toggle, no silent fallback when connected"
       ]
     },
@@ -132,10 +141,10 @@
       "date": "2026-08-10",
       "title": "Fixes + six languages",
       "changes": [
-        "Fixed false “update available” when already on the latest build",
-        "Web and macOS show server replies instead of “model unreachable” when the API returns an answer",
-        "Flat usage billing per reply — higher effort tiers no longer burn allowance faster",
-        "Reply language: English, 中文, Español, Deutsch, 한국어, 日本語"
+        "Fixed false \u201cupdate available\u201d when already on the latest build",
+        "Web and macOS show server replies instead of \u201cmodel unreachable\u201d when the API returns an answer",
+        "Flat usage billing per reply \u2014 higher effort tiers no longer burn allowance faster",
+        "Reply language: English, \u4e2d\u6587, Espa\u00f1ol, Deutsch, \ud55c\uad6d\uc5b4, \u65e5\u672c\u8a9e"
       ]
     },
     {
@@ -143,9 +152,9 @@
       "date": "2026-08-09",
       "title": "Email + password only",
       "changes": [
-        "Removed 6-digit verification email — create account with email and password only",
+        "Removed 6-digit verification email \u2014 create account with email and password only",
         "Sign-in still runs on chopstickshq.com, not Supabase Auth in the client",
-        "Offline KB fallback only when the device has no network — not when the live model fails while online"
+        "Offline KB fallback only when the device has no network \u2014 not when the live model fails while online"
       ]
     },
     {
@@ -153,7 +162,7 @@
       "date": "2026-08-09",
       "title": "Email sign-in (no Supabase Auth in app)",
       "changes": [
-        "Email/password sign-in restored — auth runs on chopstickshq.com, not Supabase Auth in the client",
+        "Email/password sign-in restored \u2014 auth runs on chopstickshq.com, not Supabase Auth in the client",
         "New accounts: 6-digit verification code emailed from cs.AI",
         "Signed-in chats sync across Lab and macOS; premium tiers require sign-in or Fathom Pro keys"
       ]
@@ -163,9 +172,9 @@
       "date": "2026-08-09",
       "title": "No Supabase Auth",
       "changes": [
-        "Removed email/password sign-in and Supabase Auth — no cloud account required",
+        "Removed email/password sign-in and Supabase Auth \u2014 no cloud account required",
         "Chats stay local on this Mac and in Lab; attachments read locally only",
-        "Premium tiers (ChopCode, StickerCoder+, Insane, etc.) work with Fathom Pro keys only — no sign-in gate"
+        "Premium tiers (ChopCode, StickerCoder+, Insane, etc.) work with Fathom Pro keys only \u2014 no sign-in gate"
       ]
     },
     {
@@ -173,9 +182,9 @@
       "date": "2026-08-09",
       "title": "No Keychain prompt",
       "changes": [
-        "Sessions and unlock keys stored in app preferences — no macOS login keychain password dialog",
+        "Sessions and unlock keys stored in app preferences \u2014 no macOS login keychain password dialog",
         "Ad-hoc installs no longer trigger Keychain access on launch",
-        "Retrieval still uses keyword intent scoring and Mozilla search — not vector embeddings"
+        "Retrieval still uses keyword intent scoring and Mozilla search \u2014 not vector embeddings"
       ]
     },
     {
@@ -183,8 +192,8 @@
       "date": "2026-08-09",
       "title": "No vector embeddings",
       "changes": [
-        "Retrieval uses keyword intent scoring and Mozilla web search — not vector embeddings",
-        "Removed “couldn't reach its model” dead-end; KB fallback and extra rescue instead",
+        "Retrieval uses keyword intent scoring and Mozilla web search \u2014 not vector embeddings",
+        "Removed \u201ccouldn't reach its model\u201d dead-end; KB fallback and extra rescue instead",
         "Signup verification via Supabase Auth email (not Resend)",
         "Privacy stance: no embedding index, no semantic vector store"
       ]
@@ -194,10 +203,10 @@
       "date": "2026-08-09",
       "title": "Security update",
       "changes": [
-        "All messages are encrypted end-to-end — chats protected in transit and at rest",
+        "All messages are encrypted end-to-end \u2014 chats protected in transit and at rest",
         "HMAC-SHA256 unlock keys; vault password verified server-side only",
         "Sessions and unlock keys stored in macOS Keychain",
-        "Per-account chat isolation — sign in or out resets local state cleanly",
+        "Per-account chat isolation \u2014 sign in or out resets local state cleanly",
         "API rate limits, tier gating, and restricted CORS on the edge",
         "Privacy mode skips cloud API and sync entirely"
       ]
@@ -208,9 +217,9 @@
       "title": "Final",
       "changes": [
         "Toggle web search off in Settings or from the composer Search chip",
-        "Dynamic usage meters — context and allowance progress bars update live",
+        "Dynamic usage meters \u2014 context and allowance progress bars update live",
         "Web search off badge, placeholder, and header update when search is disabled",
-        "`/search …` still forces a one-off Mozilla lookup when search is off",
+        "`/search \u2026` still forces a one-off Mozilla lookup when search is off",
         "Lab matches macOS: Search toggle and centered progress bars in the composer"
       ]
     },
@@ -247,7 +256,7 @@
       "date": "2026-08-08",
       "title": "Harder fix for model reachability",
       "changes": [
-        "Reserved rescue model attempt so busy free models can’t burn the whole request",
+        "Reserved rescue model attempt so busy free models can\u2019t burn the whole request",
         "write_file tools only when coding / file requests (not every chat turn)",
         "StickerCoder+/ChopCode skip web search unless you use /search"
       ]
@@ -257,7 +266,7 @@
       "date": "2026-08-08",
       "title": "Fix model timeouts / sticky Offline",
       "changes": [
-        "Model deadline no longer includes web-search time — stops “couldn't reach its model” on normal questions",
+        "Model deadline no longer includes web-search time \u2014 stops \u201ccouldn't reach its model\u201d on normal questions",
         "Coding tiers fall back to another model when the primary is busy; short rescue completion as last resort",
         "macOS Offline badge only sticks when the host is actually offline (not on transient errors)"
       ]
@@ -267,24 +276,24 @@
       "date": "2026-08-08",
       "title": "StickerCoder+",
       "changes": [
-        "New StickerCoder+ effort — coding specialist mode in Lab and the macOS app",
+        "New StickerCoder+ effort \u2014 coding specialist mode in Lab and the macOS app",
         "Pick StickerCoder+ alongside ChopCode for agentic coding and file creation"
       ]
     },
     {
       "version": "cs.AI 2.0.5",
       "date": "2026-08-08",
-      "title": "Tool-call files · labeled sidebar · more settings",
+      "title": "Tool-call files \u00b7 labeled sidebar \u00b7 more settings",
       "changes": [
         "Agent can create files via write_file tool-calls (Lab + macOS); replies include downloadable file cards",
-        "macOS nav rail shows text labels (toggle in Settings → General)",
+        "macOS nav rail shows text labels (toggle in Settings \u2192 General)",
         "More settings: Tools (write_file, confirm save, default folder), Agents (file tools), Beta (file previews)"
       ]
     },
     {
       "version": "cs.AI 2.0.4",
       "date": "2026-08-08",
-      "title": "Expandable sidebar · 500 MB uploads",
+      "title": "Expandable sidebar \u00b7 500 MB uploads",
       "changes": [
         "macOS Agents Window: animated expand/collapse for the secondary sidebar (rail toggle)",
         "Attachment limit set to 500 MB per batch (Lab + macOS)"
@@ -304,7 +313,7 @@
       "date": "2026-08-08",
       "title": "ChopCode mode",
       "changes": [
-        "New ChopCode effort — coding specialist mode in Lab and the macOS app",
+        "New ChopCode effort \u2014 coding specialist mode in Lab and the macOS app",
         "SEO keywords for cs.AI / ChopCode on HQ homepage and product page"
       ]
     },
@@ -313,20 +322,20 @@
       "date": "2026-08-08",
       "title": "Mozilla Search in the macOS app",
       "changes": [
-        "New Search rail in the Agents Window — same Mozilla engine as the website (MDN, Wikipedia, DuckDuckGo)",
+        "New Search rail in the Agents Window \u2014 same Mozilla engine as the website (MDN, Wikipedia, DuckDuckGo)",
         "Results open in your browser; no API key required"
       ]
     },
     {
       "version": "cs.AI 2.0",
       "date": "2026-08-08",
-      "title": "Mozilla engine, profile plans, What’s New",
+      "title": "Mozilla engine, profile plans, What\u2019s New",
       "changes": [
         "Branding: chopsticksAI is now cs.AI 2.0",
-        "Mozilla search engine on /chopsticks-ai/#search (MDN, Wikipedia, DuckDuckGo) — same path the AI uses first",
-        "Account plans read from Supabase profiles (token_budget / context_limit / plan_label) — no hard-coded emails",
+        "Mozilla search engine on /chopsticks-ai/#search (MDN, Wikipedia, DuckDuckGo) \u2014 same path the AI uses first",
+        "Account plans read from Supabase profiles (token_budget / context_limit / plan_label) \u2014 no hard-coded emails",
         "Usage soft warning at 80% allowance + live cooldown countdown",
-        "macOS app shows What’s New from changelog.json after an update"
+        "macOS app shows What\u2019s New from changelog.json after an update"
       ]
     },
     {
@@ -335,9 +344,9 @@
       "title": "Accounts, Usage, and Cursor-style Agents",
       "changes": [
         "Cursor-style Agents Window UI (Agents, Automations, Repos, Marketplace, Usage, Account, Settings)",
-        "Optional Supabase accounts — sign in to sync chats across Lab and the macOS app",
+        "Optional Supabase accounts \u2014 sign in to sync chats across Lab and the macOS app",
         "Usage tab with Fathom Pro oi-pl credit upgrades (not OpenRouter keys)",
-        "Credit tiers: 2 keys → 800k / 64k context; 5 → 900k / 96k; 10 → 1m / 128k",
+        "Credit tiers: 2 keys \u2192 800k / 64k context; 5 \u2192 900k / 96k; 10 \u2192 1m / 128k",
         "Homepage scavenger mint cooldown: 10 minutes",
         "Auto-update crash fix (NSAlert on main thread) and safer install staging"
       ]
