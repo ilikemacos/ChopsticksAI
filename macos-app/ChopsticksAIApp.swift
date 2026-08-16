@@ -96,6 +96,7 @@ struct UsageStats: Equatable {
 struct ChatUsageBar: View {
     let stats: UsageStats
     var webSearchEnabled: Bool = true
+    var resetInMs: Int = 0
 
     private var rowCount: Int {
         var n = 0
@@ -130,6 +131,12 @@ struct ChatUsageBar: View {
                     fill: allowanceColor(stats.allowanceProgress)
                 )
                 .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
+                if resetInMs > 0 {
+                    Text("Resets at \(UsageSnapshot.fmtResetsAt(resetInMs))")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Cursor.muted)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
             }
         }
         .frame(maxWidth: 420)
@@ -545,7 +552,7 @@ final class ChatModel: ObservableObject {
     private var welcomeLine: ChatLine {
         ChatLine(
             role: "assistant",
-            text: "Hi — I'm cs.AI 2.5.1.\n\nEmail + password sign-in via chopstickshq.com. Keyword KB + Chromium search. Ask anything. Pick StickerCoder+ for coding."
+            text: "Hi — I'm cs.AI 2.5.4.\n\nEmail + password sign-in via chopstickshq.com. Keyword KB + Chromium search. Ask anything. Pick StickerCoder+ for coding."
         )
     }
 
@@ -701,7 +708,7 @@ final class ChatModel: ObservableObject {
     }
 
     private func onlineFailureMessage() -> String {
-        "Try sending that again — the live model is still responding."
+        "The live model didn’t return an answer. Try a shorter question, or send again in a few seconds."
     }
 
     private func requestReply(payload: [String: Any], userText: String) async -> ReplyResult? {
@@ -725,6 +732,10 @@ final class ChatModel: ObservableObject {
             let reply = (obj?["reply"] as? String)?
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
+            let mode = obj?["mode"] as? String
+            if mode == "error" {
+                return nil
+            }
             guard let obj, !reply.isEmpty else {
                 if http?.statusCode == 403, obj?["mode"] as? String == "auth_required" {
                     return ReplyResult(
@@ -835,6 +846,14 @@ final class ChatModel: ObservableObject {
             if let result = await requestReply(payload: full, userText: userText) {
                 return result
             }
+        }
+        if let local = kbFallback(userText) {
+            return ReplyResult(
+                text: local + "\n\n(Live model unavailable — local product help.)",
+                usage: UsageStats(),
+                sources: [],
+                offline: true
+            )
         }
         return ReplyResult(
             text: onlineFailureMessage(),
@@ -1706,7 +1725,7 @@ struct AgentChatView: View {
     private var composer: some View {
         VStack(spacing: 8) {
             if model.usage.hasAny || !store.webSearchEnabled {
-                ChatUsageBar(stats: model.usage, webSearchEnabled: store.webSearchEnabled)
+                ChatUsageBar(stats: model.usage, webSearchEnabled: store.webSearchEnabled, resetInMs: store.usage.resetInMs)
             }
             if !attachments.status.isEmpty {
                 Text(attachments.status)
@@ -2104,10 +2123,11 @@ extension Notification.Name {
 @main
 struct ChopsticksAIApp: App {
     @ObservedObject private var updater = AppAutoUpdate.shared
+    @ObservedObject private var onboarding = OnboardingPresenter.shared
 
     init() {
         AppAutoUpdate.shared.configure(AppUpdateConfig(
-            manifestURL: URL(string: "https://chopstickshq.com/chopsticks-ai/macos-version.json")!,
+            manifestURL: URL(string: "https://chopstickshq.com/chopsticks-ai/version.json")!,
             downloadBase: URL(string: "https://chopstickshq.com/chopsticks-ai")!,
             bundleName: "chopsticksAI.app",
             productName: "cs.AI",
@@ -2118,11 +2138,23 @@ struct ChopsticksAIApp: App {
     var body: some Scene {
         WindowGroup {
             RootShell()
+                .sheet(isPresented: $onboarding.isPresented) {
+                    OnboardingView(presenter: onboarding)
+                }
                 .onAppear {
                     AppAutoUpdate.shared.checkOnLaunch()
-                    
+                    Onboarding.presentIfNeeded(on: onboarding)
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                        WhatsNew.presentIfNeeded()
+                        if Onboarding.isCompleted {
+                            WhatsNew.presentIfNeeded()
+                        }
+                    }
+                }
+                .onChange(of: onboarding.isPresented) { _, showing in
+                    if !showing && Onboarding.isCompleted {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                            WhatsNew.presentIfNeeded()
+                        }
                     }
                 }
         }

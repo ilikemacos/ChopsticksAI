@@ -62,15 +62,16 @@ struct UsageSnapshot: Equatable {
     var used: Int = 0
     var limit: Int = 775_000
     var contextLimit: Int = 48_000
-    var cooldownMs: Int = 3 * 60 * 60 * 1000
+    var cooldownMs: Int = 5 * 60 * 60 * 1000
     var retryInMs: Int = 0
+    var resetInMs: Int = 0
     var blocked: Bool = false
     var warningLevel: String?
     var warningMessage: String?
     var warningPercent: Int = 0
     var keysValid: Int = 0
     var tierLabel: String = "Free"
-    var tierDetail: String = "775k tokens · 48k context · 3h cooldown"
+    var tierDetail: String = "775k tokens · 48k context · resets every 5h"
     var accountPlan: String?
     var upgrades: [UsageUpgrade] = [
         UsageUpgrade(id: "credits-2", keysRequired: 2, limit: 800_000, contextLimit: 64_000, cooldownMs: 9_000_000, label: "2 Fathom Pro APIs", detail: "800k tokens · 64k context · 2h 30m cooldown", unlocked: false),
@@ -107,6 +108,15 @@ struct UsageSnapshot: Equatable {
         if h > 0 { return "\(h)h" }
         if m > 0 { return "\(m)m" }
         return "\(total)s"
+    }
+
+    static func fmtResetsAt(_ msFromNow: Int) -> String {
+        guard msFromNow > 0 else { return "soon" }
+        let date = Date().addingTimeInterval(Double(msFromNow) / 1000)
+        let fmt = DateFormatter()
+        fmt.timeStyle = .short
+        fmt.dateStyle = .none
+        return fmt.string(from: date)
     }
 }
 
@@ -446,6 +456,7 @@ final class AppStore: ObservableObject {
         snap.limit = u["limit"] as? Int ?? snap.limit
         snap.contextLimit = u["contextLimit"] as? Int ?? snap.contextLimit
         snap.cooldownMs = u["cooldownMs"] as? Int ?? snap.cooldownMs
+        snap.resetInMs = u["resetInMs"] as? Int ?? snap.resetInMs
         snap.keysValid = u["keysValid"] as? Int ?? snap.keysValid
         if let tier = u["tier"] as? [String: Any] {
             snap.tierLabel = tier["label"] as? String ?? snap.tierLabel
