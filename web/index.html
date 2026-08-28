@@ -41,6 +41,9 @@
     <a class="rail-btn rail-chopcode" href="/chopsticks-ai/web/?edition=online&plate=chopcode" title="ChopCode" aria-label="ChopCode">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M8 7h8M8 12h5M7 17h10"/><path d="M5 5v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H6a1 1 0 0 0-1 1z"/></svg>
     </a>
+    <a class="rail-btn" href="/chopsticks-ai/web/kaji/" title="Kaji" aria-label="Kaji">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M12 3l2.2 6.4L21 12l-6.8 2.6L12 21l-2.2-6.4L3 12l6.8-2.6L12 3z"/></svg>
+    </a>
     <button type="button" class="rail-btn" id="rail-more-models" title="More models" aria-label="More models">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6L12 3z"/></svg>
     </button>
@@ -172,7 +175,7 @@
       <div class="intro-mark" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6L12 3z"/></svg>
       </div>
-      <h1 id="intro-greeting">Welcome to cs.AI (3.7.0)</h1>
+      <h1 id="intro-greeting">Welcome to cs.AI (3.7.1)</h1>
       <p class="intro-sub" id="intro-sub">Plan, search, build anything</p>
       <p class="intro-lead" id="intro-lead" hidden></p>
       <div class="plate-tiles" id="plate-tiles" hidden></div>
@@ -221,6 +224,7 @@
             <option value="wagyua4">Wagyu A4</option>
             <option value="wagyua5">Wagyu A5</option>
             <option value="chopcode">ChopCode</option>
+            <option value="kaji">Kaji</option>
           </select>
         </div>
         <button type="button" class="send" id="send" title="Send" aria-label="Send" disabled>
@@ -232,7 +236,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">3.7.0</span>
+  <span class="cursor-footer-ver">3.7.1</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -262,6 +266,7 @@
     wagyua4: { label: 'Wagyu A4', maxTokens: 7000 },
     wagyua5: { label: 'Wagyu A5', maxTokens: 8000 },
     chopcode: { label: 'ChopCode', maxTokens: 4000 },
+    kaji: { label: 'Kaji', maxTokens: 6000 },
     low: { label: 'Rice', maxTokens: 800 },
     high: { label: 'Tamago', maxTokens: 2000 },
     pro: { label: 'Hibachi', maxTokens: 4000 },
@@ -277,7 +282,7 @@
     medium: 'tamago', high: 'tamago', standard: 'tamago', sonnet: 'tamago',
     chopsticks: 'tamago', super: 'tamago',
     pro: 'hibachi', opus: 'hibachi', ultra: 'hibachi', xhigh: 'hibachi',
-    xhighplus: 'hibachi', code: 'chopcode',
+    xhighplus: 'hibachi', code: 'chopcode', kaji: 'kaji', grok: 'kaji', grokbot: 'kaji',
     insane: 'wagyua5', fable: 'wagyua5', stickercoderplus: 'wagyua5',
     wagyu: 'wagyua5', a1: 'wagyua1', a2: 'wagyua2', a3: 'wagyua3', a4: 'wagyua4', a5: 'wagyua5',
     'wagyu-a1': 'wagyua1', 'wagyu-a2': 'wagyua2', 'wagyu-a3': 'wagyua3', 'wagyu-a4': 'wagyua4', 'wagyu-a5': 'wagyua5'
@@ -668,7 +673,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (3.7.0)';
+    if (g) g.textContent = 'Welcome to cs.AI (3.7.1)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -906,7 +911,8 @@
     { id: 'wagyua3', name: 'Wagyu A3', role: 'Mid grade — refine on', ctx: '112k · Sign in' },
     { id: 'wagyua4', name: 'Wagyu A4', role: 'High grade', ctx: '128k · Sign in' },
     { id: 'wagyua5', name: 'Wagyu A5', role: 'Highest grade', ctx: '160k · Sign in' },
-    { id: 'chopcode', name: 'ChopCode', role: '10 specialists + Lead · live research', ctx: '128k ctx · 1m tokens · 5 keys / founder' }
+    { id: 'chopcode', name: 'ChopCode', role: '10 specialists + Lead · live research', ctx: '128k ctx · 1m tokens · 5 keys / founder' },
+    { id: 'kaji', name: 'Kaji', role: 'Think different. Ask Kaji. · alpha · prone to wrong answers', ctx: 'Pro · Grok-style' }
   ];
   var plateBtn = document.getElementById('plate-btn');
   var plateMenu = document.getElementById('plate-menu');
@@ -917,6 +923,7 @@
     return PLATES.filter(function (p) { return p.id === id; })[0] || PLATES[1];
   }
   var chopcodeAllowed = false;
+  var kajiAllowed = false;
   function isWagyu(id) {
     var t = normalizeTier(id);
     return t === 'wagyu' || /^wagyua[1-5]$/.test(t);
@@ -928,6 +935,10 @@
     if (!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn())) return true;
     return !chopcodeAllowed;
   }
+  function kajiLocked() {
+    if (!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn())) return true;
+    return !kajiAllowed;
+  }
   function setPlate(id) {
     id = normalizeTier(id);
     var prev = normalizeTier(tierSel.value);
@@ -935,6 +946,19 @@
       if (window.openCsAuth) window.openCsAuth();
       closePlateMenu();
       return false;
+    }
+    if (id === 'kaji' && kajiLocked()) {
+      if (!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn()) && window.openCsAuth) window.openCsAuth();
+      if (status) {
+        status.hidden = false;
+        status.textContent = 'Kaji is Pro — redeem 5 Fathom keys, then Think different. Ask Kaji.';
+      }
+      closePlateMenu();
+      return false;
+    }
+    if (id === 'kaji') {
+      location.href = '/chopsticks-ai/web/kaji/';
+      return true;
     }
     if (id === 'chopcode' && chopcodeLocked()) {
       if (!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn()) && window.openCsAuth) window.openCsAuth();
@@ -962,11 +986,13 @@
   function plateLocked(row) {
     if (isWagyu(row.id)) return wagyuLocked();
     if (row.id === 'chopcode') return chopcodeLocked();
+    if (row.id === 'kaji') return kajiLocked();
     return false;
   }
   function plateLockLabel(row) {
     if (isWagyu(row.id)) return 'Sign in';
     if (row.id === 'chopcode') return Cloud && Cloud.isSignedIn && Cloud.isSignedIn() ? '5 keys' : 'Sign in';
+    if (row.id === 'kaji') return Cloud && Cloud.isSignedIn && Cloud.isSignedIn() ? 'Pro' : 'Sign in';
     return '';
   }
   function renderPlateUI() {
@@ -1015,8 +1041,8 @@
     return EFFORT[tierSel.value] || EFFORT.tamago;
   }
   function showTier() {
-    var ver = Cloud && Cloud.getAppVersion ? Cloud.getAppVersion() : '3.7.0';
-    if (!ver || ver === '3.3.10' || ver === '1.0.0') ver = '3.7.0';
+    var ver = Cloud && Cloud.getAppVersion ? Cloud.getAppVersion() : '3.7.1';
+    if (!ver || ver === '3.3.10' || ver === '1.0.0') ver = '3.7.1';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
@@ -1270,11 +1296,14 @@
     if (!usageEl) return;
     lastUsageData = d;
     var nextAllowed = !!(d && d.usage && d.usage.chopcode && d.usage.chopcode.allowed);
-    if (nextAllowed !== chopcodeAllowed) {
+    var nextKaji = !!(d && d.usage && d.usage.kaji && d.usage.kaji.allowed);
+    if (nextAllowed !== chopcodeAllowed || nextKaji !== kajiAllowed) {
       chopcodeAllowed = nextAllowed;
+      kajiAllowed = nextKaji;
       renderPlateUI();
     } else {
       chopcodeAllowed = nextAllowed;
+      kajiAllowed = nextKaji;
     }
     if (cooldownTimer) { clearInterval(cooldownTimer); cooldownTimer = null; }
     if (resetTimer) { clearInterval(resetTimer); resetTimer = null; }
