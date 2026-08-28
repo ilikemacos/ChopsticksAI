@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-echo "chopsticksAI Installer (App ZIP)"
+echo "cs.AI Online installer (App ZIP)"
 
 [[ "$(uname)" == "Darwin" ]] || { echo "macOS only"; exit 1; }
 [[ "${EUID:-$(id -u)}" -ne 0 ]] || { echo "Do not run as root"; exit 1; }

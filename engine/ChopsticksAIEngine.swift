@@ -67,7 +67,7 @@ enum ChopsticksAI {
 
         guard let top = ranked.first, top.score >= confidenceFloor else {
             let hints = ranked.prefix(3).map { $0.intent }
-            var answer = "I'm not sure about that one.\n\nI know about rNitro, Fathom Air, Fathom Pro, ARENA, installing, and privacy. Try rephrasing"
+            var answer = "I'm not sure about that one.\n\nI know about MacBar, Fathom Air, Fathom Pro, ARENA, installing, and privacy. Try rephrasing"
             if hints.isEmpty {
                 answer += "."
             } else {

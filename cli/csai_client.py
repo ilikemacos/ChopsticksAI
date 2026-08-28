@@ -13,29 +13,170 @@ from typing import Any
 API_URL = os.environ.get("CS_AI_API", "https://chopstickshq.com/api/chopsticks-ai")
 CONFIG_DIR = Path.home() / ".config" / "chopsticks-ai"
 SESSION_FILE = CONFIG_DIR / "session.json"
-DEFAULT_TIER = os.environ.get("CS_AI_TIER", "high")
+UNLOCK_KEYS_FILE = CONFIG_DIR / "unlock-keys.json"
+PREFS_FILE = CONFIG_DIR / "prefs.json"
+DEFAULT_TIER = os.environ.get("CS_AI_TIER", "tamago")
+
+PLATE_ALIASES = {
+    "code": "chopcode",
+    "chop-code": "chopcode",
+    "chopcode": "chopcode",
+    "low": "rice",
+    "fast": "rice",
+    "haiku": "rice",
+    "medium": "tamago",
+    "high": "tamago",
+    "sonnet": "tamago",
+    "pro": "hibachi",
+    "opus": "hibachi",
+    "ultra": "hibachi",
+    "insane": "wagyua5",
+    "fable": "wagyua5",
+    "wagyu": "wagyua5",
+    "a1": "wagyua1",
+    "a2": "wagyua2",
+    "a3": "wagyua3",
+    "a4": "wagyua4",
+    "a5": "wagyua5",
+    "wagyua1": "wagyua1",
+    "wagyua2": "wagyua2",
+    "wagyua3": "wagyua3",
+    "wagyua4": "wagyua4",
+    "wagyua5": "wagyua5",
+}
+
+
+def normalize_plate(name: str) -> str:
+    key = (name or "").strip().lower().replace(" ", "")
+    return PLATE_ALIASES.get(key, key or DEFAULT_TIER)
 
 TIER_TOKENS = {
-    "low": 400,
-    "medium": 600,
-    "high": 1000,
-    "xhigh": 2000,
-    "xhighplus": 3000,
-    "insane": 4000,
-    "chopsticks": 800,
+    "rice": 800,
+    "tamago": 2000,
+    "hibachi": 4000,
+    "wagyu": 8000,
+    "wagyua1": 2500,
+    "wagyua2": 4000,
+    "wagyua3": 5500,
+    "wagyua4": 7000,
+    "wagyua5": 8000,
+    "low": 800,
+    "medium": 2000,
+    "high": 2000,
+    "xhigh": 4000,
+    "xhighplus": 4000,
+    "insane": 8000,
+    "chopsticks": 2000,
     "chopcode": 4000,
-    "stickercoderplus": 6000,
+    "stickercoderplus": 8000,
+    "pro": 4000,
 }
+
+
+def _load_unlock_keys() -> list[str]:
+    try:
+        if UNLOCK_KEYS_FILE.is_file():
+            data = json.loads(UNLOCK_KEYS_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, list):
+                return [str(k).strip() for k in data if str(k).strip()]
+    except (OSError, json.JSONDecodeError):
+        pass
+    return []
+
+
+def _save_unlock_keys(keys: list[str]) -> None:
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    UNLOCK_KEYS_FILE.write_text(json.dumps(keys, indent=2), encoding="utf-8")
+    try:
+        UNLOCK_KEYS_FILE.chmod(0o600)
+    except OSError:
+        pass
+
+
+def _load_prefs() -> dict[str, Any]:
+    try:
+        if PREFS_FILE.is_file():
+            data = json.loads(PREFS_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return data
+    except (OSError, json.JSONDecodeError):
+        pass
+    return {"webSearch": True, "tier": DEFAULT_TIER}
+
+
+def _save_prefs(prefs: dict[str, Any]) -> None:
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    PREFS_FILE.write_text(json.dumps(prefs, indent=2), encoding="utf-8")
+    try:
+        PREFS_FILE.chmod(0o600)
+    except OSError:
+        pass
 
 
 def _tier_max_tokens(tier: str) -> int:
     return TIER_TOKENS.get(tier.lower(), 1000)
 
 
+def format_duration(ms: int) -> str:
+    if ms <= 0:
+        return "now"
+    total_s = max(1, ms // 1000)
+    h, rem = divmod(total_s, 3600)
+    m, s = divmod(rem, 60)
+    parts: list[str] = []
+    if h:
+        parts.append(f"{h}h")
+    if m:
+        parts.append(f"{m}m")
+    if not parts and s:
+        parts.append(f"{s}s")
+    return " ".join(parts) or "soon"
+
+
+def progress_bar(used: int, limit: int, width: int = 24) -> str:
+    if limit <= 0:
+        return ""
+    ratio = max(0.0, min(1.0, used / limit))
+    filled = int(round(ratio * width))
+    return f"[{'█' * filled}{'░' * (width - filled)}]"
+
+
+def format_usage(body: dict[str, Any]) -> str:
+    usage = body.get("usage") or body
+    tier = usage.get("tier") or {}
+    label = tier.get("label") or tier.get("id") or "Free"
+    detail = str(tier.get("detail") or "").strip()
+    used = int(usage.get("used", body.get("used", 0)))
+    limit = int(usage.get("limit", body.get("limit", 0)))
+    lines = [f"Plan: {label}"]
+    if detail:
+        lines.append(detail)
+    if limit:
+        pct = (100.0 * used) / limit if limit else 0.0
+        bar = progress_bar(used, limit)
+        lines.append(f"Tokens: {used:,} / {limit:,} ({pct:.1f}%)")
+        if bar:
+            lines.append(bar)
+    else:
+        lines.append(f"Tokens used: {used:,}")
+    cooldown = usage.get("cooldown") or body.get("cooldown")
+    if isinstance(cooldown, dict) and cooldown.get("blocked"):
+        retry = int(cooldown.get("retryInMs") or 0)
+        lines.append(f"Cooldown active — retry in {format_duration(retry)}.")
+    warning = usage.get("warning")
+    if isinstance(warning, dict):
+        msg = warning.get("message")
+        if msg:
+            lines.append(str(msg))
+    return "\n".join(lines)
+
+
 class CsAIClient:
     def __init__(self) -> None:
         self.session: dict[str, Any] | None = None
-        self.tier = DEFAULT_TIER
+        self.unlock_keys = _load_unlock_keys()
+        self._prefs = _load_prefs()
+        self.tier = normalize_plate(str(self._prefs.get("tier") or DEFAULT_TIER))
         self._load_session()
 
     @property
@@ -48,6 +189,32 @@ class CsAIClient:
             return ""
         user = self.session.get("user") or {}
         return str(user.get("email") or "")
+
+    @property
+    def web_search(self) -> bool:
+        return bool(self._prefs.get("webSearch", True))
+
+    def set_tier(self, name: str) -> str:
+        self.tier = normalize_plate(name)
+        self._prefs["tier"] = self.tier
+        _save_prefs(self._prefs)
+        return self.tier
+
+    def set_web_search(self, on: bool) -> None:
+        self._prefs["webSearch"] = on
+        _save_prefs(self._prefs)
+
+    def add_unlock_key(self, key: str) -> bool:
+        key = key.strip()
+        if not key or key in self.unlock_keys:
+            return False
+        self.unlock_keys.append(key)
+        _save_unlock_keys(self.unlock_keys)
+        return True
+
+    def clear_unlock_keys(self) -> None:
+        self.unlock_keys = []
+        _save_unlock_keys(self.unlock_keys)
 
     def _load_session(self) -> None:
         try:
@@ -155,7 +322,7 @@ class CsAIClient:
 
     def usage(self) -> dict[str, Any]:
         self.refresh_if_needed()
-        return self._request({"action": "usage", "unlockKeys": []})
+        return self._request({"action": "usage", "unlockKeys": self.unlock_keys})
 
     def search(self, query: str) -> dict[str, Any]:
         self.refresh_if_needed()
@@ -166,10 +333,14 @@ class CsAIClient:
         messages: list[dict[str, str]],
         *,
         tier: str | None = None,
-        disable_search: bool = False,
+        disable_search: bool | None = None,
+        attachments: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         self.refresh_if_needed()
-        use_tier = (tier or self.tier).lower()
+        use_tier = normalize_plate(tier or self.tier)
+        no_search = not self.web_search if disable_search is None else disable_search
+        if use_tier == "chopcode":
+            no_search = True if disable_search is None else disable_search
         body: dict[str, Any] = {
             "messages": messages,
             "tier": use_tier,
@@ -179,8 +350,10 @@ class CsAIClient:
             "enableTools": True,
             "client": "cli",
             "language": os.environ.get("CS_AI_LANG", "en"),
-            "unlockKeys": [],
+            "unlockKeys": self.unlock_keys,
         }
-        if disable_search:
+        if no_search:
             body["disableSearch"] = True
+        if attachments:
+            body["attachments"] = attachments
         return self._request(body)

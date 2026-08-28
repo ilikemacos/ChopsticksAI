@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<script>
+(function(){try{document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upgrades · cs.AI</title>
+<meta name="description" content="Sign in to cs.AI, redeem Fathom Pro keys, and upgrade your allowance. Enterprise sales: chopstickshq@lam.ws.">
+<link rel="canonical" href="https://chopstickshq.com/chopsticks-ai/web/upgrades/">
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/chopsticks-ai/web/cursor-ui.css?v=20260827a">
+</head>
+<body class="cursor-app upgrades-page">
+<div class="cursor-shell">
+  <aside class="cursor-rail" aria-label="Activity bar">
+    <a class="rail-btn" id="rail-chat" href="/chopsticks-ai/web/?edition=online" title="Chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M8 10h8M8 14h5"/><rect x="4" y="5" width="16" height="14" rx="2"/></svg>
+    </a>
+    <a class="rail-btn rail-chopcode" href="/chopsticks-ai/web/?edition=online&amp;plate=chopcode" title="ChopCode">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M8 7h8M8 12h5M7 17h10"/><path d="M5 5v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H6a1 1 0 0 0-1 1z"/></svg>
+    </a>
+    <a class="rail-btn active" href="/chopsticks-ai/web/upgrades/" title="Upgrades">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M12 3l2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4L12 3z"/></svg>
+    </a>
+    <span class="rail-spacer"></span>
+    <button type="button" class="rail-btn" id="account-btn" title="Account" aria-label="Account"><span id="account-label">◉</span></button>
+  </aside>
+
+  <div class="cursor-workspace">
+    <header class="cursor-topbar">
+      <div class="cursor-topbar-brand">
+        <span class="cursor-topbar-title">Upgrades</span>
+        <span class="cursor-topbar-ver">cs.AI</span>
+      </div>
+      <div class="cursor-topbar-actions" id="topbar-guest">
+        <a class="cursor-auth-btn" id="back-chat" href="/chopsticks-ai/web/?edition=online">Back to chat</a>
+      </div>
+      <div class="cursor-topbar-user" id="topbar-user" hidden>
+        <span class="cursor-topbar-email" id="topbar-email"></span>
+        <button type="button" class="cursor-auth-btn" id="top-signout">Sign out</button>
+        <a class="cursor-auth-btn cursor-auth-btn-fill" id="back-chat-user" href="/chopsticks-ai/web/?edition=online">Chat</a>
+      </div>
+    </header>
+
+    <main class="upgrades-main">
+      <div class="upgrades-wrap">
+        <p class="upgrades-kicker">chopsticksAI</p>
+        <h1>Upgrade your allowance</h1>
+        <p class="upgrades-lead">
+          Sign in so keys and usage follow you. Redeem Fathom Pro <code>oi-pl2-</code> keys for Pro.
+          Large companies: <a href="/chopsticks-ai/enterprise/">Enterprise</a> via chopstickshq@lam.ws.
+        </p>
+
+        <section class="upgrades-auth-card" id="auth-guest">
+          <h2>Sign in</h2>
+          <p>Same email and password as the chat app. Creates an account if you need one.</p>
+          <label for="auth-email">Email</label>
+          <input id="auth-email" type="email" autocomplete="username" placeholder="you@company.com">
+          <label for="auth-password">Password</label>
+          <input id="auth-password" type="password" autocomplete="current-password" placeholder="••••••••" minlength="6">
+          <p class="auth-err" id="auth-err"></p>
+          <p class="auth-ok" id="auth-ok"></p>
+          <div class="upgrades-auth-actions">
+            <button type="button" class="nbtn primary" id="auth-signin">Sign in</button>
+            <button type="button" class="nbtn" id="auth-signup">Create account</button>
+          </div>
+        </section>
+
+        <section class="upgrades-auth-card" id="auth-member" hidden>
+          <h2>Signed in</h2>
+          <p id="auth-member-email">Your account</p>
+          <div class="usage-meter" id="allowance-meter"></div>
+          <p class="usage-meta" id="allowance-meta"></p>
+        </section>
+
+        <section>
+          <h2 class="upgrades-h2">Plans</h2>
+          <div class="upgrades-plans">
+            <article class="up-plan" data-plan="free">
+              <div class="plan-kicker">Anyone</div>
+              <h3>Free</h3>
+              <p class="price">775k <span>tokens · 5h reset</span></p>
+              <ul>
+                <li>Rice, Tamago, Hibachi</li>
+                <li>Wagyu with sign-in</li>
+              </ul>
+            </article>
+            <article class="up-plan" data-plan="pro">
+              <div class="plan-kicker">Power users</div>
+              <h3>Pro</h3>
+              <p class="price">Fathom keys</p>
+              <ul>
+                <li>2 keys → 800k · 2h 30m</li>
+                <li>5 keys → 900k · 2h · ChopCode</li>
+                <li>10 keys → 1m · 1h</li>
+              </ul>
+            </article>
+            <article class="up-plan up-plan-ent">
+              <div class="plan-kicker">Companies</div>
+              <h3>Enterprise</h3>
+              <p class="price">Custom</p>
+              <ul>
+                <li>Seats, SSO review, invoices</li>
+                <li>chopstickshq@lam.ws</li>
+              </ul>
+              <a class="nbtn primary" href="mailto:chopstickshq@lam.ws?subject=cs.AI%20Enterprise">Contact sales</a>
+            </article>
+          </div>
+        </section>
+
+        <section class="upgrades-auth-card">
+          <h2>Redeem Fathom Pro keys</h2>
+          <p>Keys start with <code>oi-pl2-</code>. They are stored on this device for your signed-in account.</p>
+          <div class="unlock-row">
+            <input type="text" id="unlock-input" placeholder="oi-pl2-…" aria-label="Unlock key">
+            <button type="button" class="nbtn primary" id="unlock-redeem">Redeem</button>
+            <a class="nbtn" href="/vault/">Get a key</a>
+          </div>
+          <p class="usage-meta" id="unlock-status"></p>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="/js/theme.js"></script>
+<script src="/js/chopsticks-ai-cloud.js"></script>
+<script>
+(function () {
+  var Cloud = window.ChopsticksAICloud;
+  var API = '/api/chopsticks-ai';
+  var params = new URLSearchParams(location.search);
+  var edition = params.get('edition') === 'offline' ? 'offline' : 'online';
+  var chatHref = '/chopsticks-ai/web/?edition=' + edition;
+  ['rail-chat', 'back-chat', 'back-chat-user'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.href = chatHref;
+  });
+
+  function unlockStorageKey() {
+    var uid = Cloud && Cloud.getSession() && Cloud.getSession().user && Cloud.getSession().user.id;
+    return uid ? ('chq.aiUnlockKeys.' + uid) : 'chq.aiUnlockKeys.guest';
+  }
+  function unlockKeys() {
+    try {
+      var raw = localStorage.getItem(unlockStorageKey());
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr.filter(function (k) { return /^oi-pl2-/i.test(String(k || '')); }) : [];
+    } catch (e) { return []; }
+  }
+  function saveUnlockKeys(keys) {
+    try { localStorage.setItem(unlockStorageKey(), JSON.stringify(keys)); } catch (e) {}
+  }
+  function fmt(n) {
+    if (!isFinite(n)) return '?';
+    if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'm';
+    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return String(Math.round(n));
+  }
+
+  function updateAccountUI() {
+    var signed = Cloud && Cloud.isSignedIn();
+    document.body.classList.toggle('signed-in', !!signed);
+    var accountBtn = document.getElementById('account-btn');
+    if (accountBtn) accountBtn.classList.toggle('signed-in', !!signed);
+    var label = document.getElementById('account-label');
+    var guest = document.getElementById('auth-guest');
+    var member = document.getElementById('auth-member');
+    var topGuest = document.getElementById('topbar-guest');
+    var topUser = document.getElementById('topbar-user');
+    var topEmail = document.getElementById('topbar-email');
+    var memberEmail = document.getElementById('auth-member-email');
+    if (guest) guest.hidden = !!signed;
+    if (member) member.hidden = !signed;
+    if (topGuest) topGuest.hidden = !!signed;
+    if (topUser) topUser.hidden = !signed;
+    var em = signed ? (Cloud.userEmail() || 'Signed in') : '';
+    if (label) {
+      label.textContent = signed ? em.split('@')[0].slice(0, 10) : '◉';
+      label.title = signed ? em : 'Sign in';
+    }
+    if (topEmail) topEmail.textContent = em;
+    if (memberEmail && signed) memberEmail.textContent = em;
+  }
+
+  function pollUsage() {
+    var headers = { 'Content-Type': 'application/json' };
+    try {
+      if (Cloud && Cloud.isSignedIn() && Cloud.getSession() && Cloud.getSession().access_token) {
+        headers.Authorization = 'Bearer ' + Cloud.getSession().access_token;
+      }
+    } catch (e) {}
+    fetch(API, { method: 'POST', headers: headers, body: JSON.stringify({ action: 'usage', unlockKeys: unlockKeys() }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var used = d && d.usage && typeof d.usage.used === 'number' ? d.usage.used : null;
+        var limit = d && d.usage && d.usage.limit;
+        var meter = document.getElementById('allowance-meter');
+        var meta = document.getElementById('allowance-meta');
+        if (meter && typeof used === 'number' && limit) {
+          var pct = Math.max(2, Math.round(Math.min(1, used / limit) * 100));
+          meter.innerHTML = '<div class="usage-meter-head"><span>Allowance</span><span>' +
+            fmt(used) + ' / ' + fmt(limit) + '</span></div>' +
+            '<div class="usage-track"><div class="usage-fill allow" style="width:' + pct + '%"></div></div>';
+        }
+        var n = unlockKeys().length;
+        var bits = [];
+        if (d && d.usage && d.usage.tier && d.usage.tier.label) bits.push(d.usage.tier.label);
+        bits.push(n + ' key' + (n === 1 ? '' : 's') + ' redeemed');
+        if (meta) meta.textContent = bits.join(' · ');
+        document.querySelectorAll('.up-plan[data-plan]').forEach(function (el) {
+          el.classList.remove('is-current');
+        });
+        var plan = n >= 2 ? 'pro' : 'free';
+        var cur = document.querySelector('.up-plan[data-plan="' + plan + '"]');
+        if (cur) cur.classList.add('is-current');
+        var st = document.getElementById('unlock-status');
+        if (st && !st.dataset.flash) st.textContent = n ? n + ' valid key' + (n === 1 ? '' : 's') + ' on this account.' : '';
+      })
+      .catch(function () {});
+  }
+
+  var err = document.getElementById('auth-err');
+  var ok = document.getElementById('auth-ok');
+  var email = document.getElementById('auth-email');
+  var pass = document.getElementById('auth-password');
+  document.getElementById('auth-signin').onclick = function () {
+    err.textContent = '';
+    ok.textContent = '';
+    Cloud.signIn(email.value.trim(), pass.value)
+      .then(function () {
+        ok.textContent = 'Signed in.';
+        updateAccountUI();
+        pollUsage();
+      })
+      .catch(function (e) { err.textContent = e.message || 'Sign in failed'; });
+  };
+  document.getElementById('auth-signup').onclick = function () {
+    err.textContent = '';
+    ok.textContent = '';
+    Cloud.signUp(email.value.trim(), pass.value)
+      .then(function (r) {
+        if (r && r.needsConfirm) {
+          ok.textContent = r.message || 'Account created. Sign in.';
+        } else {
+          ok.textContent = 'Account ready.';
+          updateAccountUI();
+          pollUsage();
+        }
+      })
+      .catch(function (e) { err.textContent = e.message || 'Sign up failed'; });
+  };
+  document.getElementById('top-signout').onclick = function () {
+    Cloud.signOut().then(function () {
+      updateAccountUI();
+      pollUsage();
+    });
+  };
+  document.getElementById('account-btn').onclick = function () {
+    var guest = document.getElementById('auth-guest');
+    if (guest && !guest.hidden) email.focus();
+  };
+  document.getElementById('unlock-redeem').onclick = function () {
+    var input = document.getElementById('unlock-input');
+    var st = document.getElementById('unlock-status');
+    var k = String(input.value || '').trim();
+    if (!/^oi-pl2-/i.test(k)) {
+      st.textContent = 'Key must start with oi-pl2-';
+      return;
+    }
+    var keys = unlockKeys();
+    if (keys.indexOf(k) < 0) {
+      keys.push(k);
+      saveUnlockKeys(keys);
+    }
+    input.value = '';
+    st.dataset.flash = '1';
+    st.textContent = 'Redeemed. Refreshing allowance…';
+    pollUsage();
+    setTimeout(function () { delete st.dataset.flash; }, 800);
+  };
+  document.getElementById('unlock-input').onkeydown = function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('unlock-redeem').click(); }
+  };
+
+  updateAccountUI();
+  pollUsage();
+})();
+</script>
+</body>
+</html>

@@ -1094,7 +1094,9 @@ struct SettingsView: View {
                     }
 
                 case .chat:
-                    SettingsCard(title: "Chat mode", subtitle: "Online mode is the default — cs.AI uses the live model whenever your Mac has a network connection.") {
+                    SettingsCard(title: "Chat mode", subtitle: CSAIEdition.current.isOffline
+                                ? "cs.AI Offline — on-device knowledge base only."
+                                : "cs.AI Online — live models. Does not use the local KB.") {
                         HStack {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text("Connection")
@@ -1109,17 +1111,9 @@ struct SettingsView: View {
                                 .foregroundStyle(network.isOnline ? Cursor.green : Cursor.soft)
                         }
                         Divider().overlay(Cursor.hairline)
-                        SettingsToggleRow(
-                            title: "Offline mode",
-                            subtitle: "Local product KB only — no cloud API. Turn off for online mode (default).",
-                            isOn: Binding(get: { store.offlineChatMode }, set: { store.setOfflineChatMode($0) })
-                        )
-                        Divider().overlay(Cursor.hairline)
-                        Text(store.offlineChatMode
-                             ? "Offline mode is on. Answers come from the on-device knowledge base."
-                             : (network.isOnline
-                                ? "Online mode — live model via chopstickshq.com on \(network.connection.label)."
-                                : "Online mode is selected but no network is detected. Connect to Wi‑Fi or enable Offline mode."))
+                        Text(CSAIEdition.current.isOffline
+                             ? "This is cs.AI Offline. Answers come only from the on-device knowledge base."
+                             : "This is cs.AI Online. Live models via chopstickshq.com — it does not fall back to the local KB.")
                             .font(.system(size: 13))
                             .foregroundStyle(Cursor.soft)
                     }
@@ -1159,11 +1153,12 @@ struct SettingsView: View {
                     }
 
                 case .models:
-                    SettingsCard(title: "Effort", subtitle: "Maps to ChopsticksAI generation tiers. ChopCode and StickerCoder+ are for coding.") {
+                    SettingsCard(title: "Plate", subtitle: "Rice → Tamago → Hibachi → Wagyu A1–A5. ChopCode is the 10-agent coding room (Pro / founder).") {
                         ForEach([
-                            ("low", "Low"), ("medium", "Medium"), ("high", "High"),
-                            ("xhigh", "Xhigh"), ("xhighplus", "Xhigh+"), ("insane", "Insane"),
-                            ("chopsticks", "Chopsticks"), ("chopcode", "ChopCode"),
+                            ("rice", "Rice"), ("tamago", "Tamago"), ("hibachi", "Hibachi"),
+                            ("wagyua1", "Wagyu A1"), ("wagyua2", "Wagyu A2"), ("wagyua3", "Wagyu A3"),
+                            ("wagyua4", "Wagyu A4"), ("wagyua5", "Wagyu A5"),
+                            ("chopcode", "ChopCode"),
                             ("stickercoderplus", "StickerCoder+"),
                         ], id: \.0) { id, label in
                             Button {
@@ -1182,6 +1177,14 @@ struct SettingsView: View {
                             }
                             .buttonStyle(.plain)
                             if id != "stickercoderplus" { Divider().overlay(Cursor.hairline) }
+                        }
+                    }
+                    SettingsCard(title: "More models") {
+                        Text("Bring your Groq, OpenRouter, or Claude API key and pick from their full catalogs.")
+                            .font(.system(size: 13))
+                            .foregroundStyle(Cursor.soft)
+                        GhostButton(title: "Open More models") {
+                            store.nav = .moreModels
                         }
                     }
 
