@@ -1338,7 +1338,7 @@ struct RootShell: View {
     private var sidebarBlurb: String {
         switch store.nav {
         case .search: return "Chromium browser · Google search"
-        case .kaji: return "Think different. Ask Kaji. · web computer, no VM"
+        case .kaji: return "Think different. Ask Kaji. · alpha · prone to wrong answers"
         case .cloudAgents: return "Remote agent runs"
         case .automations: return "Schedules & event triggers"
         case .repos: return "Local repositories"

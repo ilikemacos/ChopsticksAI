@@ -1009,7 +1009,7 @@ struct MarketplaceView: View {
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Cursor.chromium)
                 }
-                Text("Think different. Ask Kaji. Grok-style Pro assistant. The web is the computer — no VM.")
+                Text("Think different. Ask Kaji. Alpha Grok-style Pro app — prone to wrong answers. The web is the computer — no VM.")
                     .font(.system(size: 12.5))
                     .foregroundStyle(Cursor.muted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -1208,7 +1208,7 @@ struct SettingsView: View {
                     }
 
                 case .models:
-                    SettingsCard(title: "Plate", subtitle: "Rice → Tamago → Hibachi → Wagyu. ChopCode and Kaji are Pro (5 keys / founder). Think different. Ask Kaji.") {
+                    SettingsCard(title: "Plate", subtitle: "Rice → Tamago → Hibachi → Wagyu. ChopCode and Kaji are Pro. Kaji is alpha and prone to wrong answers.") {
                         ForEach([
                             ("rice", "Rice"), ("tamago", "Tamago"), ("hibachi", "Hibachi"),
                             ("wagyua1", "Wagyu A1"), ("wagyua2", "Wagyu A2"), ("wagyua3", "Wagyu A3"),

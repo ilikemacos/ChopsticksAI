@@ -14,35 +14,39 @@ const TIERS = {
   rice: {
     label: "Rice",
     models: [
-      "nvidia/llama-3.3-nemotron-super-49b-v1:free",
       "nvidia/nemotron-3-nano-30b-a3b:free",
+      "nvidia/llama-3.3-nemotron-super-49b-v1:free",
     ],
     longModels: [
-      "nvidia/llama-3.3-nemotron-super-49b-v1:free",
       "nvidia/nemotron-3-nano-30b-a3b:free",
+      "nvidia/llama-3.3-nemotron-super-49b-v1:free",
     ],
     context: 16000,
     refine: false,
-    maxReply: 800,
+    maxReply: 700,
     grounding: 3,
-    searchMax: 4,
-    timeoutMs: 18000,
+    searchMax: 3,
+    timeoutMs: 14000,
+    temperature: 0.25,
   },
   tamago: {
     label: "Tamago",
     models: [
       "nvidia/nemotron-3-super-120b-a12b:free",
       "nvidia/llama-3.3-nemotron-super-49b-v1:free",
+      "nvidia/nemotron-3-nano-30b-a3b:free",
     ],
     longModels: [
       "nvidia/nemotron-3-super-120b-a12b:free",
+      "nvidia/llama-3.3-nemotron-super-49b-v1:free",
     ],
     context: 48000,
     refine: false,
-    maxReply: 2000,
-    grounding: 6,
-    searchMax: 8,
-    timeoutMs: 22000,
+    maxReply: 1800,
+    grounding: 5,
+    searchMax: 6,
+    timeoutMs: 18000,
+    temperature: 0.3,
   },
   hibachi: {
     label: "Hibachi",
@@ -55,10 +59,11 @@ const TIERS = {
     ],
     context: 96000,
     refine: false,
-    maxReply: 4000,
-    grounding: 10,
-    searchMax: 12,
-    timeoutMs: 26000,
+    maxReply: 3500,
+    grounding: 8,
+    searchMax: 8,
+    timeoutMs: 22000,
+    temperature: 0.32,
   },
   wagyu: {
     label: "Wagyu A5",
@@ -81,7 +86,8 @@ const TIERS = {
     maxReply: 8000,
     grounding: 16,
     searchMax: 16,
-    timeoutMs: 26000,
+    timeoutMs: 24000,
+    temperature: 0.35,
   },
 };
 const WAGYU_SHARED = {
@@ -138,24 +144,24 @@ TIERS.chopcode = {
     label: "ChopCode",
     chopCode: true,
     models: [
+      "groq/llama-3.3-70b-versatile:free",
       "z-ai/glm-5.2:free",
       "nvidia/nemotron-3-ultra:free",
       "cohere/north-mini-code:free",
       "openai/gpt-oss-20b:free",
       "qwen/qwen3-coder:free",
-      "groq/llama-3.3-70b-versatile:free",
       "poolside/laguna-s-2.1:free",
       "nvidia/nemotron-3-super-120b-a12b:free",
       "google/gemma-4-26b-a4b-it:free",
       "google/gemma-4-31b-it:free",
     ],
     longModels: [
+      "groq/llama-3.3-70b-versatile:free",
       "z-ai/glm-5.2:free",
       "nvidia/nemotron-3-ultra:free",
       "cohere/north-mini-code:free",
       "openai/gpt-oss-20b:free",
       "qwen/qwen3-coder:free",
-      "groq/llama-3.3-70b-versatile:free",
       "poolside/laguna-s-2.1:free",
       "nvidia/nemotron-3-super-120b-a12b:free",
       "google/gemma-4-26b-a4b-it:free",
@@ -167,31 +173,31 @@ TIERS.chopcode = {
     maxReply: 4096,
     grounding: 8,
     searchMax: 8,
-    timeoutMs: 26000,
-    temperature: 0.7,
+    timeoutMs: 22000,
+    temperature: 0.2,
 };
 TIERS.kaji = {
   label: "Kaji",
   kaji: true,
   models: [
     "x-ai/grok-4-fast",
-    "x-ai/grok-4",
     "x-ai/grok-3-mini",
+    "nvidia/nemotron-3-nano-30b-a3b:free",
     "nvidia/nemotron-3-super-120b-a12b:free",
-    "nvidia/llama-3.3-nemotron-super-49b-v1:free",
   ],
   longModels: [
+    "x-ai/grok-4-fast",
     "x-ai/grok-4",
     "nvidia/nemotron-3-super-120b-a12b:free",
   ],
   refine: true,
-  refineModels: ["x-ai/grok-4-fast", "moonshotai/kimi-k2.6:free"],
+  refineModels: ["x-ai/grok-4-fast", "nvidia/nemotron-3-nano-30b-a3b:free"],
   context: 128000,
-  maxReply: 6000,
-  grounding: 48,
-  searchMax: 12,
-  timeoutMs: 32000,
-  temperature: 0.85,
+  maxReply: 3500,
+  grounding: 16,
+  searchMax: 6,
+  timeoutMs: 22000,
+  temperature: 0.5,
 };
 const TIER_ALIASES = {
   rice: "rice",
@@ -991,8 +997,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 
-const APP_VERSION = "3.7.0";
-const PREVIEW_APP_VERSION = "3.7.0";
+const APP_VERSION = "3.7.1";
+const PREVIEW_APP_VERSION = "3.7.1";
 
 function appVersionFor(account) {
   return canPickOpenRouterModel(account) ? PREVIEW_APP_VERSION : APP_VERSION;
@@ -1488,7 +1494,7 @@ const SEARCH_ENABLED = (process.env.CHOPSTICKS_AI_SEARCH || "on") !== "off";
 const SEARCH_TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_SEARCH_TIMEOUT_MS || 2200);
 const SEARCH_MIN_LEN = 3;
 const MAX_SOURCES = 12;
-const UA = "cs.AI-3/3.7.0 (+https://chopstickshq.com/chopsticks-ai/)";
+const UA = "cs.AI-3/3.7.1 (+https://chopstickshq.com/chopsticks-ai/)";
 
 function clockNow() {
   const d = new Date();
@@ -2056,7 +2062,7 @@ function selfFacts(tier, appVersion) {
     t.stickerCoder
       ? "- StickerCoder+ mode: prioritise complete, runnable code, write_file tool use, and sharp engineering answers."
       : t.kaji
-        ? "- Kaji mode: Grok-style assistant. Catchphrase: Think different. Ask Kaji. You have the full Chopsticks HQ knowledge catalog plus live web research. Your computer is the in-app web browser (open_page) — there is no Linux VM."
+        ? "- Kaji mode (alpha): Grok-style assistant. Catchphrase: Think different. Ask Kaji. Full Chopsticks HQ catalog plus live web. The in-app browser is your computer — no Linux VM. You are alpha: you are prone to wrong answers. Prefer “I don’t know” over a confident guess."
       : t.chopCode
         ? "- ChopCode mode: ten coding specialists run in parallel (each educated on today's date and live research), then Lead merges their drafts into one answer. Prioritise complete, runnable code and clear file fences."
         : null,
@@ -2117,7 +2123,8 @@ function systemPrompt(grounding, mode, web, tier, language, appVersion) {
     : tier.kaji
     ? [
         "You are Kaji — Chopsticks HQ’s Grok-style assistant. Catchphrase: Think different. Ask Kaji.\n\n",
-        "Be maximally helpful, irreverent when it fits, and never boring. Answer anything. ",
+        "Kaji is ALPHA. You are prone to wrong answers. Do not bluff. If the reference material or live research does not support a fact, say you are not sure. ",
+        "Be maximally helpful and a little irreverent, but never at the cost of accuracy. Answer anything. ",
         "You were trained on the full Chopsticks HQ product catalog (MacBar, Fathom, ARENA, rNitro, cs.AI) plus live web research. ",
         "You do not have a Linux VM. The in-app web browser is your computer: use the open_page tool to load https URLs there, then reason about what you opened. ",
         "When you need a machine, browse. Never claim you can SSH, spawn a container, or run a desktop VM.\n\n",
@@ -2181,6 +2188,8 @@ function systemPrompt(grounding, mode, web, tier, language, appVersion) {
     "steer the conversation back to Chopsticks HQ, and do not mention the reference material ",
     "when it isn't relevant.\n",
     "- If you are genuinely unsure of a fact, say so rather than inventing one.\n",
+    "- Be smarter and faster: lead with the answer, skip throat-clearing, skip repeating the question. Prefer one tight paragraph unless the user asked for depth or code. ",
+    "Check names, versions, and numbers against reference material and live research before stating them. If those sources disagree with your memory, trust the sources.\n",
     "- You are cs.AI (chopsticksAI), made by Chopsticks HQ. If asked what model, ",
     "engine or company is behind you, say you are cs.AI by Chopsticks ",
     "HQ. Never name or speculate about any underlying model, provider or vendor.\n",
