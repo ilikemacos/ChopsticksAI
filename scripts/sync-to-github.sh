@@ -16,19 +16,26 @@ cp "$APP/install-chopsticks-ai.sh" "$MIRROR/macos-app/" 2>/dev/null || true
 
 # Mirror build paths (engine/, shared/, site zip output)
 sed -i '' \
-  -e 's|AI="$ROOT/../chopsticks-ai"|AI="$ROOT/../engine"|' \
-  -e 's|SITE="$ROOT/../chopstickshq-site/chopsticks-ai"|SITE="$ROOT/../../chopstickshq-site/chopsticks-ai"|' \
+  -e 's|AI="$WORK/chopsticks-ai"|AI="$REPO/engine"|' \
+  -e 's|AI="$ROOT/../chopsticks-ai"|AI="$REPO/engine"|' \
+  -e 's|SITE="$WORK/chopstickshq-site/chopsticks-ai"|SITE="${CHOPSTICKS_AI_SITE:-$REPO/../chopstickshq-site/chopsticks-ai}"|' \
   -e 's|macos-shared|shared|' \
   "$MIRROR/macos-app/build-app.sh" 2>/dev/null || \
 sed -i \
-  -e 's|AI="$ROOT/../chopsticks-ai"|AI="$ROOT/../engine"|' \
-  -e 's|SITE="$ROOT/../chopstickshq-site/chopsticks-ai"|SITE="$ROOT/../../chopstickshq-site/chopsticks-ai"|' \
+  -e 's|AI="$WORK/chopsticks-ai"|AI="$REPO/engine"|' \
+  -e 's|AI="$ROOT/../chopsticks-ai"|AI="$REPO/engine"|' \
+  -e 's|SITE="$WORK/chopstickshq-site/chopsticks-ai"|SITE="${CHOPSTICKS_AI_SITE:-$REPO/../chopstickshq-site/chopsticks-ai}"|' \
   -e 's|macos-shared|shared|' \
   "$MIRROR/macos-app/build-app.sh"
 
 echo "==> Sync API + changelog"
 cp "$SITE/api/_lib/chopsticks-ai.js" "$MIRROR/server/chopsticks-ai.js"
 cp "$SITE/api/_lib/signup-verify.js" "$MIRROR/server/signup-verify.js"
+cp "$SITE/api/_lib/usage-email.js" "$MIRROR/server/usage-email.js"
+cp "$SITE/api/_lib/chopsticks-ai-kb.json" "$MIRROR/server/chopsticks-ai-kb.json"
+cp "$SITE/api/_lib/chopcode-ensemble.js" "$MIRROR/server/chopcode-ensemble.js" 2>/dev/null || true
+mkdir -p "$MIRROR/js"
+cp "$SITE/js/chopsticks-ai-cloud.js" "$MIRROR/js/chopsticks-ai-cloud.js"
 cp "$SITE/chopsticks-ai/changelog.json" "$MIRROR/changelog.json"
 cp "$SITE/chopsticks-ai/macos-version.json" "$MIRROR/macos-version.json"
 

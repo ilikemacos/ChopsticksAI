@@ -43,7 +43,7 @@ struct OnboardingView: View {
         (
             "bubble.left.and.bubble.right",
             "Agents window + Browser",
-            "Use the Agents chat for coding and files. The Browser rail opens pages inside the app. Live chat needs network; HQ product help can fall back to the offline knowledge base."
+            "Use the Agents chat for coding and files. The Browser rail opens pages in WebKit inside the app. Online needs a signed-in account and network; Offline uses the local product knowledge base only."
         ),
     ]
 

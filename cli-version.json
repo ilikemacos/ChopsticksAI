@@ -1,0 +1,21 @@
+{
+  "latest": "3.3.11",
+  "product": "csai",
+  "base": "https://chopstickshq.com/chopsticks-ai/cli",
+  "files": [
+    "csai",
+    "csai.py",
+    "csai_tui.py",
+    "csai_client.py",
+    "csai_update.py",
+    "csai.cmd"
+  ],
+  "sha256": {
+    "csai": "e252a6a76e8b93d83f6d09d47cab224919153b470f8811592e9e26d5fbb5486f",
+    "csai.py": "78d569271f039031544acfdbe8ce0bf32ffd5f2c0b07fc2ed66c018e82e25eac",
+    "csai_tui.py": "f93931e79a8a4cd124ddc39321e5b3052bd20c221a61781f1174ff942a18ae3a",
+    "csai_client.py": "7a211d8922fba552297aae9e461ab374de0383a93314bd757070b41eb6aa3415",
+    "csai_update.py": "dab4e55b1a103ab05fb06e1466f3df3bfd6f9d6366f45cea2ea0e66160ca1111",
+    "csai.cmd": "d3e45a0b59be6fa990ce6e22d7581df08149db8e72effef033459c9ee650f897"
+  }
+}

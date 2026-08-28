@@ -771,7 +771,7 @@ final class ChatModel: ObservableObject {
                 req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             }
         }
-        req.timeoutInterval = 22
+        req.timeoutInterval = 90
         req.httpBody = try? JSONSerialization.data(withJSONObject: payload)
 
         do {

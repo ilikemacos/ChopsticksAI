@@ -84,8 +84,16 @@ def _load_unlock_keys() -> list[str]:
     return []
 
 
+def _ensure_config_dir() -> None:
+    _ensure_config_dir()
+    try:
+        CONFIG_DIR.chmod(0o700)
+    except OSError:
+        pass
+
+
 def _save_unlock_keys(keys: list[str]) -> None:
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    _ensure_config_dir()
     UNLOCK_KEYS_FILE.write_text(json.dumps(keys, indent=2), encoding="utf-8")
     try:
         UNLOCK_KEYS_FILE.chmod(0o600)
@@ -105,7 +113,7 @@ def _load_prefs() -> dict[str, Any]:
 
 
 def _save_prefs(prefs: dict[str, Any]) -> None:
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    _ensure_config_dir()
     PREFS_FILE.write_text(json.dumps(prefs, indent=2), encoding="utf-8")
     try:
         PREFS_FILE.chmod(0o600)
@@ -226,7 +234,7 @@ class CsAIClient:
             self.session = None
 
     def _save_session(self) -> None:
-        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        _ensure_config_dir()
         if self.session:
             SESSION_FILE.write_text(json.dumps(self.session, indent=2), encoding="utf-8")
             try:
@@ -306,6 +314,27 @@ class CsAIClient:
     def sign_in(self, email: str, password: str) -> dict[str, Any]:
         body = self._request(
             {"action": "authSignIn", "email": email.strip(), "password": password},
+            auth=False,
+        )
+        if body.get("needsCode") and body.get("loginToken"):
+            return body
+        session = self._normalize_session(body)
+        if not session:
+            err = body.get("error") or body.get("message") or "Sign in failed"
+            raise RuntimeError(str(err))
+        self.session = session
+        self._save_session()
+        return body
+
+    def verify_login(self, email: str, password: str, code: str, login_token: str) -> dict[str, Any]:
+        body = self._request(
+            {
+                "action": "loginVerify",
+                "email": email.strip(),
+                "password": password,
+                "code": code.strip(),
+                "loginToken": login_token,
+            },
             auth=False,
         )
         session = self._normalize_session(body)
