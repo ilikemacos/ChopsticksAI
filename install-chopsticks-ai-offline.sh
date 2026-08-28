@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-echo "cs.AI Online installer (App ZIP)"
+echo "cs.AI Offline installer"
 
 [[ "$(uname)" == "Darwin" ]] || { echo "macOS only"; exit 1; }
 [[ "${EUID:-$(id -u)}" -ne 0 ]] || { echo "Do not run as root"; exit 1; }
 
 BASE="https://chopstickshq.com/chopsticks-ai"
-APP="chopsticksAI.app"
+APP="cs.AI Offline.app"
 
-TMP=$(mktemp -d "${TMPDIR:-/tmp}/chopsticks-ai-install.XXXXXX")
+TMP=$(mktemp -d "${TMPDIR:-/tmp}/csai-offline-install.XXXXXX")
 trap 'rm -rf -- "$TMP"' EXIT
 
 json_get() {
@@ -17,22 +17,22 @@ json_get() {
     | head -1 | sed 's/.*:[[:space:]]*"//; s/"$//'
 }
 
-echo "Resolving latest version..."
-curl -fsSL "$BASE/macos-version.json" -o "$TMP/version.json" \
-  || { echo "Could not reach $BASE/macos-version.json"; exit 1; }
+echo "Resolving latest Offline version..."
+curl -fsSL "$BASE/macos-offline-version.json" -o "$TMP/version.json" \
+  || { echo "Could not reach $BASE/macos-offline-version.json"; exit 1; }
 
 VER="$(json_get "$TMP/version.json" latest)"
 ZIP="$(json_get "$TMP/version.json" zip)"
 WANT_SHA="$(json_get "$TMP/version.json" sha256)"
 
-[[ -n "$VER" && -n "$ZIP" ]] || { echo "Malformed macos-version.json"; exit 1; }
+[[ -n "$VER" && -n "$ZIP" ]] || { echo "Malformed macos-offline-version.json"; exit 1; }
 echo "Latest is $VER"
 
 echo "Downloading ${ZIP}..."
-curl --progress-bar -fL "${BASE}/${ZIP}" -o "$TMP/chopsticks-ai.zip"
+curl --progress-bar -fL "${BASE}/${ZIP}" -o "$TMP/app.zip"
 
 if [[ -n "$WANT_SHA" ]]; then
-  GOT_SHA="$(shasum -a 256 "$TMP/chopsticks-ai.zip" | awk '{print $1}')"
+  GOT_SHA="$(shasum -a 256 "$TMP/app.zip" | awk '{print $1}')"
   if [[ "$GOT_SHA" != "$WANT_SHA" ]]; then
     echo "Checksum mismatch - refusing to install."
     echo "  expected $WANT_SHA"
@@ -42,7 +42,7 @@ if [[ -n "$WANT_SHA" ]]; then
   echo "Checksum verified."
 fi
 
-unzip -qo "$TMP/chopsticks-ai.zip" -d "$TMP/out"
+unzip -qo "$TMP/app.zip" -d "$TMP/out"
 [[ -d "${TMP}/out/${APP}" ]] || { echo "Archive did not contain $APP"; exit 1; }
 
 mkdir -p "$HOME/Applications"

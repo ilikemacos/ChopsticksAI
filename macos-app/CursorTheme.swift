@@ -29,6 +29,7 @@ enum AppNav: String, CaseIterable, Identifiable {
     case automations
     case repos
     case marketplace
+    case moreModels
     case usage
     case account
     case settings
@@ -43,6 +44,7 @@ enum AppNav: String, CaseIterable, Identifiable {
         case .automations: return "Automations"
         case .repos: return "Repositories"
         case .marketplace: return "Marketplace"
+        case .moreModels: return "More models"
         case .usage: return "Usage"
         case .account: return "Account"
         case .settings: return "Settings"
@@ -57,6 +59,7 @@ enum AppNav: String, CaseIterable, Identifiable {
         case .automations: return "arrow.triangle.2.circlepath"
         case .repos: return "externaldrive"
         case .marketplace: return "puzzlepiece.extension"
+        case .moreModels: return "sparkles"
         case .usage: return "chart.bar"
         case .account: return "person.crop.circle"
         case .settings: return "gearshape"

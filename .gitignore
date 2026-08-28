@@ -1,4 +1,5 @@
 build/
+*.zip
 .DS_Store
 *.iconset/
 .icon-*.png

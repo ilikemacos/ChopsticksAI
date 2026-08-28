@@ -2,14 +2,23 @@
 set -Eeuo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-AI="$ROOT/../chopsticks-ai"
-SITE="$ROOT/../chopstickshq-site/chopsticks-ai"
+WORK="$(cd "$ROOT/../.." && pwd)"
+AI="$WORK/chopsticks-ai"
+SITE="$WORK/chopstickshq-site/chopsticks-ai"
 BUNDLE="chopsticksAI.app"
 EXEC="chopsticksAI"
-VERSION="${1:-v2.0.0}"
+VERSION="${1:-v3.6.10}"
+EDITION="${2:-online}"
 BUILD="$ROOT/build"
+if [[ "$EDITION" == "offline" ]]; then
+  BUNDLE="cs.AI Offline.app"
+  ZIP="chopsticksAI-offline-${VERSION}.zip"
+else
+  BUNDLE="chopsticksAI.app"
+  ZIP="chopsticksAI-${VERSION}.zip"
+  EDITION="online"
+fi
 APP="$BUILD/$BUNDLE"
-ZIP="chopsticksAI-${VERSION}.zip"
 
 [[ "$(uname)" == "Darwin" ]] || { echo "macOS only"; exit 1; }
 
@@ -58,14 +67,14 @@ ARCH="$(uname -m)"
 TARGET="arm64-apple-macos14.0"
 [[ "$ARCH" == "arm64" ]] || TARGET="x86_64-apple-macos14.0"
 
-echo "Building chopsticksAI $VERSION ($TARGET)..."
+echo "Building chopsticksAI $VERSION ($EDITION) ($TARGET)..."
 
 rm -rf "$BUILD"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$ROOT/Info.plist" "$APP/Contents/Info.plist"
 cp "$ROOT/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 
-SHARED="$ROOT/../macos-shared/AppAutoUpdate.swift"
+SHARED="$WORK/macos-shared/AppAutoUpdate.swift"
 BIN="$APP/Contents/MacOS/$EXEC"
 
 SDK_ARGS=()
@@ -78,12 +87,14 @@ SWIFT_CMD+=(
   -framework SwiftUI
   -framework AppKit
   -framework WebKit
+  -framework Security
   -o "$BIN"
   "$AI/ChopsticksAIKB.swift"
   "$AI/ChopsticksAIEngine.swift"
   "$SHARED"
   "$ROOT/CursorTheme.swift"
   "$ROOT/AppStore.swift"
+  "$ROOT/KeychainStore.swift"
   "$ROOT/CloudAuth.swift"
   "$ROOT/NetworkStatus.swift"
   "$ROOT/Onboarding.swift"
@@ -91,6 +102,8 @@ SWIFT_CMD+=(
   "$ROOT/Attachments.swift"
   "$ROOT/CursorPages.swift"
   "$ROOT/ChromiumBrowser.swift"
+  "$ROOT/MoreModelsStore.swift"
+  "$ROOT/MoreModelsView.swift"
   "$ROOT/ChopsticksAIApp.swift"
 )
 "${SWIFT_CMD[@]}"
@@ -99,6 +112,18 @@ SWIFT_CMD+=(
 chmod +x "$BIN"
 
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VERSION#v}" "$APP/Contents/Info.plist" 2>/dev/null || true
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion 3610" "$APP/Contents/Info.plist" 2>/dev/null || true
+/usr/libexec/PlistBuddy -c "Set :CSAIEdition $EDITION" "$APP/Contents/Info.plist" 2>/dev/null || \
+  /usr/libexec/PlistBuddy -c "Add :CSAIEdition string $EDITION" "$APP/Contents/Info.plist"
+if [[ "$EDITION" == "offline" ]]; then
+  /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName cs.AI Offline" "$APP/Contents/Info.plist"
+  /usr/libexec/PlistBuddy -c "Set :CFBundleName cs.AI Offline" "$APP/Contents/Info.plist"
+  /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.chopstickshq.chopsticksai.offline" "$APP/Contents/Info.plist"
+else
+  /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName cs.AI Online" "$APP/Contents/Info.plist"
+  /usr/libexec/PlistBuddy -c "Set :CFBundleName chopsticksAI" "$APP/Contents/Info.plist"
+  /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.chopstickshq.chopsticksai.online" "$APP/Contents/Info.plist"
+fi
 codesign --force --deep --sign - "$APP"
 
 rm -f "$BUILD/$ZIP"
@@ -114,14 +139,22 @@ unzip -q "$BUILD/$ZIP" -d "$CHECK"
 mkdir -p "$SITE"
 cp "$BUILD/$ZIP" "$SITE/"
 cp "$ROOT/install-chopsticks-ai.sh" "$SITE/"
+if [[ "$EDITION" == "offline" ]]; then
+  MAC_JSON="$SITE/macos-offline-version.json"
+  VER_JSON="$SITE/offline-version.json"
+else
+  MAC_JSON="$SITE/macos-version.json"
+  VER_JSON="$SITE/version.json"
+fi
 
 PY="$(command -v python3.11 2>/dev/null || command -v python3 2>/dev/null || echo /usr/bin/python3)"
-"$PY" - "$SITE/version.json" "$SITE/macos-version.json" "$VERSION" "$ZIP" "$SHA" <<'PY'
+"$PY" - "$VER_JSON" "$MAC_JSON" "$VERSION" "$ZIP" "$SHA" "$EDITION" <<'PY'
 import json, sys
-path, mac_path, ver, zip_name, sha = sys.argv[1:6]
+path, mac_path, ver, zip_name, sha, edition = sys.argv[1:7]
 payload = {
     "latest": ver.lstrip("v"),
-    "product": "chopsticksAI",
+    "product": "cs.AI " + edition,
+    "edition": edition,
     "releases": {"stable": {"zip": zip_name, "sha256": sha}},
 }
 for p in (path, mac_path):

@@ -3,17 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <script>
-(function(){try{var t=localStorage.getItem('chq.theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches)document.documentElement.setAttribute('data-theme','light');}catch(e){}})();
+(function(){try{document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>cs.AI 2.5.1 — web · Chopsticks HQ</title>
-<meta name="description" content="cs.AI web — free AI assistant in your browser. Chromium search, effort tiers, file generation, cloud sync. No API key.">
+<title>cs.AI · Chopsticks HQ</title>
+<meta name="description" content="cs.AI in the browser — live models or on-device knowledge base. Plates, search, account sync. No API key on your side.">
+<meta name="keywords" content="cs.AI web, chopsticksAI, Chopsticks HQ, online AI, offline knowledge base">
 <link rel="canonical" href="https://chopstickshq.com/chopsticks-ai/web/">
 <meta name="robots" content="index,follow">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Chopsticks HQ">
-<meta property="og:title" content="cs.AI 2.5.1 — web agent">
-<meta property="og:description" content="cs.AI in the browser — chat, Chromium search, downloadable files, account sync.">
+<meta property="og:title" content="cs.AI">
+<meta property="og:description" content="cs.AI in the browser — plates, search, files, account sync.">
 <meta property="og:url" content="https://chopstickshq.com/chopsticks-ai/web/">
 <meta name="twitter:card" content="summary">
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -21,343 +22,95 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/chopsticks-ai/web/cursor-ui.css?v=20260827mac2">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root, html[data-theme="dark"] {
-    --bg: #0a0a0c; --bg2: #0e0e12; --card: #121216; --card2: #18181e;
-    --border: #26262e; --text: #f2f2f5; --muted: #8b8b9a; --soft: #e8e8ed;
-    --nav-bg: rgba(10,10,12,.72); --nav-border: rgba(255,255,255,.08);
-    --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
-    --sans: 'Inter', system-ui, -apple-system, sans-serif;
-    --display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-    --radius: .75rem;
-  }
-  html[data-theme="light"] {
-    --bg: #f4f4f6; --bg2: #ebebef; --card: #ffffff; --card2: #f0f0f4;
-    --border: #d8d8e0; --text: #121218; --muted: #5c5c6a; --soft: #14141a;
-    --nav-bg: rgba(244,244,246,.85); --nav-border: rgba(0,0,0,.08);
-  }
-  html { color-scheme: dark; height: 100%; }
-  html[data-theme="light"] { color-scheme: light; }
-
-  body {
-    height: 100%; display: flex; flex-direction: column;
-    background: var(--bg); color: var(--text); font-family: var(--sans);
-    font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased;
-  }
-  a { color: inherit; }
-  h1, h2, h3 { font-family: var(--display); letter-spacing: -.02em; }
-
-  nav {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 0 18px; min-height: 3.5rem; flex: 0 0 auto;
-    background: var(--nav-bg); backdrop-filter: blur(18px);
-    border-bottom: 1px solid var(--nav-border);
-  }
-  .brand { font-family: var(--display); font-weight: 600; font-size: .95rem; text-decoration: none; }
-  .brand span { color: var(--muted); font-weight: 400; }
-  .nav-right { display: flex; align-items: center; gap: 8px; }
-  .nbtn {
-    border: 1px solid var(--border); background: transparent; color: var(--text);
-    border-radius: 999px; padding: .4rem .8rem; font-size: .74rem; font-weight: 600;
-    font-family: inherit; cursor: pointer; text-decoration: none; white-space: nowrap;
-  }
-  .nbtn:hover { background: rgba(127,127,127,.12); }
-  select.nbtn { appearance: none; padding-right: 1.5rem; background-image:
-    linear-gradient(45deg, transparent 50%, currentColor 50%),
-    linear-gradient(135deg, currentColor 50%, transparent 50%);
-    background-position: calc(100% - 14px) 52%, calc(100% - 9px) 52%;
-    background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
-  select.nbtn option { background: var(--card); color: var(--text); }
-
-  .stage { flex: 1 1 auto; overflow-y: auto; }
-  .inner { width: min(52rem, calc(100% - 2rem)); margin-inline: auto; padding: 1.75rem 0 2rem; }
-
-  .intro { padding: 2.5rem 0 1rem; }
-  .kicker {
-    font-family: var(--mono); font-size: .64rem; letter-spacing: .18em;
-    text-transform: uppercase; color: var(--muted); margin-bottom: .7rem;
-  }
-  .intro h1 { font-size: clamp(1.9rem, 5vw, 2.6rem); font-weight: 700; letter-spacing: -.035em; margin-bottom: .6rem; }
-  .intro p { color: var(--muted); max-width: 40rem; }
-
-  .suggest { display: grid; gap: .5rem; margin-top: 1.5rem; }
-  @media (min-width: 640px) { .suggest { grid-template-columns: 1fr 1fr; } }
-  .sug {
-    text-align: left; background: var(--card); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: .8rem .95rem; cursor: pointer;
-    color: var(--text); font-family: inherit; font-size: .88rem; line-height: 1.45;
-  }
-  .sug:hover { border-color: var(--muted); }
-  .sug b { display: block; font-weight: 600; margin-bottom: .15rem; }
-  .sug span { color: var(--muted); font-size: .82rem; }
-
-  .turn { margin-bottom: 1.5rem; }
-  .who {
-    font-family: var(--mono); font-size: .62rem; letter-spacing: .16em;
-    text-transform: uppercase; color: var(--muted); margin-bottom: .45rem;
-  }
-  .bubble { white-space: pre-wrap; word-wrap: break-word; }
-  .turn.user .bubble {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: .75rem .95rem;
-  }
-  .bubble p { margin: 0 0 .7rem; }
-  .bubble p:last-child { margin-bottom: 0; }
-  .bubble code.inline {
-    font-family: var(--mono); font-size: .86em;
-    background: var(--card2); border: 1px solid var(--border);
-    border-radius: 5px; padding: .08em .35em;
-  }
-
-  .file {
-    border: 1px solid var(--border); border-radius: var(--radius);
-    overflow: hidden; margin: .8rem 0; background: var(--bg2);
-  }
-  .file-head {
-    display: flex; align-items: center; justify-content: space-between; gap: .6rem;
-    padding: .55rem .8rem; border-bottom: 1px solid var(--border); background: var(--card);
-  }
-  .file-name { font-family: var(--mono); font-size: .76rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .file-lang { font-family: var(--mono); font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
-  .file-acts { display: flex; gap: .4rem; flex: 0 0 auto; }
-  .fbtn {
-    border: 1px solid var(--border); background: transparent; color: var(--muted);
-    border-radius: 999px; padding: .22rem .6rem; font-size: .68rem;
-    font-family: var(--mono); cursor: pointer; white-space: nowrap;
-  }
-  .fbtn:hover { color: var(--text); border-color: var(--muted); }
-  .file pre { margin: 0; padding: .8rem; overflow-x: auto; }
-  .file code { font-family: var(--mono); font-size: .78rem; line-height: 1.6; color: var(--text); white-space: pre; }
-
-  .composer { flex: 0 0 auto; border-top: 1px solid var(--border); background: var(--bg); }
-  .composer-inner {
-    width: min(52rem, calc(100% - 2rem)); margin-inline: auto;
-    padding: .85rem 0 1.1rem; display: flex; gap: .6rem; align-items: flex-end;
-  }
-  textarea {
-    flex: 1; resize: none; background: var(--card); color: var(--text);
-    border: 1px solid var(--border); border-radius: 12px; padding: .7rem .85rem;
-    font-family: inherit; font-size: .92rem; line-height: 1.5; max-height: 11rem; min-height: 2.9rem;
-  }
-  textarea:focus { outline: none; border-color: var(--muted); }
-  .send {
-    background: var(--soft); color: var(--bg); border: none; border-radius: 12px;
-    padding: 0 1.1rem; height: 2.9rem; font-weight: 600; font-size: .9rem;
-    font-family: inherit; cursor: pointer; flex: 0 0 auto;
-  }
-  .send:disabled { opacity: .5; cursor: default; }
-  .hint {
-    width: min(52rem, calc(100% - 2rem)); margin: 0 auto .35rem;
-    font-family: var(--mono); font-size: .64rem; color: var(--muted);
-    display: flex; justify-content: space-between; align-items: flex-start;
-    gap: .75rem 1.25rem; flex-wrap: wrap;
-  }
-  .hint > span {
-    min-width: 0; max-width: 100%;
-    overflow-wrap: anywhere; word-break: break-word; white-space: normal;
-  }
-  .hint #status { text-align: right; flex: 1 1 10rem; }
-  .usage {
-    width: min(52rem, calc(100% - 2rem)); margin: 0 auto .55rem;
-    font-family: var(--mono); font-size: .64rem; color: var(--muted);
-    text-align: center; line-height: 1.5;
-    box-sizing: border-box; padding: 0 2px;
-  }
-  .usage-panel { display: flex; flex-direction: column; align-items: center; gap: .45rem; max-width: 26rem; margin-inline: auto; }
-  .usage-chip {
-    display: inline-flex; align-items: center; gap: .35rem;
-    font-size: .62rem; letter-spacing: .04em; padding: .22rem .65rem;
-    border-radius: 999px; border: 1px solid var(--border); background: var(--card);
-  }
-  .usage-chip.on { color: #ff7139; border-color: rgba(255,113,57,.35); background: rgba(255,113,57,.1); }
-  .usage-chip.off { color: var(--muted); }
-  .usage-meter { width: 100%; }
-  .usage-meter-head {
-    display: flex; justify-content: space-between; align-items: baseline;
-    gap: .5rem; margin-bottom: .22rem; font-size: .62rem;
-  }
-  .usage-meter-head span:last-child { color: var(--soft); font-variant-numeric: tabular-nums; }
-  .usage-track {
-    height: 6px; border-radius: 999px; background: var(--card2); overflow: hidden;
-  }
-  .usage-fill {
-    height: 100%; border-radius: 999px; width: 0;
-    transition: width .45s cubic-bezier(.34, 1.2, .64, 1);
-  }
-  .usage-fill.ctx { background: rgba(96, 165, 250, .85); }
-  .usage-fill.allow { background: rgba(180, 180, 195, .85); }
-  .usage-fill.allow.warn { background: #e8a25a; }
-  .usage-fill.allow.critical { background: #e86a5a; }
-  .usage-meta { font-size: .58rem; color: var(--muted); margin-top: .15rem; }
-  .search-toggle.on { color: #ff7139; border-color: rgba(255,113,57,.35); background: rgba(255,113,57,.1); }
-  .search-toggle.off { color: var(--muted); }
-  .usage.warn { color: #e8a25a; }
-  .usage.critical { color: #e86a5a; }
-  .usage.cooldown { color: #e8a25a; }
-  .attach-row {
-    width: min(52rem, calc(100% - 2rem)); margin: 0 auto .45rem;
-    display: flex; flex-wrap: wrap; gap: .4rem; align-items: center;
-  }
-  .attach-chip {
-    display: inline-flex; align-items: center; gap: .4rem;
-    font-family: var(--mono); font-size: .68rem; color: var(--text);
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 999px; padding: .28rem .55rem .28rem .7rem; max-width: 100%;
-  }
-  .attach-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 16rem; }
-  .attach-chip button {
-    border: none; background: transparent; color: var(--muted); cursor: pointer;
-    font-size: .85rem; line-height: 1; padding: 0 .15rem;
-  }
-  .attach-chip.busy { color: var(--muted); }
-  .composer.drag {
-    outline: 2px dashed rgba(255,113,57,.55); outline-offset: -4px;
-  }
-  .attach-btn {
-    border: 1px solid var(--border); background: transparent; color: var(--muted);
-    border-radius: 12px; height: 2.9rem; padding: 0 .85rem; font-size: .8rem;
-    font-family: inherit; cursor: pointer; flex: 0 0 auto;
-  }
-  .attach-btn:hover { color: var(--text); border-color: var(--muted); }
-  .sources { margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.08); }
-  .sources-label {
-    font-family: var(--mono); font-size: .64rem; letter-spacing: .08em;
-    color: var(--muted); text-transform: uppercase; margin-bottom: 4px;
-  }
-  .sources a {
-    display: block; font-size: .78rem; color: var(--text); opacity: .85;
-    margin-top: 4px; text-decoration: underline; text-underline-offset: 2px;
-    word-break: break-word;
-  }
-  html.compact .intro { padding: 1rem 0 .5rem; }
-  html.compact .intro h1 { font-size: 1.45rem; }
-  html.compact .intro p { display: none; }
-  html.compact .suggest { display: none; }
-  html.compact .turn { margin-bottom: .85rem; }
-  html.compact .bubble { font-size: .88rem; }
-  html.compact nav { min-height: 2.75rem; }
-  html.compact .inner { padding-top: .75rem; }
-  .resumed {
-    font-family: var(--mono); font-size: .66rem; color: var(--muted);
-    border: 1px dashed var(--border); border-radius: 999px;
-    padding: .4rem .8rem; margin-bottom: 1.25rem; display: inline-block;
-  }
-  .dots::after { content: ''; animation: dots 1.2s steps(4, end) infinite; }
-  @keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
-
-  .nbtn.primary { background: var(--soft); color: var(--bg); border-color: transparent; }
-  .nbtn.primary:hover { opacity: .9; background: var(--soft); }
-  .auth-modal {
-    position: fixed; inset: 0; z-index: 40; display: none;
-    align-items: center; justify-content: center;
-    background: rgba(0,0,0,.55); padding: 1rem;
-  }
-  .auth-modal.is-open { display: flex; }
-  .auth-card {
-    width: min(22rem, 100%); background: var(--card); border: 1px solid var(--border);
-    border-radius: 14px; padding: 1.15rem 1.2rem 1.25rem;
-    box-shadow: 0 24px 60px rgba(0,0,0,.35);
-  }
-  .auth-card h2 { font-size: 1.1rem; margin-bottom: .25rem; }
-  .auth-card p { color: var(--muted); font-size: .82rem; margin-bottom: .9rem; }
-  .auth-card label { display: block; font-size: .72rem; color: var(--muted); margin: .55rem 0 .25rem; }
-  .auth-card input {
-    width: 100%; background: var(--bg2); color: var(--text); border: 1px solid var(--border);
-    border-radius: 10px; padding: .65rem .75rem; font: inherit; font-size: .9rem;
-  }
-  .auth-card input:focus { outline: none; border-color: var(--muted); }
-  .auth-actions { display: flex; gap: .5rem; margin-top: 1rem; flex-wrap: wrap; }
-  .auth-err { color: #e07070; font-size: .78rem; min-height: 1.1em; margin-top: .55rem; }
-  .auth-ok { color: #6dbf7a; font-size: .78rem; margin-top: .55rem; }
-  .auth-hint { color: var(--muted, #888); font-size: .76rem; margin: .35rem 0 0; line-height: 1.35; }
-  #account-label { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; }
-
-  .app-shell { flex: 1 1 auto; display: flex; min-height: 0; overflow: hidden; }
-  .main-col { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-  .browser-rail {
-    flex: 0 0 min(42vw, 520px); display: flex; flex-direction: column;
-    border-right: 1px solid var(--border); background: var(--bg2); min-width: 280px;
-  }
-  .browser-rail[hidden] { display: none !important; }
-  .browser-bar {
-    display: flex; align-items: center; gap: 4px; padding: 6px 8px;
-    border-bottom: 1px solid var(--border); background: var(--card);
-  }
-  .browser-bar button {
-    border: 1px solid var(--border); background: transparent; color: var(--text);
-    border-radius: 6px; width: 28px; height: 28px; cursor: pointer; font-size: .85rem;
-  }
-  .browser-bar button:hover { background: rgba(127,127,127,.12); }
-  .browser-url {
-    flex: 1; min-width: 0; background: var(--bg); color: var(--text);
-    border: 1px solid var(--border); border-radius: 8px; padding: .35rem .55rem;
-    font: .78rem var(--mono);
-  }
-  .browser-frame { flex: 1 1 auto; border: 0; width: 100%; background: #fff; }
-  .unlock-row {
-    display: flex; gap: .4rem; margin-top: .45rem; flex-wrap: wrap; align-items: center;
-  }
-  .unlock-row input {
-    flex: 1; min-width: 8rem; background: var(--bg2); color: var(--text);
-    border: 1px solid var(--border); border-radius: 8px; padding: .35rem .5rem;
-    font: .78rem var(--mono);
-  }
-  .unlock-row button {
-    border: 1px solid var(--border); background: var(--card2); color: var(--text);
-    border-radius: 8px; padding: .35rem .65rem; font-size: .72rem; cursor: pointer;
-  }
-  @media (max-width: 900px) {
-    .app-shell { flex-direction: column; }
-    .browser-rail { flex: 0 0 42vh; border-right: 0; border-bottom: 1px solid var(--border); max-width: none; }
-  }
+  .attach-chip.busy { color: var(--cursor-muted); }
+  .search-toggle.off { color: var(--cursor-muted); }
+  .auth-hint { color: var(--cursor-muted); font-size: 12px; margin: 6px 0 0; line-height: 1.35; }
 </style>
 </head>
-<body>
-<nav>
-  <a class="brand" href="/chopsticks-ai/">cs.AI <span>· web 2.5.1</span></a>
-  <div class="nav-right">
-    <button type="button" class="nbtn" id="browser-toggle" title="Chromium browser rail">Browser</button>
-    <button type="button" class="nbtn" id="offline-toggle" title="Offline mode — local KB only">Online</button>
-    <select class="nbtn" id="lang" aria-label="Reply language" title="Language for cs.AI replies">
-      <option value="en">English</option>
-      <option value="zh">中文</option>
-      <option value="es">Español</option>
-      <option value="de">Deutsch</option>
-      <option value="ko">한국어</option>
-      <option value="ja">日本語</option>
-    </select>
-    <select class="nbtn" id="tier" aria-label="Effort level" title="Low → Insane raise depth and length. Chopsticks focuses on HQ apps. ChopCode and StickerCoder+ are for coding.">
-      <option value="low">Low · quick</option>
-      <option value="medium">Medium · balanced</option>
-      <option value="high" selected>High · default</option>
-      <option value="xhigh">Xhigh · large</option>
-      <option value="xhighplus">Xhigh+ · deeper</option>
-      <option value="insane">Insane · max</option>
-      <option value="chopsticks">Chopsticks · HQ apps</option>
-      <option value="chopcode">ChopCode · coding</option>
-      <option value="stickercoderplus">StickerCoder+ · coding</option>
-    </select>
-    <select class="nbtn" id="chat-list" aria-label="Saved chats" title="Cloud chats (sign in to sync)" hidden>
-      <option value="">Local chat</option>
-    </select>
-    <button type="button" class="nbtn" id="export">Export chat</button>
-    <button type="button" class="nbtn" id="reset">New chat</button>
-    <button type="button" class="nbtn" id="account-btn"><span id="account-label">Account</span></button>
-    <a class="nbtn" href="/chopsticks-ai/">Download app</a>
-    <a class="nbtn" href="/chopailab/">Lab</a>
-    <button type="button" class="nbtn" data-theme-toggle>&#9680;</button>
-  </div>
-</nav>
+<body class="cursor-app has-intro">
+<div class="cursor-shell">
+  <aside class="cursor-rail" aria-label="Activity bar">
+    <button type="button" class="rail-btn active" id="sidebar-toggle" title="Agents" aria-label="Agents">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M8 10h8M8 14h5"/><rect x="4" y="5" width="16" height="14" rx="2"/></svg>
+    </button>
+    <button type="button" class="rail-btn" id="rail-new-chat" title="New Agent" aria-label="New chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+    <a class="rail-btn rail-chopcode" href="/chopsticks-ai/web/?edition=online&plate=chopcode" title="ChopCode" aria-label="ChopCode">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M8 7h8M8 12h5M7 17h10"/><path d="M5 5v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H6a1 1 0 0 0-1 1z"/></svg>
+    </a>
+    <button type="button" class="rail-btn" id="rail-more-models" title="More models" aria-label="More models">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6L12 3z"/></svg>
+    </button>
+    <a class="rail-btn" id="rail-upgrades" href="/chopsticks-ai/web/upgrades/" title="Upgrades" aria-label="Upgrades">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M12 3l2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4L12 3z"/></svg>
+    </a>
+    <span class="rail-spacer"></span>
+    <button type="button" class="rail-btn" id="account-btn" title="Account" aria-label="Account"><span id="account-label">◉</span></button>
+  </aside>
+
+  <aside class="cursor-sidebar" id="cursor-sidebar" aria-label="Agents">
+    <div class="sidebar-head">
+      <button type="button" class="new-agent-btn" id="drawer-new-chat" title="New Agent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        New Agent
+      </button>
+    </div>
+    <div class="sidebar-chats chat-list-panel" id="chat-list-panel">
+      <div class="chat-list-empty">Sign in to sync chats.</div>
+    </div>
+    <select id="chat-list" aria-label="Saved chats" hidden><option value="">Local chat</option></select>
+    <div class="sidebar-foot">
+      <button type="button" class="sbar-link" id="sidebar-signin">Sign in</button>
+      <select id="lang" aria-label="Reply language">
+        <option value="en">English</option>
+        <option value="zh">中文</option>
+        <option value="es">Español</option>
+        <option value="de">Deutsch</option>
+        <option value="ko">한국어</option>
+        <option value="ja">日本語</option>
+      </select>
+      <a class="sbar-link" href="/chopsticks-ai/web/upgrades/">Upgrades</a>
+      <a class="sbar-link" id="sidebar-download" href="/chopsticks-ai/online/">Mac app</a>
+      <button type="button" class="sbar-link" id="drawer-browser">Browser</button>
+    </div>
+  </aside>
+
+  <div class="cursor-workspace">
+    <header class="cursor-topbar">
+      <div class="cursor-topbar-brand">
+        <svg class="topbar-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3l1.6 5L19 9.6l-5.4 1.6L12 16.2l-1.6-5L5 9.6l5.4-1.6L12 3z"/></svg>
+        <span class="cursor-topbar-title" id="topbar-title">Agent</span>
+        <span class="topbar-sep">·</span>
+        <span class="topbar-plate" id="topbar-plate">Tamago</span>
+        <span class="topbar-badge" id="topbar-online">Online</span>
+      </div>
+      <div class="cursor-topbar-actions" id="topbar-guest">
+        <button type="button" class="cursor-auth-btn cursor-auth-btn-fill" id="top-signin">Sign in</button>
+      </div>
+      <div class="cursor-topbar-user" id="topbar-user" hidden>
+        <span class="cursor-topbar-email" id="topbar-email"></span>
+        <button type="button" class="icon-btn" id="rail-new-chat-dup" title="New Agent" hidden></button>
+        <button type="button" class="cursor-auth-btn" id="top-account">Account</button>
+      </div>
+    </header>
 
 <div class="auth-modal" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
   <div class="auth-card">
     <h2 id="auth-title">cs.AI account</h2>
-    <p>Sign in with email and password. New accounts are created instantly — no verification email.</p>
+    <div id="auth-guest">
+    <p>Sign in with email. Syncs chats and allowance across devices.</p>
+    <p class="auth-hint">Need more tokens? <a href="/chopsticks-ai/web/upgrades/">Open upgrades</a> to redeem Fathom Pro keys or talk to sales.</p>
     <label for="auth-email">Email</label>
     <input id="auth-email" type="email" autocomplete="username" placeholder="you@example.com">
     <label for="auth-password">Password</label>
     <input id="auth-password" type="password" autocomplete="current-password" placeholder="••••••••" minlength="6">
+    </div>
+    <div id="auth-member" hidden>
+      <p id="auth-member-email">Signed in</p>
+    </div>
     <div class="auth-err" id="auth-err"></div>
     <div class="auth-ok" id="auth-ok"></div>
     <div class="auth-actions">
@@ -366,6 +119,34 @@
       <button type="button" class="nbtn" id="auth-signout" hidden>Sign out</button>
       <button type="button" class="nbtn" id="auth-close">Close</button>
     </div>
+    <div class="auth-advanced">
+      <button type="button" class="nbtn auth-advanced-btn" id="auth-export">Export chat</button>
+      <button type="button" class="nbtn auth-advanced-btn" id="auth-offline">Online mode</button>
+    </div>
+  </div>
+</div>
+
+<div class="more-models-modal" id="more-models-modal" hidden>
+  <div class="more-models-card">
+    <h2>More models</h2>
+    <p>Paste a Groq, OpenRouter, or Claude key. Load catalogs, then pick a model. Keys stay in this browser.</p>
+    <label>OpenRouter <input id="mm-or-key" type="password" placeholder="sk-or-v1-…" autocomplete="off"></label>
+    <label>Groq <input id="mm-groq-key" type="password" placeholder="gsk_…" autocomplete="off"></label>
+    <label>Claude <input id="mm-claude-key" type="password" placeholder="sk-ant-…" autocomplete="off"></label>
+    <div class="more-models-actions">
+      <button type="button" class="nbtn primary" id="mm-load">Load catalogs</button>
+      <button type="button" class="nbtn" id="mm-clear">Use plates instead</button>
+      <button type="button" class="nbtn" id="mm-close">Close</button>
+    </div>
+    <p class="auth-hint" id="mm-status"></p>
+    <input id="mm-filter" type="search" placeholder="Filter models…" aria-label="Filter models">
+    <div class="more-models-tabs">
+      <button type="button" class="nbtn mm-tab on" data-prov="all">All</button>
+      <button type="button" class="nbtn mm-tab" data-prov="groq">Groq</button>
+      <button type="button" class="nbtn mm-tab" data-prov="claude">Claude</button>
+      <button type="button" class="nbtn mm-tab" data-prov="openrouter">OpenRouter</button>
+    </div>
+    <select id="mm-list" size="14" aria-label="Model catalog"></select>
   </div>
 </div>
 
@@ -375,42 +156,87 @@
     <button type="button" id="browser-back" title="Back">←</button>
     <button type="button" id="browser-fwd" title="Forward">→</button>
     <button type="button" id="browser-reload" title="Reload">↻</button>
-    <input class="browser-url" id="browser-url" type="text" spellcheck="false" value="https://www.google.com" aria-label="URL">
+    <button type="button" id="browser-home" title="Home (Chopsticks HQ)">⌂</button>
+    <input class="browser-url" id="browser-url" type="text" spellcheck="false" value="https://chopstickshq.com/" aria-label="URL">
     <button type="button" id="browser-go" title="Go">Go</button>
   </div>
-  <iframe class="browser-frame" id="browser-frame" title="Chromium browser" src="https://www.google.com" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
+  <iframe class="browser-frame" id="browser-frame" title="Chromium browser" src="https://chopstickshq.com/" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
 </aside>
 <div class="main-col">
 <div class="stage" id="stage">
   <div class="inner" id="log">
     <div class="intro" id="intro">
-      <div class="kicker">cs.AI 2.5.1 · web</div>
-      <h1>cs.AI in your browser</h1>
-      <p>
-        The same live agent as the macOS app — effort tiers from Low through Insane,
-        Chromium search grounding, downloadable files, and cloud sync when you sign in.
-        Open the <strong>Browser</strong> rail for in-page browsing. Guests stay local;
-        accounts sync across web and macOS.
-      </p>
-      <div class="suggest" id="suggest"></div>
+      <div class="intro-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6L12 3z"/></svg>
+      </div>
+      <h1 id="intro-greeting">Welcome to cs.AI (3.6.10)</h1>
+      <p class="intro-sub" id="intro-sub">Plan, search, build anything</p>
+      <p class="intro-lead" id="intro-lead" hidden></p>
+      <div class="plate-tiles" id="plate-tiles" hidden></div>
+      <div class="intro-actions" id="intro-actions">
+        <button type="button" class="intro-starter" data-suggest="What is ChopsticksAI?">What is ChopsticksAI?</button>
+        <button type="button" class="intro-starter" data-suggest="How do I install rNitro?">How do I install rNitro?</button>
+        <button type="button" class="intro-starter" data-suggest="macOS says it can't be opened">macOS says it can't be opened</button>
+        <button type="button" class="intro-starter" data-suggest="Write me a haiku about Mondays">Write me a haiku about Mondays</button>
+      </div>
     </div>
   </div>
 </div>
 
 <div class="composer" id="composer">
-  <div class="hint">
-    <span>Enter to send · Attach files/images (≤500 MB, sign in) · <code>/compact</code></span>
-    <span id="status">cs.AI</span>
+  <div class="composer-meta">
+    <div class="hint">
+      <span>Enter to send · Shift+Enter for newline</span>
+      <span id="status" class="composer-note" hidden></span>
+    </div>
+    <div class="usage" id="usage" aria-live="polite"></div>
+    <div class="attach-row" id="attach-row" hidden></div>
   </div>
-  <div class="usage" id="usage" aria-live="polite"></div>
-  <div class="attach-row" id="attach-row" hidden></div>
   <div class="composer-inner">
+    <textarea id="input" rows="1" placeholder="Plan, search, build…" aria-label="Message"></textarea>
     <input type="file" id="file-input" multiple hidden>
-    <button type="button" class="attach-btn search-toggle on" id="search-toggle" title="Automatic Chromium web search on each question">Search</button>
-    <button type="button" class="attach-btn" id="attach-btn" title="Attach files or images (up to 500 MB)">Attach</button>
-    <textarea id="input" rows="1" placeholder="Ask anything, or attach files / images…" aria-label="Message"></textarea>
-    <button class="send" id="send">Send</button>
+    <div class="composer-toolbar">
+      <button type="button" class="chip attach-btn" id="attach-btn" title="Attach files" aria-label="Attach">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M8 12v-2a4 4 0 0 1 8 0v8a4 4 0 0 1-8 0v-4"/><path d="M12 14V6"/></svg>
+        Attach
+      </button>
+      <button type="button" class="chip search-toggle on" id="search-toggle" title="Web search">Search</button>
+      <div class="composer-toolbar-right">
+        <input type="text" id="or-model-filter" class="model-filter" hidden placeholder="Filter…" aria-label="Filter models">
+        <button type="button" class="tool-btn" id="or-groq-filter" hidden title="Groq models">Groq</button>
+        <select class="mode-select" id="or-model" hidden aria-label="Model"><option value="">Model…</option></select>
+        <div class="plate-wrap" id="plate-wrap">
+          <button type="button" class="plate-btn" id="plate-btn" aria-haspopup="listbox" aria-expanded="false" title="Choose plate">Tamago</button>
+          <div class="plate-menu" id="plate-menu" hidden role="listbox" aria-label="Plates"></div>
+          <select class="mode-select" id="tier" hidden aria-label="Plate">
+            <option value="rice">Rice</option>
+            <option value="tamago" selected>Tamago</option>
+            <option value="hibachi">Hibachi</option>
+            <option value="wagyua1">Wagyu A1</option>
+            <option value="wagyua2">Wagyu A2</option>
+            <option value="wagyua3">Wagyu A3</option>
+            <option value="wagyua4">Wagyu A4</option>
+            <option value="wagyua5">Wagyu A5</option>
+            <option value="chopcode">ChopCode</option>
+          </select>
+        </div>
+        <button type="button" class="send" id="send" title="Send" aria-label="Send" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 19V5M7 10l5-5 5 5"/></svg>
+        </button>
+      </div>
+    </div>
   </div>
+  <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
+</div>
+<footer class="cursor-statusbar" hidden>
+  <span class="cursor-footer-ver">3.6.10</span>
+  <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
+  <a href="/chopsticks-ai/enterprise/">Enterprise</a>
+  <a href="/chopsticks-ai/">cs.AI</a>
+  <a href="/">Chopsticks HQ</a>
+</footer>
+</div>
+</div>
 </div>
 </div>
 
@@ -423,27 +249,58 @@
   'use strict';
 
   var EFFORT = {
-    low: { label: 'Low', maxTokens: 400 },
-    medium: { label: 'Medium', maxTokens: 600 },
-    high: { label: 'High', maxTokens: 1000 },
-    xhigh: { label: 'Xhigh', maxTokens: 2000 },
-    xhighplus: { label: 'Xhigh+', maxTokens: 3000 },
-    insane: { label: 'Insane', maxTokens: 4000 },
-    chopsticks: { label: 'Chopsticks', maxTokens: 800 },
+    rice: { label: 'Rice', maxTokens: 800 },
+    tamago: { label: 'Tamago', maxTokens: 2000 },
+    hibachi: { label: 'Hibachi', maxTokens: 4000 },
+    wagyu: { label: 'Wagyu A5', maxTokens: 8000 },
+    wagyua1: { label: 'Wagyu A1', maxTokens: 2500 },
+    wagyua2: { label: 'Wagyu A2', maxTokens: 4000 },
+    wagyua3: { label: 'Wagyu A3', maxTokens: 5500 },
+    wagyua4: { label: 'Wagyu A4', maxTokens: 7000 },
+    wagyua5: { label: 'Wagyu A5', maxTokens: 8000 },
     chopcode: { label: 'ChopCode', maxTokens: 4000 },
-    stickercoderplus: { label: 'StickerCoder+', maxTokens: 6000 },
-    ultra: { label: 'Xhigh', maxTokens: 2000 },
-    super: { label: 'Medium', maxTokens: 600 }
+    low: { label: 'Rice', maxTokens: 800 },
+    high: { label: 'Tamago', maxTokens: 2000 },
+    pro: { label: 'Hibachi', maxTokens: 4000 },
+    medium: { label: 'Tamago', maxTokens: 2000 },
+    insane: { label: 'Wagyu', maxTokens: 8000 },
+    chopsticks: { label: 'Tamago', maxTokens: 2000 },
+    stickercoderplus: { label: 'Wagyu', maxTokens: 8000 },
+    ultra: { label: 'Hibachi', maxTokens: 4000 },
+    super: { label: 'Tamago', maxTokens: 2000 }
   };
+  var LEGACY_TIER_MAP = {
+    low: 'rice', fast: 'rice', haiku: 'rice',
+    medium: 'tamago', high: 'tamago', standard: 'tamago', sonnet: 'tamago',
+    chopsticks: 'tamago', super: 'tamago',
+    pro: 'hibachi', opus: 'hibachi', ultra: 'hibachi', xhigh: 'hibachi',
+    xhighplus: 'hibachi', code: 'chopcode',
+    insane: 'wagyua5', fable: 'wagyua5', stickercoderplus: 'wagyua5',
+    wagyu: 'wagyua5', a1: 'wagyua1', a2: 'wagyua2', a3: 'wagyua3', a4: 'wagyua4', a5: 'wagyua5',
+    'wagyu-a1': 'wagyua1', 'wagyu-a2': 'wagyua2', 'wagyu-a3': 'wagyua3', 'wagyu-a4': 'wagyua4', 'wagyu-a5': 'wagyua5'
+  };
+  function normalizeTier(id) {
+    var key = String(id || '').toLowerCase();
+    return LEGACY_TIER_MAP[key] || key;
+  }
   var API = '/api/chopsticks-ai';
   var STORE = 'chq.web.session';
   var history = [];
   var busy = false;
   var cloudChatId = null;
   var cloudSyncing = false;
+  var cloudSyncQueued = false;
   var Cloud = window.ChopsticksAICloud;
 
-  
+  function syncIntroState() {
+    document.body.classList.toggle('has-intro', !!(intro && intro.parentNode));
+  }
+  function syncSendState() {
+    if (!send || !input) return;
+    var hasText = !!String(input.value || '').trim();
+    var hasFile = pendingAttach && pendingAttach.some(function (a) { return a.url && !a.error; });
+    send.disabled = busy || (!hasText && !hasFile);
+  }
   function saveSession() {
     try {
       localStorage.setItem(STORE, JSON.stringify({
@@ -480,26 +337,40 @@
     if (typeof lastUsageData !== 'undefined') lastUsageData = null;
     pollUsage();
     refreshChatList();
+    syncIntroState();
   }
-  async function loadAccountChats() {
-    switchAccountSession();
+  async function loadAccountChats(openLatest) {
     if (!Cloud || !Cloud.isSignedIn()) {
       return;
     }
+    var pending = history.slice();
+    var pendingId = cloudChatId;
+    var hadUser = pending.some(function (m) { return m.role === 'user' && m.content; });
     try {
       var chats = await Cloud.listChats();
-      refreshChatList();
-      if (!chats.length) {
-        return;
+      if (hadUser) {
+        history = pending;
+        cloudChatId = pendingId;
+        await cloudSync();
+        await refreshChatList();
+      } else if (openLatest && chats.length) {
+        await openCloudChat(chats[0].id);
+      } else {
+        await refreshChatList();
       }
-      await openCloudChat(chats[0].id);
       pollUsage();
     } catch (e) {
-      switchAccountSession();
+      history = pending;
+      cloudChatId = pendingId;
+      console.warn('cloud list failed', e);
     }
   }
   async function cloudSync() {
-    if (!Cloud || !Cloud.isSignedIn() || cloudSyncing) return;
+    if (!Cloud || !Cloud.isSignedIn()) return;
+    if (cloudSyncing) {
+      cloudSyncQueued = true;
+      return;
+    }
     cloudSyncing = true;
     try {
       var title = 'New Chat';
@@ -514,7 +385,7 @@
         cloudChatId = created && created.id;
       }
       if (!cloudChatId) return;
-      await Cloud.saveMessages(cloudChatId, history.slice(-40), {
+      await Cloud.saveMessages(cloudChatId, history.slice(-80), {
         title: title,
         tier: tierSel.value
       });
@@ -523,36 +394,72 @@
       console.warn('cloud sync failed', e);
     } finally {
       cloudSyncing = false;
+      if (cloudSyncQueued) {
+        cloudSyncQueued = false;
+        cloudSync();
+      }
     }
+  }
+  function chatListEmptyHtml(message, withSignIn) {
+    var html = '<div class="chat-list-empty">' + message;
+    if (withSignIn) {
+      html += '<br><button type="button" class="sidebar-signin-btn">Sign in</button>';
+    }
+    return html + '</div>';
   }
   async function refreshChatList() {
     var sel = document.getElementById('chat-list');
-    if (!sel || !Cloud) return;
-    if (!Cloud.isSignedIn()) {
-      sel.hidden = true;
+    var panel = document.getElementById('chat-list-panel');
+    if (!Cloud) {
+      if (panel) panel.innerHTML = chatListEmptyHtml('Sign in to sync chats.', false);
       return;
     }
-    sel.hidden = false;
+    if (!Cloud.isSignedIn()) {
+      if (sel) sel.hidden = true;
+      if (panel) panel.innerHTML = chatListEmptyHtml('Sign in to sync chats.', false);
+      return;
+    }
+    if (sel) sel.hidden = true;
     try {
       var chats = await Cloud.listChats();
       var cur = cloudChatId || '';
-      sel.innerHTML = '<option value="">' + (cur ? 'Current chat' : 'New local draft') + '</option>';
-      chats.forEach(function (c) {
-        var opt = document.createElement('option');
-        opt.value = c.id;
-        opt.textContent = (c.title || 'Untitled').slice(0, 48);
-        if (c.id === cur) opt.selected = true;
-        sel.appendChild(opt);
-      });
+      if (panel) {
+        if (!chats.length) {
+          panel.innerHTML = '<div class="chat-list-empty">No saved chats yet — start a new one.</div>';
+        } else {
+          panel.innerHTML = chats.map(function (c) {
+            var title = (c.title || 'Untitled').slice(0, 48).replace(/</g, '&lt;');
+            var active = c.id === cur ? ' active' : '';
+            return '<button type="button" class="chat-item' + active + '" data-id="' + c.id + '">' + title + '</button>';
+          }).join('');
+        }
+      }
+      if (sel) {
+        sel.innerHTML = '<option value="">' + (cur ? 'Current chat' : 'New local draft') + '</option>';
+        chats.forEach(function (c) {
+          var opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = (c.title || 'Untitled').slice(0, 48);
+          if (c.id === cur) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      }
     } catch (e) {
-      sel.hidden = true;
+      if (panel) panel.innerHTML = '<div class="chat-list-empty">Could not load chats.</div>';
+      if (sel) sel.hidden = true;
     }
   }
   async function openCloudChat(id) {
     if (!Cloud || !id) return;
     var msgs = await Cloud.loadMessages(id);
     history = msgs.map(function (m) {
-      return { role: m.role, content: m.content, sources: m.sources || [] };
+      return {
+        role: m.role,
+        content: m.content,
+        sources: m.sources || [],
+        agents: m.agents || null,
+        conversation: m.conversation || null
+      };
     });
     cloudChatId = id;
     log.innerHTML = '';
@@ -561,19 +468,160 @@
     } else {
       history.forEach(function (m) {
         addTurn(m.role === 'user' ? 'user' : 'bot',
-          m.role === 'user' ? plain(m.content) : renderAssistant(m.content, m.sources));
+          m.role === 'user' ? plain(m.content) : renderAssistant(m.content, m.sources, m.agents, m.conversation));
       });
     }
     saveSession();
+    syncIntroState();
     stage.scrollTop = stage.scrollHeight;
   }
   function updateAccountUI() {
     var label = document.getElementById('account-label');
+    var accountBtn = document.getElementById('account-btn');
+    var sidebarSignin = document.getElementById('sidebar-signin');
     var signOut = document.getElementById('auth-signout');
+    var signinBtn = document.getElementById('auth-signin');
+    var signupBtn = document.getElementById('auth-signup');
+    var topGuest = document.getElementById('topbar-guest');
+    var topUser = document.getElementById('topbar-user');
+    var topEmail = document.getElementById('topbar-email');
     var signed = Cloud && Cloud.isSignedIn();
-    if (label) label.textContent = signed ? (Cloud.userEmail() || 'Signed in') : 'Account';
+    document.body.classList.toggle('signed-in', !!signed);
+    if (accountBtn) accountBtn.classList.toggle('signed-in', !!signed);
+    if (sidebarSignin) sidebarSignin.hidden = !!signed;
+    if (topGuest) topGuest.hidden = !!signed;
+    if (topUser) topUser.hidden = !signed;
+    if (label) {
+      if (signed) {
+        var em = Cloud.userEmail() || 'Signed in';
+        label.textContent = em.split('@')[0].slice(0, 10);
+        label.title = em;
+        if (topEmail) {
+          topEmail.textContent = em;
+          topEmail.title = em;
+        }
+      } else {
+        label.textContent = '◉';
+        label.title = 'Sign in';
+        if (topEmail) topEmail.textContent = '';
+      }
+    }
     if (signOut) signOut.hidden = !signed;
+    var guest = document.getElementById('auth-guest');
+    var member = document.getElementById('auth-member');
+    if (signinBtn) signinBtn.hidden = !!signed;
+    if (signupBtn) signupBtn.hidden = !!signed;
+    if (guest) guest.hidden = !!signed;
+    if (member) member.hidden = !signed;
+    var memberEmail = document.getElementById('auth-member-email');
+    if (memberEmail && signed) memberEmail.textContent = 'Signed in as ' + (Cloud.userEmail() || 'your account');
     refreshChatList();
+    loadModelPickerUI();
+    if (typeof renderPlateUI === 'function') renderPlateUI();
+  }
+
+  var orModelSel = document.getElementById('or-model');
+  var orModelFilter = document.getElementById('or-model-filter');
+  var orGroqFilter = document.getElementById('or-groq-filter');
+  var OR_MODEL_KEY = 'chq.orModel';
+  var GROQ_KEY = 'chq.groqApiKey';
+  var orModelsCache = [];
+
+  var OR_KEY = 'chq.openRouterApiKey';
+  var CLAUDE_KEY = 'chq.anthropicApiKey';
+  function groqApiKey() {
+    try { return String(localStorage.getItem(GROQ_KEY) || '').trim(); } catch (e) { return ''; }
+  }
+  function openRouterApiKey() {
+    try { return String(localStorage.getItem(OR_KEY) || '').trim(); } catch (e) { return ''; }
+  }
+  function anthropicApiKey() {
+    try { return String(localStorage.getItem(CLAUDE_KEY) || '').trim(); } catch (e) { return ''; }
+  }
+  function saveGroqApiKey(val) {
+    try {
+      var v = String(val || '').trim();
+      if (v) localStorage.setItem(GROQ_KEY, v);
+      else localStorage.removeItem(GROQ_KEY);
+    } catch (e) {}
+  }
+  function saveOpenRouterApiKey(val) {
+    try {
+      var v = String(val || '').trim();
+      if (v) localStorage.setItem(OR_KEY, v);
+      else localStorage.removeItem(OR_KEY);
+    } catch (e) {}
+  }
+  function saveAnthropicApiKey(val) {
+    try {
+      var v = String(val || '').trim();
+      if (v) localStorage.setItem(CLAUDE_KEY, v);
+      else localStorage.removeItem(CLAUDE_KEY);
+    } catch (e) {}
+  }
+
+  function orModelOptionExists(val) {
+    if (!orModelSel || !val) return false;
+    for (var i = 0; i < orModelSel.options.length; i++) {
+      if (orModelSel.options[i].value === val) return true;
+    }
+    return false;
+  }
+
+  function renderOrModelOptions(list, q) {
+    if (!orModelSel) return;
+    var cur = orModelSel.value;
+    var needle = String(q || '').trim().toLowerCase();
+    orModelSel.innerHTML = '<option value="">Pick a model…</option>';
+    (list || []).forEach(function (m) {
+      var hay = (m.id + ' ' + (m.name || '') + ' ' + (m.provider || '')).toLowerCase();
+      if (needle && hay.indexOf(needle) < 0) return;
+      var opt = document.createElement('option');
+      opt.value = m.id;
+      var label = m.name && m.name !== m.id ? m.name + ' · ' + m.id : m.id;
+      if (String(m.id).indexOf('groq/') === 0) label = '⚡ ' + label;
+      opt.textContent = label;
+      orModelSel.appendChild(opt);
+    });
+    if (cur && orModelOptionExists(cur)) orModelSel.value = cur;
+  }
+
+  async function loadModelPickerUI() {
+    if (orModelSel) orModelSel.hidden = true;
+    if (orModelFilter) orModelFilter.hidden = true;
+    if (orGroqFilter) orGroqFilter.hidden = true;
+    if (tierSel) tierSel.hidden = true;
+    if (!Cloud || !Cloud.canPickModel || !Cloud.canPickModel()) return;
+    try {
+      orModelsCache = await Cloud.listOpenRouterModels(groqApiKey() || undefined);
+      renderOrModelOptions(orModelsCache, orModelFilter ? orModelFilter.value : '');
+      try {
+        var saved = localStorage.getItem(OR_MODEL_KEY);
+        if (saved && orModelOptionExists(saved)) orModelSel.value = saved;
+      } catch (e) {}
+    } catch (e) {
+      console.warn('Model list failed', e);
+    }
+  }
+
+  if (orGroqFilter) {
+    orGroqFilter.addEventListener('click', function () {
+      if (orModelFilter) {
+        orModelFilter.value = 'groq';
+        renderOrModelOptions(orModelsCache, 'groq');
+      }
+    });
+  }
+
+  if (orModelFilter) {
+    orModelFilter.addEventListener('input', function () {
+      renderOrModelOptions(orModelsCache, orModelFilter.value);
+    });
+  }
+  if (orModelSel) {
+    orModelSel.addEventListener('change', function () {
+      try { localStorage.setItem(OR_MODEL_KEY, orModelSel.value || ''); } catch (e) {}
+    });
   }
 
   var stage = document.getElementById('stage');
@@ -588,19 +636,58 @@
   var lastUsageData = null;
   var tierSel = document.getElementById('tier');
   var langSel = document.getElementById('lang');
-  var offlineToggle = document.getElementById('offline-toggle');
+  var offlineToggle = document.getElementById('auth-offline');
   var LANG_KEY = 'chq.aiLang';
   var OFFLINE_KEY = 'chq.aiOfflineMode';
 
+  function csaiEdition() {
+    try {
+      var q = new URLSearchParams(location.search).get('edition');
+      if (q === 'offline' || q === 'online') return q;
+    } catch (e) {}
+    if (/\/offline\//.test(location.pathname)) return 'offline';
+    return 'online';
+  }
+
   function offlineChatModeOn() {
-    try { return localStorage.getItem(OFFLINE_KEY) === '1'; } catch (e) { return false; }
+    return csaiEdition() === 'offline';
   }
 
   function updateOfflineToggleUI() {
-    if (!offlineToggle) return;
-    var on = offlineChatModeOn();
-    offlineToggle.textContent = on ? 'Offline' : 'Online';
-    offlineToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (offlineToggle) {
+      offlineToggle.hidden = true;
+      offlineToggle.style.display = 'none';
+    }
+    var offline = csaiEdition() === 'offline';
+    document.body.classList.toggle('edition-offline', offline);
+    var g = document.getElementById('intro-greeting');
+    var sub = document.getElementById('intro-sub');
+    var lead = document.getElementById('intro-lead');
+    var title = document.getElementById('topbar-title');
+    var dl = document.getElementById('sidebar-download');
+    if (g) g.textContent = 'Welcome to cs.AI (3.6.10)';
+    if (title) title.textContent = 'Agent';
+    if (sub) sub.textContent = offline
+      ? 'Ask the on-device Chopsticks HQ knowledge base'
+      : 'Plan, search, build anything';
+    var badge = document.getElementById('topbar-online');
+    if (badge) {
+      badge.textContent = offline ? 'Offline' : 'Online';
+      badge.classList.toggle('offline', offline);
+    }
+    if (lead) lead.textContent = offline
+      ? 'Ask about MacBar, Fathom, CSR, Doomlike-FPS, or anything else in the bundled product docs.'
+      : 'Rice is fastest. Tamago is the default. Hibachi is the flagship. Wagyu A1–A5 need an account. ChopCode is the coding plate.';
+    if (dl) dl.href = offline ? '/chopsticks-ai/offline/' : '/chopsticks-ai/online/';
+    var up = document.getElementById('rail-upgrades');
+    if (up) up.href = '/chopsticks-ai/web/upgrades/?edition=' + (offline ? 'offline' : 'online');
+    document.title = offline ? 'cs.AI Offline · Chopsticks HQ' : 'cs.AI Online · Chopsticks HQ';
+    var tiles = document.getElementById('plate-tiles');
+    if (tiles) tiles.hidden = true;
+    var wrap = document.getElementById('plate-wrap');
+    if (wrap) wrap.hidden = offline;
+    var search = document.getElementById('search-toggle');
+    if (search) search.hidden = offline;
   }
   var attachBtn = document.getElementById('attach-btn');
   var fileInput = document.getElementById('file-input');
@@ -636,7 +723,7 @@
         '<span title="' + label.replace(/"/g, '&quot;') + '">' + label.replace(/</g, '&lt;') + '</span>' +
         '<button type="button" aria-label="Remove" data-rm="' + a.id + '">×</button></div>';
     }).join('') +
-      '<span style="font-family:var(--mono);font-size:.64rem;color:var(--muted)">' +
+      '<span style="font-family:var(--mono);font-size:.64rem;color:var(--cursor-muted)">' +
       fmtBytes(batchBytes()) + ' / 500 MB</span>';
   }
   attachRow && attachRow.addEventListener('click', function (e) {
@@ -648,7 +735,8 @@
   async function readTextPreview(file) {
     var mime = file.type || '';
     var name = (file.name || '').toLowerCase();
-    var texty = /^text\
+    var texty = /^text\//.test(mime) ||
+      /\.(txt|md|json|js|ts|py|swift|html|css|xml|yaml|yml|sh|csv|log|env|toml|rs|go|java|c|cpp|h|sql|rb|php|vue|svelte|tsx|jsx)$/.test(name);
     if (!texty || file.size > 512 * 1024) return '';
     try {
       var t = await file.text();
@@ -800,17 +888,162 @@
   }
 
   try {
-    var savedTier = localStorage.getItem('chq.aiTier');
+    var savedTier = normalizeTier(localStorage.getItem('chq.aiTier'));
+    if (savedTier && isWagyu(savedTier) && !(Cloud && Cloud.isSignedIn && Cloud.isSignedIn())) savedTier = 'tamago';
     if (savedTier && EFFORT[savedTier]) tierSel.value = savedTier;
     var savedLang = localStorage.getItem(LANG_KEY);
     if (savedLang && langSel.querySelector('option[value="' + savedLang + '"]')) langSel.value = savedLang;
   } catch (e) {}
+  var PLATES = [
+    { id: 'rice', name: 'Rice', role: 'Smallest and fastest — the staple', ctx: '16k context' },
+    { id: 'tamago', name: 'Tamago', role: 'Balanced default workhorse', ctx: '48k context' },
+    { id: 'hibachi', name: 'Hibachi', role: 'Flagship standard', ctx: '96k context' },
+    { id: 'wagyua1', name: 'Wagyu A1', role: 'Entry Wagyu grade', ctx: '80k · Sign in' },
+    { id: 'wagyua2', name: 'Wagyu A2', role: 'Better marbling, more room', ctx: '96k · Sign in' },
+    { id: 'wagyua3', name: 'Wagyu A3', role: 'Mid grade — refine on', ctx: '112k · Sign in' },
+    { id: 'wagyua4', name: 'Wagyu A4', role: 'High grade', ctx: '128k · Sign in' },
+    { id: 'wagyua5', name: 'Wagyu A5', role: 'Highest grade', ctx: '160k · Sign in' },
+    { id: 'chopcode', name: 'ChopCode', role: '10 specialists + Lead · live research', ctx: '128k ctx · 1m tokens · 5 keys / founder' }
+  ];
+  var plateBtn = document.getElementById('plate-btn');
+  var plateMenu = document.getElementById('plate-menu');
+  var plateWrap = document.getElementById('plate-wrap');
+  var plateHint = document.getElementById('plate-hint');
+  function currentPlate() {
+    var id = normalizeTier(tierSel.value);
+    return PLATES.filter(function (p) { return p.id === id; })[0] || PLATES[1];
+  }
+  var chopcodeAllowed = false;
+  function isWagyu(id) {
+    var t = normalizeTier(id);
+    return t === 'wagyu' || /^wagyua[1-5]$/.test(t);
+  }
+  function wagyuLocked() {
+    return !(Cloud && Cloud.isSignedIn && Cloud.isSignedIn());
+  }
+  function chopcodeLocked() {
+    if (!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn())) return true;
+    return !chopcodeAllowed;
+  }
+  function setPlate(id) {
+    id = normalizeTier(id);
+    var prev = normalizeTier(tierSel.value);
+    if (isWagyu(id) && wagyuLocked()) {
+      if (window.openCsAuth) window.openCsAuth();
+      closePlateMenu();
+      return false;
+    }
+    if (id === 'chopcode' && chopcodeLocked()) {
+      if (!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn()) && window.openCsAuth) window.openCsAuth();
+      if (status) {
+        status.hidden = false;
+        status.textContent = chopcodeAllowed
+          ? 'Sign in to use ChopCode'
+          : 'ChopCode needs 5 Fathom Pro keys in Usage (founder rank already has it)';
+      }
+    }
+    if (!EFFORT[id]) id = 'tamago';
+    tierSel.value = id;
+    try { localStorage.setItem('chq.aiTier', id); } catch (e) {}
+    if (id === 'chopcode' && prev !== 'chopcode') setWebSearch(true);
+    showTier();
+    renderPlateUI();
+    syncComposerChrome();
+    return true;
+  }
+  function closePlateMenu() {
+    if (!plateMenu || !plateBtn) return;
+    plateMenu.hidden = true;
+    plateBtn.setAttribute('aria-expanded', 'false');
+  }
+  function plateLocked(row) {
+    if (isWagyu(row.id)) return wagyuLocked();
+    if (row.id === 'chopcode') return chopcodeLocked();
+    return false;
+  }
+  function plateLockLabel(row) {
+    if (isWagyu(row.id)) return 'Sign in';
+    if (row.id === 'chopcode') return Cloud && Cloud.isSignedIn && Cloud.isSignedIn() ? '5 keys' : 'Sign in';
+    return '';
+  }
+  function renderPlateUI() {
+    var p = currentPlate();
+    if (plateBtn) {
+      var btnLock = plateLocked(p);
+      plateBtn.textContent = p.name + (btnLock ? ' 🔒' : '');
+      plateBtn.setAttribute('data-plate', p.id);
+      plateBtn.className = 'chip plate-btn plate-' + p.id;
+    }
+    var topPlate = document.getElementById('topbar-plate');
+    if (topPlate) topPlate.textContent = p.name;
+    if (status) {
+      status.className = 'plate-status plate-' + p.id;
+    }
+    if (plateMenu) {
+      plateMenu.innerHTML = PLATES.map(function (row) {
+        var locked = plateLocked(row);
+        var on = row.id === p.id ? ' is-on' : '';
+        var lock = locked ? '<span class="plate-lock">' + plateLockLabel(row) + '</span>' : '';
+        return '<button type="button" class="plate-item' + on + (locked ? ' is-locked' : '') + ' plate-' + row.id + '" data-plate="' + row.id + '" role="option">' +
+          '<span class="plate-item-name">' + row.name + lock + '</span>' +
+          '<span class="plate-item-role">' + row.role + '</span>' +
+          '<span class="plate-item-ctx">' + row.ctx + '</span>' +
+          '</button>';
+      }).join('') +
+        (isWagyu(p.id) && !wagyuLocked()
+          ? '<div class="plate-menu-foot">Wagyu A1–A5 · A5 is the highest grade. Same allowance, more context on higher grades.</div>'
+          : p.id === 'chopcode'
+            ? '<div class="plate-menu-foot">Attach files in the composer. Same chat as the other plates.</div>'
+            : '');
+    }
+    var tiles = document.getElementById('plate-tiles');
+    if (tiles) {
+      tiles.hidden = true;
+    }
+    if (plateHint) {
+      plateHint.textContent = (isWagyu(p.id) && !wagyuLocked())
+        ? (p.name + ' — A5 is the highest Wagyu grade. cs.AI can make mistakes.')
+        : (p.id === 'chopcode'
+          ? 'ChopCode — attach files in the composer. Verify code before you run it.'
+          : 'cs.AI can make mistakes. Verify important info.');
+    }
+  }
   function effortInfo() {
-    return EFFORT[tierSel.value] || EFFORT.high;
+    return EFFORT[tierSel.value] || EFFORT.tamago;
   }
   function showTier() {
-    var e = effortInfo();
-    status.textContent = 'ChopsticksAI · ' + e.label + ' effort' + (compact ? ' · compact' : '');
+    var ver = Cloud && Cloud.getAppVersion ? Cloud.getAppVersion() : '3.6.10';
+    if (!ver || ver === '3.3.10' || ver === '1.0.0') ver = '3.6.10';
+    var topVer = document.getElementById('topbar-ver');
+    var footVer = document.querySelector('.cursor-footer-ver');
+    if (topVer) topVer.textContent = ver;
+    if (footVer) footVer.textContent = ver;
+    renderPlateUI();
+    syncComposerChrome();
+  }
+  function syncComposerChrome() {
+    var chop = normalizeTier(tierSel.value) === 'chopcode';
+    if (status) {
+      if (chop && !chopcodeLocked()) {
+        status.hidden = false;
+        status.textContent = 'ChopCode · attach files for context';
+      } else if (chop && chopcodeLocked()) {
+        status.hidden = false;
+      } else {
+        status.hidden = true;
+        status.textContent = '';
+      }
+    }
+    if (attachBtn) {
+      attachBtn.classList.toggle('is-primary', chop);
+      attachBtn.title = chop ? 'Attach a file for ChopCode' : 'Attach files';
+    }
+    if (input) {
+      if (chop) input.placeholder = 'Paste an error, or attach a file…';
+      else if (webSearchOn()) input.placeholder = 'Plan, search, build…';
+      else input.placeholder = 'Ask anything (search off · /search forces lookup)…';
+    }
+    updateSearchToggleUI();
   }
   function fmt(n) {
     if (!isFinite(n)) return '?';
@@ -844,6 +1077,8 @@
   }
   var cooldownTimer = null;
   var cooldownEndsAt = 0;
+  var resetEndsAt = 0;
+  var resetTimer = null;
 
   function fmtCooldownLeft(ms) {
     var s = Math.max(0, Math.ceil(ms / 1000));
@@ -862,11 +1097,7 @@
   function setWebSearch(on) {
     try { localStorage.setItem(WEB_SEARCH_KEY, on ? 'on' : 'off'); } catch (e) {}
     updateSearchToggleUI();
-    if (input) {
-      input.placeholder = on
-        ? 'Ask anything, or attach files / images…'
-        : 'Ask anything (search off · /search forces lookup)…';
-    }
+    syncComposerChrome();
     if (!cooldownEndsAt) renderUsagePanel(lastUsageData);
   }
 
@@ -900,9 +1131,45 @@
       '</div>';
   }
 
+  function fmtResetAt(msLeft) {
+    if (msLeft <= 0) return 'soon';
+    return new Date(Date.now() + msLeft).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+
+  var usageExpanded = false;
+
   function renderUsagePanel(d) {
     if (!usageEl || cooldownEndsAt) return;
+    var used = d && d.usage && typeof d.usage.used === 'number' ? d.usage.used
+      : (d && d.budget && d.budget.used);
+    var limit = d && d.usage && d.usage.limit ? d.usage.limit
+      : (d && d.budget && d.budget.limit);
+    var ratio = (typeof used === 'number' && limit) ? usageRatio(used, limit) : 0;
+    var resetLine = '';
+    if (resetEndsAt > Date.now()) {
+      var resetLeft = resetEndsAt - Date.now();
+      resetLine = ' · resets ' + fmtResetAt(resetLeft);
+    }
+
+    if (!usageExpanded) {
+      var compact = (typeof used === 'number' && limit)
+        ? 'Allowance ' + fmt(used) + '/' + fmt(limit) + resetLine
+        : 'Allowance — sign in to sync';
+      usageEl.innerHTML = '<div class="usage-compact">' +
+        '<span>' + compact + '</span>' +
+        '<span class="usage-compact-acts">' +
+        '<a class="usage-details-btn" href="/chopsticks-ai/web/upgrades/">Upgrade</a>' +
+        '<button type="button" class="usage-details-btn" id="usage-details-toggle">Details</button>' +
+        '</span>' +
+        '</div>';
+      var toggleBtn = document.getElementById('usage-details-toggle');
+      if (toggleBtn) toggleBtn.onclick = function () { usageExpanded = true; renderUsagePanel(lastUsageData); };
+      return;
+    }
+
     var html = '<div class="usage-panel">';
+    html += '<div class="usage-panel-head"><span>Usage</span>' +
+      '<button type="button" class="usage-details-btn" id="usage-details-hide">Hide</button></div>';
     if (d && d.searched) {
       html += '<div class="usage-chip on">Chromium search</div>';
     } else if (!webSearchOn()) {
@@ -920,6 +1187,10 @@
       html += usageMeter('Allowance', used, limit, usageRatio(used, limit), 'allow');
     }
     var meta = [];
+    if (resetEndsAt > Date.now()) {
+      var resetLeft = resetEndsAt - Date.now();
+      meta.push('Resets at ' + fmtResetAt(resetLeft) + ' · ' + fmtCooldownLeft(resetLeft) + ' left');
+    }
     if (d && d.usage && d.usage.tier && d.usage.tier.label) meta.push(d.usage.tier.label);
     var n = unlockKeys().length;
     if (n) meta.push(n + ' Fathom Pro key' + (n === 1 ? '' : 's'));
@@ -929,10 +1200,20 @@
     html += '<div class="unlock-row">' +
       '<input type="text" id="unlock-input" placeholder="Redeem Fathom Pro key (oi-pl2-…)" aria-label="Unlock key">' +
       '<button type="button" id="unlock-redeem">Redeem</button>' +
+      '<a class="nbtn" href="/chopsticks-ai/web/upgrades/" style="padding:.35rem .55rem;font-size:.72rem;text-decoration:none">Upgrades</a>' +
       '<a class="nbtn" href="/vault/" style="padding:.35rem .55rem;font-size:.72rem;text-decoration:none">Get key</a>' +
       '</div>';
+    if (Cloud && Cloud.canPickModel && Cloud.canPickModel()) {
+      html += '<div class="unlock-row groq-key-row">' +
+        '<input type="password" id="groq-key-input" placeholder="Groq API key (gsk_…)" aria-label="Groq API key" autocomplete="off">' +
+        '<button type="button" id="groq-key-save">Save</button>' +
+        '</div>' +
+        '<div class="usage-meta">Wagyu is sign-in only and uses the largest context. Rice → Tamago → Hibachi → Wagyu, each with more tokens and context.</div>';
+    }
     html += '</div>';
     usageEl.innerHTML = html;
+    var hideBtn = document.getElementById('usage-details-hide');
+    if (hideBtn) hideBtn.onclick = function () { usageExpanded = false; renderUsagePanel(lastUsageData); };
     var redeemBtn = document.getElementById('unlock-redeem');
     var unlockInput = document.getElementById('unlock-input');
     if (redeemBtn && unlockInput) {
@@ -947,6 +1228,15 @@
       };
       unlockInput.onkeydown = function (e) {
         if (e.key === 'Enter') { e.preventDefault(); redeemBtn.click(); }
+      };
+    }
+    var groqInput = document.getElementById('groq-key-input');
+    var groqSave = document.getElementById('groq-key-save');
+    if (groqInput && groqSave) {
+      groqInput.value = groqApiKey();
+      groqSave.onclick = function () {
+        saveGroqApiKey(groqInput.value);
+        loadModelPickerUI();
       };
     }
   }
@@ -969,8 +1259,17 @@
   function showUsage(d) {
     if (!usageEl) return;
     lastUsageData = d;
+    var nextAllowed = !!(d && d.usage && d.usage.chopcode && d.usage.chopcode.allowed);
+    if (nextAllowed !== chopcodeAllowed) {
+      chopcodeAllowed = nextAllowed;
+      renderPlateUI();
+    } else {
+      chopcodeAllowed = nextAllowed;
+    }
     if (cooldownTimer) { clearInterval(cooldownTimer); cooldownTimer = null; }
+    if (resetTimer) { clearInterval(resetTimer); resetTimer = null; }
     cooldownEndsAt = 0;
+    resetEndsAt = 0;
     usageEl.className = 'usage';
 
     var cool = d && d.usage && d.usage.cooldown;
@@ -979,6 +1278,13 @@
       tickCooldown();
       cooldownTimer = setInterval(tickCooldown, 1000);
       return;
+    }
+
+    if (d && d.usage && typeof d.usage.resetInMs === 'number' && d.usage.resetInMs > 0) {
+      resetEndsAt = Date.now() + d.usage.resetInMs;
+      resetTimer = setInterval(function () {
+        if (resetEndsAt && lastUsageData) renderUsagePanel(lastUsageData);
+      }, 30000);
     }
 
     var warn = d && d.usage && d.usage.warning;
@@ -1017,34 +1323,73 @@
       showTier();
     });
     updateOfflineToggleUI();
+  } else {
+    updateOfflineToggleUI();
   }
   showTier();
-  updateSearchToggleUI();
-  if (input && !webSearchOn()) {
-    input.placeholder = 'Ask anything (search off · /search forces lookup)…';
+  if (plateBtn && plateMenu) {
+    plateBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = plateMenu.hidden;
+      plateMenu.hidden = !open;
+      plateBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    plateMenu.addEventListener('click', function (e) {
+      var item = e.target.closest('[data-plate]');
+      if (!item) return;
+      setPlate(item.getAttribute('data-plate'));
+      closePlateMenu();
+    });
   }
+  var plateTilesEl = document.getElementById('plate-tiles');
+  if (plateTilesEl) {
+    plateTilesEl.addEventListener('click', function (e) {
+      var item = e.target.closest('[data-plate]');
+      if (!item) return;
+      setPlate(item.getAttribute('data-plate'));
+    });
+  }
+  document.addEventListener('click', function (e) {
+    if (plateWrap && !plateWrap.contains(e.target)) closePlateMenu();
+  });
+  updateSearchToggleUI();
+  syncComposerChrome();
   if (searchToggle) {
     searchToggle.addEventListener('click', function () { setWebSearch(!webSearchOn()); });
   }
   pollUsage();
 
-  var SUGGESTIONS = [
-    ['Write a Python script', 'that renames every file in a folder by date'],
-    ['Make me a .gitignore', 'for a Node and Python project'],
-    ['Explain how SSDs work', 'in plain language'],
-    ['How do I install rNitro?', 'on a Mac, step by step']
+  var SUGGESTIONS = csaiEdition() === 'offline' ? [
+    { label: 'What is MacBar?', prompt: 'What is MacBar and how do I install it?', plate: null },
+    { label: 'Install CSR', prompt: 'How do I install CSR on a Mac?', plate: null },
+    { label: 'Fathom vs Fathom Pro', prompt: 'What is the difference between Fathom Air and Fathom Pro?', plate: null },
+    { label: 'How do I unlock Fathom Pro?', prompt: 'How do I unlock Fathom Pro?', plate: null }
+  ] : [
+    { label: 'What is ChopsticksAI?', prompt: 'What is ChopsticksAI?', plate: null },
+    { label: 'How do I install rNitro?', prompt: 'How do I install rNitro?', plate: null },
+    { label: "macOS says it can't be opened", prompt: "macOS says it can't be opened. How do I fix that?", plate: null },
+    { label: 'Write me a haiku about Mondays', prompt: 'Write me a haiku about Mondays', plate: null }
   ];
 
   (function fillSuggestions() {
-    var wrap = document.getElementById('suggest');
+    var wrap = document.getElementById('intro-actions');
+    if (!wrap) return;
+    wrap.innerHTML = '';
     SUGGESTIONS.forEach(function (s) {
       var b = document.createElement('button');
       b.type = 'button';
-      b.className = 'sug';
-      b.innerHTML = '<b></b><span></span>';
-      b.querySelector('b').textContent = s[0];
-      b.querySelector('span').textContent = s[1];
-      b.addEventListener('click', function () { submit(s[0] + ' ' + s[1]); });
+      b.className = 'intro-starter';
+      b.textContent = s.label;
+      b.addEventListener('click', function () {
+        if (s.plate) setPlate(s.plate);
+        input.value = s.prompt;
+        input.style.height = 'auto';
+        input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+        syncSendState();
+        input.focus();
+        var len = input.value.length;
+        try { input.setSelectionRange(len, len); } catch (e) {}
+      });
       wrap.appendChild(b);
     });
   })();
@@ -1064,8 +1409,16 @@
     txt: 'txt', text: 'txt', xml: 'xml', toml: 'toml', ini: 'ini', csv: 'csv'
   };
 
-  function download(name, body) {
-    var blob = new Blob([body], { type: 'text/plain;charset=utf-8' });
+  function download(name, body, encoding) {
+    var blob;
+    if (encoding === 'base64') {
+      var raw = atob(String(body || '').replace(/\s+/g, ''));
+      var bytes = new Uint8Array(raw.length);
+      for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+      blob = new Blob([bytes]);
+    } else {
+      blob = new Blob([body], { type: 'text/plain;charset=utf-8' });
+    }
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
@@ -1076,58 +1429,263 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
 
-  
-  function renderAssistant(text, sources) {
+  function renderFileDownloadBanner(files) {
+    var bar = document.createElement('div');
+    bar.className = 'file-banner';
+    var head = document.createElement('div');
+    head.className = 'file-banner-head';
+    head.innerHTML =
+      '<div class="file-banner-title">' +
+        '<span class="file-banner-icon">↓</span>' +
+        '<span>' + (files.length === 1 ? 'Generated file ready' : 'Generated ' + files.length + ' files') + '</span>' +
+      '</div>' +
+      '<button type="button" class="fbtn file-banner-all" data-a="all">Download all</button>';
+    bar.appendChild(head);
+    var chips = document.createElement('div');
+    chips.className = 'file-banner-chips';
+    files.forEach(function (f) {
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'file-banner-chip';
+      chip.textContent = f.name;
+      chip.addEventListener('click', function () { download(f.name, f.body, f.encoding); });
+      chips.appendChild(chip);
+    });
+    bar.appendChild(chips);
+    head.querySelector('[data-a="all"]').addEventListener('click', function () {
+      files.forEach(function (f) { download(f.name, f.body, f.encoding); });
+    });
+    return bar;
+  }
+
+  function looksLikeCodeLine(line) {
+    var t = String(line || '').trim();
+    if (!t) return false;
+    if (/^<\/?[a-zA-Z!][^>]*>/.test(t)) return true;
+    if (/^(const|let|var|function|class|import |export |return |document\.|window\.|console\.)/.test(t)) return true;
+    if (/[{};]\s*$/.test(t) && t.length < 240 && !/^[A-Z][^<{]{12,}[.!?]$/.test(t)) return true;
+    return false;
+  }
+  function guessLangFromBlock(block) {
+    var s = String(block || '');
+    if (/<!DOCTYPE|<html\b|<head\b|<body\b|<\/?(div|span|script|style|p|section)\b/i.test(s)) return 'html';
+    if (/\b(const|let|function|=>|document\.)\b/.test(s)) return 'javascript';
+    if (/\b(def |import |print\()/.test(s)) return 'python';
+    if (/[.#][\w-]+\s*\{/.test(s)) return 'css';
+    return 'text';
+  }
+  function splitLooseCode(prose) {
+    var lines = String(prose || '').split('\n');
+    var out = [];
+    var i = 0;
+    while (i < lines.length) {
+      var two = looksLikeCodeLine(lines[i]) && i + 1 < lines.length && looksLikeCodeLine(lines[i + 1]);
+      if (two) {
+        var start = i;
+        i += 2;
+        while (i < lines.length && (looksLikeCodeLine(lines[i]) || !String(lines[i]).trim())) i += 1;
+        while (i > start && !String(lines[i - 1]).trim()) i -= 1;
+        out.push({ type: 'code', text: lines.slice(start, i).join('\n').replace(/\n+$/, '') });
+        continue;
+      }
+      var s = i;
+      i += 1;
+      while (i < lines.length) {
+        if (looksLikeCodeLine(lines[i]) && i + 1 < lines.length && looksLikeCodeLine(lines[i + 1])) break;
+        i += 1;
+      }
+      var block = lines.slice(s, i).join('\n');
+      if (block.trim()) out.push({ type: 'prose', text: block });
+    }
+    return out;
+  }
+  function addFileCard(wrap, name, lang, body, encoding, fileList) {
+    if (fileList) fileList.push({ name: name, body: body, encoding: encoding || null });
+    var PREVIEW = 12;
+    var lines = String(body || '').split('\n');
+    var collapsed = lines.length > PREVIEW;
+    var preview = collapsed ? lines.slice(0, PREVIEW).join('\n') : body;
+    var card = document.createElement('div');
+    card.className = 'file' + (collapsed ? ' is-collapsed' : '');
+    card.innerHTML =
+      '<div class="file-head">' +
+        '<div class="file-meta">' +
+          '<span class="file-name"></span>' +
+          '<span class="file-lang"></span>' +
+        '</div>' +
+        '<span class="file-acts">' +
+          '<button type="button" class="fbtn" data-a="copy">Copy</button>' +
+          '<button type="button" class="fbtn" data-a="dl">Download</button>' +
+        '</span>' +
+      '</div><pre><code></code></pre>' +
+      (collapsed ? '<button type="button" class="file-more">Show more</button>' : '');
+    card.querySelector('.file-name').textContent = name;
+    card.querySelector('.file-lang').textContent = lang;
+    var code = card.querySelector('code');
+    code.textContent = preview;
+    card.querySelector('[data-a="dl"]').addEventListener('click', function () {
+      download(name, body, encoding);
+    });
+    card.querySelector('[data-a="copy"]').addEventListener('click', function (e) {
+      navigator.clipboard.writeText(body).then(function () {
+        var b = e.target; b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1400);
+      });
+    });
+    var more = card.querySelector('.file-more');
+    if (more) {
+      more.addEventListener('click', function () {
+        var open = card.classList.toggle('is-expanded');
+        code.textContent = open ? body : preview;
+        more.textContent = open ? 'Show less' : 'Show more';
+      });
+    }
+    wrap.appendChild(card);
+  }
+  function addProse(wrap, part) {
+    if (!part.trim()) return;
+    var p = document.createElement('div');
+    p.innerHTML = esc(part.trim())
+      .replace(/`([^`\n]+)`/g, '<code class="inline">$1</code>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n{2,}/g, '</p><p>')
+      .replace(/^/, '<p>').replace(/$/, '</p>');
+    wrap.appendChild(p);
+  }
+  function publicAgentName(raw, index) {
+    var t = String(raw || '').trim();
+    var low = t.toLowerCase();
+    if (low.indexOf('agent') === 0 || low === 'lead' || low === 'you') return t;
+    if (low.indexOf('lead') !== -1) return 'Lead';
+    return 'Agent ' + (index + 1);
+  }
+
+  function renderAgentTurn(turn, index) {
+    var row = document.createElement('div');
+    row.className = 'agent-bubble agent-bubble--' + (turn.type || 'message');
+    var name = publicAgentName(turn.label || turn.speaker, index);
+    var head = document.createElement('div');
+    head.className = 'agent-bubble-name';
+    head.textContent = name;
+    var body = document.createElement('div');
+    body.className = 'agent-bubble-text';
+    body.textContent = turn.text || turn.preview || '…';
+    row.appendChild(head);
+    row.appendChild(body);
+    return row;
+  }
+
+  var CHOP_CHATTER = [
+    "I'll take the first pass.",
+    "Looking at structure and edge cases.",
+    "I'll watch naming and APIs.",
+    "Drafting a compact version.",
+    "Checking the refactor path.",
+    "Fast sketch incoming.",
+    "I'll flag file layout.",
+    "Reviewing for sharp edges.",
+    "Matching the request literally.",
+    "Reasoning through the tricky bit.",
+    "Merging the room into one answer."
+  ];
+
+  function chopcodeInstantTurns() {
+    return CHOP_CHATTER.map(function (text, i) {
+      return {
+        label: i === 10 ? 'Lead' : ('Agent ' + (i + 1)),
+        type: i === 10 ? 'synthesis' : 'draft',
+        text: text
+      };
+    });
+  }
+
+  function startInstantAgentRoom(host) {
+    var room = renderMultiAgentRoom(null, chopcodeInstantTurns().slice(0, 4), true);
+    host.appendChild(room);
+    return function stop() {};
+  }
+
+  function renderMultiAgentRoom(agents, conversation, openByDefault) {
+    var det = document.createElement('details');
+    det.className = 'multi-agent-room';
+    det.open = openByDefault !== false;
+    var sum = document.createElement('summary');
+    sum.className = 'multi-agent-room-summary';
+    var icon = document.createElement('span');
+    icon.className = 'multi-agent-room-icon';
+    icon.textContent = '◎';
+    var title = document.createElement('span');
+    title.className = 'multi-agent-room-title';
+    title.textContent = 'Agent conversation';
+    sum.appendChild(icon);
+    sum.appendChild(title);
+    det.appendChild(sum);
+
+    var body = document.createElement('div');
+    body.className = 'multi-agent-room-body agent-thread';
+    var turns = (conversation || []).filter(function (t) { return t && t.type !== 'user'; });
+    if (!turns.length && agents && agents.length) {
+      turns = agents.map(function (a, i) {
+        return {
+          label: publicAgentName(a.label, i),
+          type: a.role === 'synthesizer' ? 'synthesis' : 'draft',
+          text: a.message || a.preview || '…'
+        };
+      });
+    }
+    turns.forEach(function (turn, i) {
+      body.appendChild(renderAgentTurn(turn, i));
+    });
+    det.appendChild(body);
+    return det;
+  }
+
+  function renderChopCodeAgents(agents, conversation, openByDefault) {
+    return renderMultiAgentRoom(agents, conversation, openByDefault);
+  }
+
+  function renderAssistant(text, sources, agents, conversation) {
     var wrap = document.createElement('div');
     wrap.className = 'bubble';
+    if ((agents && agents.length) || (conversation && conversation.length)) {
+      wrap.appendChild(renderMultiAgentRoom(agents, conversation, false));
+    }
+    var fileList = [];
     var parts = String(text).split(/```/);
 
     parts.forEach(function (part, i) {
       if (i % 2 === 0) {
-        if (!part.trim()) return;
-        var p = document.createElement('div');
-        p.innerHTML = esc(part.trim())
-          .replace(/`([^`\n]+)`/g, '<code class="inline">$1</code>')
-          .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-          .replace(/\n{2,}/g, '</p><p>')
-          .replace(/^/, '<p>').replace(/$/, '</p>');
-        wrap.appendChild(p);
+        splitLooseCode(part).forEach(function (seg) {
+          if (seg.type === 'prose') addProse(wrap, seg.text);
+          else {
+            var lang = guessLangFromBlock(seg.text);
+            var ext = lang === 'javascript' ? 'js' : (lang === 'text' ? 'txt' : lang);
+            addFileCard(wrap, 'chopsticksai-file.' + ext, lang, seg.text, null, fileList);
+          }
+        });
         return;
       }
-
-      
       var nl = part.indexOf('\n');
       var head = (nl === -1 ? part : part.slice(0, nl)).trim();
       var body = (nl === -1 ? '' : part.slice(nl + 1)).replace(/\n+$/, '');
       var bits = head.split(/\s+/);
       var lang = (bits[0] || 'text').toLowerCase();
       var name = bits.slice(1).join(' ').trim();
+      var encoding = null;
+      if (lang === 'base64' && name) {
+        encoding = 'base64';
+        var real = name.split(/\s+/).pop();
+        if (real && /\./.test(real)) {
+          name = real;
+          lang = (real.split('.').pop() || 'bin').toLowerCase();
+        }
+      }
       if (!name) name = 'chopsticksai-file.' + (EXT[lang] || 'txt');
-
-      var card = document.createElement('div');
-      card.className = 'file';
-      card.innerHTML =
-        '<div class="file-head">' +
-          '<span class="file-name"></span>' +
-          '<span class="file-lang"></span>' +
-          '<span class="file-acts">' +
-            '<button type="button" class="fbtn" data-a="copy">Copy</button>' +
-            '<button type="button" class="fbtn" data-a="dl">Download</button>' +
-          '</span>' +
-        '</div><pre><code></code></pre>';
-      card.querySelector('.file-name').textContent = name;
-      card.querySelector('.file-lang').textContent = lang;
-      card.querySelector('code').textContent = body;
-      card.querySelector('[data-a="dl"]').addEventListener('click', function () {
-        download(name, body);
-      });
-      card.querySelector('[data-a="copy"]').addEventListener('click', function (e) {
-        navigator.clipboard.writeText(body).then(function () {
-          var b = e.target; b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1400);
-        });
-      });
-      wrap.appendChild(card);
+      addFileCard(wrap, name, lang, body, encoding, fileList);
     });
+
+    if (fileList.length) {
+      wrap.insertBefore(renderFileDownloadBanner(fileList), wrap.firstChild);
+    }
 
     if (!wrap.childNodes.length) wrap.textContent = text;
     if (sources && sources.length) {
@@ -1159,11 +1717,12 @@
 
   function addTurn(who, node) {
     if (intro && intro.parentNode) intro.remove();
+    syncIntroState();
     var t = document.createElement('div');
     t.className = 'turn ' + who;
     var label = document.createElement('div');
     label.className = 'who';
-    label.textContent = who === 'user' ? 'You' : 'ChopsticksAI';
+    label.textContent = who === 'user' ? 'You' : 'cs.AI';
     t.appendChild(label);
     t.appendChild(node);
     log.appendChild(t);
@@ -1183,42 +1742,22 @@
   }
 
   function offline(text) {
-    if (!offlineChatModeOn() && !isDeviceOffline()) {
-      return 'The model is unreachable right now. Check your connection and try again.';
+    if (!offlineChatModeOn()) {
+      return 'The live model is unreachable right now. Try Rice, or send the question again.';
     }
     if (window.chopsticksAI && window.chopsticksAI.ask) {
       var r = window.chopsticksAI.ask(text);
-      var tag = offlineChatModeOn()
-        ? '(Offline mode · local product help.)'
-        : '(Offline answer — no network connection.)';
-      return r.answer + '\n\n' + tag;
+      return r.answer + '\n\n(Offline mode · local product help.)';
     }
-    return 'No network connection. Connect to Wi‑Fi or enable Offline mode for local product help.';
+    return 'cs.AI Offline only answers from the on-device Chopsticks HQ docs.';
   }
 
   
-  function streamReveal(targetTurn, fullText, sources, done) {
-    var host = targetTurn.lastChild;
-    var scratch = document.createElement('div');
-    scratch.className = 'bubble';
-    targetTurn.replaceChild(scratch, host);
-    var i = 0;
-    var step = Math.max(12, Math.floor(fullText.length / 40));
-    function tick() {
-      i = Math.min(fullText.length, i + step);
-      var chunk = fullText.slice(0, i);
-      var rendered = renderAssistant(i < fullText.length ? chunk + '▌' : chunk);
-      if (i >= fullText.length) {
-        rendered = renderAssistant(fullText);
-        appendSources(rendered, sources);
-      }
-      targetTurn.replaceChild(rendered, targetTurn.lastChild);
-      stage.scrollTop = stage.scrollHeight;
-      if (i < fullText.length) {
-        requestAnimationFrame(function () { setTimeout(tick, 16); });
-      } else if (done) done();
-    }
-    tick();
+  function streamReveal(targetTurn, fullText, sources, agents, conversation, done) {
+    var rendered = renderAssistant(fullText, sources, agents, conversation);
+    appendSources(rendered, sources);
+    targetTurn.replaceChild(rendered, targetTurn.lastChild);
+    if (done) done();
   }
 
   function showCooldown(targetTurn, d) {
@@ -1261,6 +1800,16 @@
     }
     var ready = pendingAttach.filter(function (a) { return a.url && !a.error; });
     if (!text && !ready.length) return;
+    if (isWagyu(tierSel.value) && wagyuLocked()) {
+      if (window.openCsAuth) window.openCsAuth();
+      if (status) { status.hidden = false; status.textContent = 'Sign in to use Wagyu'; }
+      return;
+    }
+    if (normalizeTier(tierSel.value) === 'chopcode' && chopcodeLocked()) {
+      if (!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn()) && window.openCsAuth) window.openCsAuth();
+      status.textContent = 'ChopCode needs sign-in and Pro';
+      return;
+    }
     if (handleSlash(text)) {
       input.value = '';
       addTurn('bot', plain(compact ? 'Compact mode on.' : 'Compact mode off.'));
@@ -1280,23 +1829,28 @@
     busy = true;
     send.disabled = true;
     var thinking = addTurn('bot', plain('Working', 'dots'));
+    var stopRoom = function () {};
+    if (normalizeTier(tierSel.value) === 'chopcode') {
+      stopRoom = startInstantAgentRoom(thinking);
+    }
 
     if (offlineChatModeOn()) {
       var localMsg = offline(text || 'Please review the attached files.');
       history.push({ role: 'assistant', content: localMsg });
       thinking.replaceChild(renderAssistant(localMsg), thinking.lastChild);
       busy = false;
-      send.disabled = false;
+      syncSendState();
       saveSession();
       stage.scrollTop = stage.scrollHeight;
       return;
     }
     if (isDeviceOffline()) {
-      var noNet = 'No network connection detected. Connect to Wi‑Fi or turn on Offline mode for local product help.';
+      var noNet = 'No network connection. cs.AI Online needs the internet — it does not fall back to a local knowledge base.';
+      if (offlineChatModeOn()) noNet = 'cs.AI Offline uses the on-device knowledge base and does not need the network.';
       history.push({ role: 'assistant', content: noNet });
       thinking.replaceChild(renderAssistant(noNet), thinking.lastChild);
       busy = false;
-      send.disabled = false;
+      syncSendState();
       saveSession();
       stage.scrollTop = stage.scrollHeight;
       return;
@@ -1323,6 +1877,18 @@
         };
       })
     };
+    if (Cloud && Cloud.canPickModel && Cloud.canPickModel() && orModelSel && orModelSel.value) {
+      payload.model = orModelSel.value;
+    }
+    var savedModel = '';
+    try { savedModel = localStorage.getItem(OR_MODEL_KEY) || ''; } catch (e) {}
+    if (savedModel) payload.model = savedModel;
+    var gk = groqApiKey();
+    if (gk && /^gsk_/i.test(gk)) payload.groqKey = gk;
+    var ork = openRouterApiKey();
+    if (ork && /^sk-or-/i.test(ork)) payload.openRouterKey = ork;
+    var ck = anthropicApiKey();
+    if (ck && /^sk-ant-/i.test(ck)) payload.anthropicKey = ck;
     pendingAttach = [];
     renderAttachRow();
     if (sr.hadPrefix) {
@@ -1343,6 +1909,23 @@
     })
       .then(function (r) { return r.json(); })
       .then(function (d) {
+        var liveMiss = d && d.mode === 'error' && /didn.t return an answer/.test(String(d.reply || ''));
+        if (liveMiss && payload.tier !== 'tamago') {
+          payload.tier = 'tamago';
+          payload.disableSearch = true;
+          return fetch(API, { method: 'POST', headers: headers, body: JSON.stringify(payload) }).then(function (r) { return r.json(); });
+        }
+        return d;
+      })
+      .then(function (d) {
+        stopRoom();
+        if (d && (d.mode === 'auth_required' || d.mode === 'chopcode_pro')) {
+          var need = d.error || 'Sign in to use this plate.';
+          history.push({ role: 'assistant', content: need });
+          thinking.replaceChild(renderAssistant(need), thinking.lastChild);
+          saveSession();
+          return;
+        }
         if (!d || !d.reply) throw new Error('empty');
         if (d.mode === 'cooldown') {
           history.push({ role: 'assistant', content: d.reply, sources: d.sources || [] });
@@ -1361,45 +1944,57 @@
             var has = replyText.indexOf(needle) !== -1 && replyText.indexOf('```') !== -1;
             if (has) return;
             var lang = f.language || 'text';
-            replyText += (replyText ? '\n\n' : '') + '```' + lang + ' ' + f.name + '\n' + f.content + '\n```';
+            var head = f.encoding === 'base64' ? ('base64 ' + f.name) : (lang + ' ' + f.name);
+            replyText += (replyText ? '\n\n' : '') + '```' + head + '\n' + f.content + '\n```';
           });
         }
-        history.push({ role: 'assistant', content: replyText, sources: d.sources || [] });
+        history.push({
+          role: 'assistant',
+          content: replyText,
+          sources: d.sources || [],
+          agents: d.agents || null,
+          conversation: d.conversation || null
+        });
         showUsage(d);
         showTier();
         return new Promise(function (resolve) {
-          streamReveal(thinking, replyText, d.sources, function () {
+          streamReveal(thinking, replyText, d.sources, d.agents, d.conversation, function () {
             saveSession();
             resolve();
           });
         });
       })
       .catch(function () {
-        var msg = (offlineChatModeOn() || isDeviceOffline())
-          ? offline(text)
-          : 'Try sending that again — the live model is still responding.';
-        history.push({ role: 'assistant', content: msg });
-        thinking.replaceChild(renderAssistant(msg), thinking.lastChild);
-        saveSession();
+        stopRoom();
+        var payload2 = Object.assign({}, payload, { tier: 'rice', enableTools: false, disableSearch: true, maxTokens: 400 });
+        return fetch(API, { method: 'POST', headers: headers, body: JSON.stringify(payload2) })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (d && d.reply) {
+              history.push({ role: 'assistant', content: d.reply, sources: d.sources || [] });
+              thinking.replaceChild(renderAssistant(d.reply, d.sources, d.agents, d.conversation), thinking.lastChild);
+              saveSession();
+              return;
+            }
+            throw new Error('empty');
+          })
+          .catch(function () {
+            var msg = 'I couldn’t reach a live model just now. Try Rice, or send the question again.';
+            if (offlineChatModeOn() && typeof offline === 'function') msg = offline(text || 'help');
+            history.push({ role: 'assistant', content: msg });
+            thinking.replaceChild(renderAssistant(msg), thinking.lastChild);
+            saveSession();
+          });
       })
       .then(function () {
         busy = false;
-        send.disabled = false;
+        syncSendState();
         stage.scrollTop = stage.scrollHeight;
         input.focus();
       });
   }
 
-  send.addEventListener('click', function () { submit(input.value); });
-  input.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(input.value); }
-  });
-  input.addEventListener('input', function () {
-    input.style.height = 'auto';
-    input.style.height = Math.min(input.scrollHeight, 176) + 'px';
-  });
-
-  document.getElementById('reset').addEventListener('click', function () {
+  function startNewChat() {
     history = [];
     if (usageEl) usageEl.textContent = '';
     clearSession();
@@ -1407,17 +2002,129 @@
     log.appendChild(intro);
     showTier();
     refreshChatList();
+    syncIntroState();
     input.focus();
+  }
+
+  var mmModal = document.getElementById('more-models-modal');
+  var mmList = document.getElementById('mm-list');
+  var mmFilter = document.getElementById('mm-filter');
+  var mmStatus = document.getElementById('mm-status');
+  var mmProv = 'all';
+  var mmCache = [];
+  function mmFillKeys() {
+    var a = document.getElementById('mm-or-key');
+    var b = document.getElementById('mm-groq-key');
+    var c = document.getElementById('mm-claude-key');
+    if (a) a.value = openRouterApiKey();
+    if (b) b.value = groqApiKey();
+    if (c) c.value = anthropicApiKey();
+  }
+  function mmSaveKeysFromForm() {
+    var a = document.getElementById('mm-or-key');
+    var b = document.getElementById('mm-groq-key');
+    var c = document.getElementById('mm-claude-key');
+    if (a) saveOpenRouterApiKey(a.value);
+    if (b) saveGroqApiKey(b.value);
+    if (c) saveAnthropicApiKey(c.value);
+  }
+  function mmRender() {
+    if (!mmList) return;
+    var q = String(mmFilter && mmFilter.value || '').toLowerCase();
+    var cur = '';
+    try { cur = localStorage.getItem(OR_MODEL_KEY) || ''; } catch (e) {}
+    mmList.innerHTML = '';
+    mmCache.forEach(function (m) {
+      if (mmProv !== 'all' && m.provider !== mmProv) return;
+      var hay = (m.id + ' ' + (m.name || '') + ' ' + (m.provider || '')).toLowerCase();
+      if (q && hay.indexOf(q) < 0) return;
+      var opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = '[' + (m.provider || 'or') + '] ' + (m.name && m.name !== m.id ? m.name + ' · ' : '') + m.id;
+      if (m.id === cur) opt.selected = true;
+      mmList.appendChild(opt);
+    });
+  }
+  async function mmLoad() {
+    mmSaveKeysFromForm();
+    if (mmStatus) mmStatus.textContent = 'Loading catalogs…';
+    try {
+      var body = await Cloud.listModels({
+        groqKey: groqApiKey() || undefined,
+        openRouterKey: openRouterApiKey() || undefined,
+        anthropicKey: anthropicApiKey() || undefined
+      });
+      mmCache = (body && body.models) || [];
+      var c = (body && body.counts) || {};
+      if (mmStatus) {
+        mmStatus.textContent = mmCache.length + ' models · Groq ' + (c.groq || 0) +
+          ' · Claude ' + (c.claude || 0) + ' · OpenRouter ' + (c.openrouter || 0);
+      }
+      mmRender();
+    } catch (e) {
+      if (mmStatus) mmStatus.textContent = 'Could not load catalogs.';
+    }
+  }
+  function mmOpen() {
+    if (!mmModal) return;
+    mmModal.hidden = false;
+    mmFillKeys();
+    if (!mmCache.length) mmLoad();
+    else mmRender();
+  }
+  var railMore = document.getElementById('rail-more-models');
+  if (railMore) railMore.addEventListener('click', mmOpen);
+  var mmClose = document.getElementById('mm-close');
+  if (mmClose) mmClose.addEventListener('click', function () { if (mmModal) mmModal.hidden = true; });
+  var mmLoadBtn = document.getElementById('mm-load');
+  if (mmLoadBtn) mmLoadBtn.addEventListener('click', mmLoad);
+  var mmClear = document.getElementById('mm-clear');
+  if (mmClear) mmClear.addEventListener('click', function () {
+    try { localStorage.removeItem(OR_MODEL_KEY); } catch (e) {}
+    if (orModelSel) orModelSel.value = '';
+    mmRender();
+  });
+  if (mmFilter) mmFilter.addEventListener('input', mmRender);
+  if (mmList) mmList.addEventListener('change', function () {
+    try { localStorage.setItem(OR_MODEL_KEY, mmList.value || ''); } catch (e) {}
+  });
+  document.querySelectorAll('.mm-tab').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      mmProv = btn.getAttribute('data-prov') || 'all';
+      document.querySelectorAll('.mm-tab').forEach(function (b) { b.classList.toggle('on', b === btn); });
+      mmRender();
+    });
   });
 
+  send.addEventListener('click', function () { submit(input.value); });
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(input.value); }
+  });
+  input.addEventListener('input', function () {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+    syncSendState();
+  });
+  syncSendState();
+
+  document.addEventListener('keydown', function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'n') { e.preventDefault(); startNewChat(); }
+  });
+
+  var chatListPanel = document.getElementById('chat-list-panel');
+  if (chatListPanel) {
+    chatListPanel.addEventListener('click', function (e) {
+      var btn = e.target && e.target.closest('[data-id]');
+      if (!btn) return;
+      openCloudChat(btn.getAttribute('data-id')).catch(function (err) { console.warn(err); });
+    });
+  }
   var chatList = document.getElementById('chat-list');
   if (chatList) {
     chatList.addEventListener('change', function () {
       var id = chatList.value;
       if (!id) return;
-      openCloudChat(id).catch(function (e) {
-        console.warn(e);
-      });
+      openCloudChat(id).catch(function (e) { console.warn(e); });
     });
   }
 
@@ -1436,10 +2143,23 @@
       modal.classList.add('is-open');
       email && email.focus();
     }
+    window.openCsAuth = open;
     function close() {
       if (modal) modal.classList.remove('is-open');
     }
     document.getElementById('account-btn').addEventListener('click', open);
+    var topAccount = document.getElementById('top-account');
+    if (topAccount) topAccount.addEventListener('click', open);
+    var sidebarSignin = document.getElementById('sidebar-signin');
+    if (sidebarSignin) sidebarSignin.addEventListener('click', open);
+    var topSignin = document.getElementById('top-signin');
+    if (topSignin) topSignin.addEventListener('click', open);
+    var chatPanel = document.getElementById('chat-list-panel');
+    if (chatPanel) {
+      chatPanel.addEventListener('click', function (e) {
+        if (e.target.closest('.sidebar-signin-btn')) open();
+      });
+    }
     document.getElementById('auth-close').addEventListener('click', close);
     modal.addEventListener('click', function (e) {
       if (e.target === modal) close();
@@ -1451,7 +2171,7 @@
         .then(function () {
           ok.textContent = 'Signed in. Loading your account…';
           updateAccountUI();
-          return loadAccountChats();
+          return loadAccountChats(true);
         })
         .then(function () {
           ok.textContent = 'Signed in.';
@@ -1469,7 +2189,7 @@
           } else {
             ok.textContent = 'Account created. Loading…';
             updateAccountUI();
-            return loadAccountChats();
+            return loadAccountChats(true);
           }
         })
         .then(function () {
@@ -1490,41 +2210,41 @@
   })();
 
   
-  function restoreGuestSession() {
-    if (Cloud && Cloud.isSignedIn()) return;
+  function restoreLocalSession() {
     var saved = loadSession();
-    if (!saved) return;
-    if (saved.authUserId) {
+    if (!saved) return false;
+    var uid = Cloud && Cloud.getSession() && Cloud.getSession().user ? Cloud.getSession().user.id : null;
+    if (saved.authUserId && uid && saved.authUserId !== uid) return false;
+    if (saved.authUserId && !uid) {
       clearSession();
-      return;
+      return false;
     }
     history = saved.history;
     cloudChatId = saved.cloudChatId || null;
     if (usageEl && saved.usage) {
       usageEl.textContent = String(saved.usage).replace(/\s*·?\s*Your OpenRouter key/gi, '').trim();
     }
-    if (saved.tier && EFFORT[saved.tier]) tierSel.value = saved.tier;
-    intro.remove();
-
-    var when = new Date(saved.at);
-    var note = document.createElement('div');
-    note.className = 'resumed';
-    note.textContent = 'Resumed your session from ' +
-      when.toLocaleDateString() + ' ' +
-      when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) +
-      ' — ' + history.length + ' messages. New chat starts fresh.';
-    log.appendChild(note);
-
+    if (saved.tier && EFFORT[normalizeTier(saved.tier)]) tierSel.value = normalizeTier(saved.tier);
+    if (intro && intro.parentNode) intro.remove();
+    syncIntroState();
+    log.innerHTML = '';
     history.forEach(function (m) {
       addTurn(m.role === 'user' ? 'user' : 'bot',
-        m.role === 'user' ? plain(m.content) : renderAssistant(m.content, m.sources));
+        m.role === 'user' ? plain(m.content) : renderAssistant(m.content, m.sources, m.agents, m.conversation));
     });
     showTier();
     pollUsage();
     stage.scrollTop = stage.scrollHeight;
+    return history.length > 0;
   }
 
-  document.getElementById('export').addEventListener('click', function () {
+  function restoreGuestSession() {
+    if (Cloud && Cloud.isSignedIn()) return;
+    restoreLocalSession();
+  }
+
+  var authExport = document.getElementById('auth-export');
+  if (authExport) authExport.addEventListener('click', function () {
     if (!history.length) return;
     var md = '# cs.AI conversation\n\n' + history.map(function (m) {
       return (m.role === 'user' ? '## You\n\n' : '## cs.AI\n\n') + m.content;
@@ -1540,38 +2260,79 @@
       if (uid === lastCloudUserId) return;
       lastCloudUserId = uid || null;
       updateAccountUI();
-      if (uid) loadAccountChats();
+      if (uid) {
+        restoreLocalSession();
+        refreshChatList();
+        if (!history.length) loadAccountChats(true);
+      }
       else switchAccountSession();
     });
     Cloud.init().then(function () {
       lastCloudUserId = Cloud.getSession() && Cloud.getSession().user ? Cloud.getSession().user.id : null;
       updateAccountUI();
-      if (Cloud.isSignedIn()) loadAccountChats();
-      else restoreGuestSession();
+      if (Cloud.isSignedIn()) {
+        var had = restoreLocalSession();
+        refreshChatList();
+        if (!had) loadAccountChats(true);
+      } else restoreGuestSession();
     }).catch(function () { restoreGuestSession(); });
   } else {
     restoreGuestSession();
   }
 
+  (function wireCursorChrome() {
+    var sidebar = document.getElementById('cursor-sidebar');
+    var toggle = document.getElementById('sidebar-toggle');
+    var SIDEBAR_KEY = 'chq.web.sidebarOpen';
+    function setSidebar(open) {
+      if (sidebar) sidebar.classList.toggle('collapsed', !open);
+      if (toggle) toggle.classList.toggle('active', open);
+      try { localStorage.setItem(SIDEBAR_KEY, open ? '1' : '0'); } catch (e) {}
+    }
+    var defaultOpen = true;
+    try {
+      if (window.matchMedia && matchMedia('(max-width: 768px)').matches) defaultOpen = false;
+      else if (localStorage.getItem(SIDEBAR_KEY) === '0') defaultOpen = false;
+    } catch (e) {}
+    setSidebar(defaultOpen);
+    if (toggle) toggle.addEventListener('click', function () {
+      setSidebar(sidebar && sidebar.classList.contains('collapsed'));
+    });
+    var drawerNew = document.getElementById('drawer-new-chat');
+    var railNew = document.getElementById('rail-new-chat');
+    function onNewChat() { startNewChat(); }
+    if (drawerNew) drawerNew.addEventListener('click', onNewChat);
+    if (railNew) railNew.addEventListener('click', onNewChat);
+    var topNew = document.getElementById('top-new-chat-guest');
+    if (topNew) topNew.addEventListener('click', onNewChat);
+    if (input && window.matchMedia && !matchMedia('(max-width: 768px)').matches) {
+      setTimeout(function () { input.focus(); }, 120);
+    }
+    syncIntroState();
+  })();
+
   (function wireBrowser() {
     var rail = document.getElementById('browser-rail');
-    var toggle = document.getElementById('browser-toggle');
     var frame = document.getElementById('browser-frame');
     var urlInput = document.getElementById('browser-url');
-    if (!rail || !toggle || !frame || !urlInput) return;
+    var drawerBrowser = document.getElementById('drawer-browser');
+    if (!rail || !frame || !urlInput) return;
     var BKEY = 'chq.web.browserOpen';
     function setOpen(on) {
       rail.hidden = !on;
-      toggle.classList.toggle('primary', on);
+      if (drawerBrowser) {
+        drawerBrowser.classList.toggle('on', on);
+        drawerBrowser.textContent = on ? 'Hide browser' : 'Browser';
+      }
       try { localStorage.setItem(BKEY, on ? '1' : '0'); } catch (e) {}
     }
     try { setOpen(localStorage.getItem(BKEY) === '1'); } catch (e) { setOpen(false); }
-    toggle.addEventListener('click', function () { setOpen(rail.hidden); });
+    if (drawerBrowser) drawerBrowser.addEventListener('click', function () { setOpen(rail.hidden); });
     function navigate(raw) {
       var t = String(raw || '').trim();
       if (!t) return;
       var url = t;
-      if (!/^https?:\/\//i.test(t) && !/^about:/i.test(t)) {
+      if (!/^https?:\/\//i.test(t)) {
         if (t.indexOf('.') >= 0 && t.indexOf(' ') < 0) url = 'https://' + t;
         else url = 'https://www.google.com/search?q=' + encodeURIComponent(t);
       }
@@ -1585,6 +2346,9 @@
     document.getElementById('browser-reload').addEventListener('click', function () {
       try { frame.contentWindow.location.reload(); } catch (err) { frame.src = urlInput.value; }
     });
+    document.getElementById('browser-home').addEventListener('click', function () {
+      navigate('https://chopstickshq.com/');
+    });
     document.getElementById('browser-back').addEventListener('click', function () {
       try { frame.contentWindow.history.back(); } catch (err) {}
     });
@@ -1593,6 +2357,10 @@
     });
   })();
 
+  try {
+    var plateQ = new URLSearchParams(location.search).get('plate');
+    if (plateQ) setPlate(plateQ);
+  } catch (e) {}
   input.focus();
 })();
 </script>

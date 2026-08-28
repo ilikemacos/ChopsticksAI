@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from csai_client import CsAIClient
 
+from csai_client import format_usage  # noqa: E402
 from csai_update import VERSION  # noqa: E402
 
 MIN_COLS = 52
@@ -199,8 +200,13 @@ class CsAITui:
             return True
         if cmd == "help":
             self.push_system(
-                "Commands: /help /clear /login /logout /usage /tier [name] /search <q> /update /version /exit\n"
-                "Keys: Enter send · PgUp/PgDn scroll · Ctrl+L clear · Ctrl+D quit"
+                "Commands\n"
+                "  /help /clear /login /logout /usage /tier [name]\n"
+                "  /keys [add|clear] /search on|off /search <q>\n"
+                "  /update /version /exit\n"
+                "  Plates: rice, tamago, hibachi, wagyua1–a5, chopcode (Pro).\n\n"
+                "Keys: Enter send · PgUp/PgDn scroll · Ctrl+L clear · Ctrl+D quit\n"
+                "Allowance resets every 5 hours on the free tier."
             )
             return True
         if cmd == "clear":
@@ -220,27 +226,53 @@ class CsAITui:
             return True
         if cmd == "usage":
             body = self.client.usage()
+            self.push_system(format_usage(body))
             usage = body.get("usage") or body
-            tier = usage.get("tier") or {}
-            label = tier.get("label") or tier.get("id") or "Free"
             used = int(usage.get("used", body.get("used", 0)))
             limit = int(usage.get("limit", body.get("limit", 0)))
-            msg = f"Plan: {label}\nTokens: {used:,}" + (f" / {limit:,}" if limit else "")
-            if body.get("cooldown"):
-                msg += "\nCooldown active."
-            self.push_system(msg)
+            if limit:
+                self.usage_hint = f"{used:,}/{limit:,}"
             return True
         if cmd == "tier":
             if arg:
-                self.tier = arg.lower()
-                self.client.tier = self.tier
-                self.push_system(f"Tier set to {self.tier}")
+                self.tier = self.client.set_tier(arg)
+                self.push_system(f"Plate set to {self.tier}")
             else:
-                self.push_system(f"Current tier: {self.tier}")
+                self.push_system(f"Current plate: {self.tier}")
+            return True
+        if cmd == "keys":
+            parts = arg.split(maxsplit=1)
+            sub = parts[0].lower() if parts else ""
+            rest = parts[1].strip() if len(parts) > 1 else ""
+            if sub in ("", "list"):
+                n = len(self.client.unlock_keys)
+                self.push_system(
+                    f"{n} unlock key(s) saved."
+                    if n
+                    else "No unlock keys. /keys add <key>"
+                )
+            elif sub == "add":
+                if not rest:
+                    self.push_system("Usage: /keys add <unlock-key>")
+                elif self.client.add_unlock_key(rest):
+                    self.push_system("Unlock key saved.")
+                else:
+                    self.push_system("Key not added (empty or duplicate).")
+            elif sub == "clear":
+                self.client.clear_unlock_keys()
+                self.push_system("Unlock keys cleared.")
+            else:
+                self.push_system("Usage: /keys [list|add <key>|clear]")
             return True
         if cmd == "search":
+            if arg.lower() in ("on", "off"):
+                self.client.set_web_search(arg.lower() == "on")
+                state = "on" if self.client.web_search else "off"
+                self.push_system(f"Auto web search: {state}")
+                return True
             if not arg:
-                self.push_system("Usage: /search your query")
+                state = "on" if self.client.web_search else "off"
+                self.push_system(f"Auto web search is {state}. /search on|off or /search <query>")
                 return True
             self.status = "Searching"
             body = self.client.search(arg)
@@ -419,7 +451,7 @@ class CsAITui:
                 pass
         _safe_addstr(stdscr, prompt_y, w - 2, "│", pairs["border"])
 
-        foot = " Ask cs.AI anything — /help · Ctrl+D exit "
+        foot = " cs.AI agent · allowance resets every 5h · /help · Ctrl+D exit "
         _safe_addstr(stdscr, h - 1, 0, "└", pairs["border"])
         _safe_addstr(stdscr, h - 1, 1, foot[: max(0, w - 4)], pairs["dim"])
         _safe_addstr(stdscr, h - 1, w - 2, "┘", pairs["border"])
@@ -472,7 +504,8 @@ def run_tui(client: CsAIClient, tier: str | None = None) -> int:
     app = CsAITui(client, tier)
     app.push_system(
         "cs.AI agent ready — full-screen terminal UI.\n"
-        "Same live model as the macOS app. Type a question or /help."
+        "Same live model as macOS and web. Free allowance resets every 5 hours.\n"
+        "Type a question or /help."
     )
 
     def _main(stdscr: curses.window) -> int:

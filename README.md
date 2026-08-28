@@ -1,85 +1,95 @@
 # cs.AI / chopsticksAI
 
-**Fully open source** (MIT) — native macOS Agents app, Terminal CLI, web Lab, and Netlify API for [Chopsticks HQ](https://chopstickshq.com/).
+**Free Mac, web, and Terminal AI agent** — no OpenRouter API key on your side.  
+Built-in Chromium browser · Cursor-style Agents window · MIT licensed.
 
-Latest release: **cs.AI 2.5.1** (macOS app) · Terminal CLI **2.3.9b**
+Latest release: **cs.AI 3.6.10** (Online and Offline are separate apps).
 
-## What's new in 2.5.1
+chopsticksAI (cs.AI) is the free AI assistant from Chopsticks HQ. Use it in the macOS app, in your browser, or from Terminal with `csai`. Live chat runs through chopstickshq.com — you never paste an OpenRouter or OpenAI key.
 
-- **Chromium browser** rail in the Agents Window — in-app WKWebView plus Chromium search API (Google + DuckDuckGo)
-- Drag-and-drop chats into folders; **shift-click** and **⌘-click** multi-select for bulk move
-- Keyword retrieval and Chromium web search — no vector embeddings
-- Full-screen Terminal CLI (`csai`) with `csai update` self-updater
+[![Download cs.AI 3.6.10](https://img.shields.io/badge/download-cs.AI%203.6.10-00ff80)](https://chopstickshq.com/chopsticks-ai/online/)
+[![Product Hunt](https://img.shields.io/badge/Product%20Hunt-cs.AI-da552f)](https://www.producthunt.com/products/cs-ai)
+[![AlternativeTo](https://img.shields.io/badge/AlternativeTo-listing-0f766e)](https://alternativeto.net/software/chopsticks-ai/about/)
+[![macOS 14+](https://img.shields.io/badge/macOS-14%2B-111111)](https://chopstickshq.com/chopsticks-ai/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-6b6b8a)](LICENSE)
 
-## Repositories
+**Online (live models):** [chopstickshq.com/chopsticks-ai/online/](https://chopstickshq.com/chopsticks-ai/online/)  
+**Offline (on-device KB):** [chopstickshq.com/chopsticks-ai/offline/](https://chopstickshq.com/chopsticks-ai/offline/)  
+**Web app:** [chopstickshq.com/chopsticks-ai/web/](https://chopstickshq.com/chopsticks-ai/web/) · [Upgrades](https://chopstickshq.com/chopsticks-ai/web/upgrades/) · [Enterprise](https://chopstickshq.com/chopsticks-ai/enterprise/)  
+**GitHub:** [github.com/ilikemacos/ChopsticksAI](https://github.com/ilikemacos/ChopsticksAI)
 
-| Component | Path in this repo |
-|-----------|-------------------|
-| macOS app (SwiftUI) | [`macos-app/`](macos-app/) |
-| **Terminal CLI** (`csai`) | [`cli/`](cli/) |
-| Offline KB + engine | [`engine/`](engine/) |
-| Auto-update helper | [`shared/AppAutoUpdate.swift`](shared/) |
-| API handler | [`server/chopsticks-ai.js`](server/chopsticks-ai.js) |
-| Web app (cs.AI 2.5.1) | [`web/`](web/) on [chopstickshq.com](https://chopstickshq.com/chopsticks-ai/web/) |
-| Web Lab (legacy) | [`lab/index.html`](lab/) |
-| Site mirror (full HQ pages) | [chopstickshq-mirror](https://github.com/ilikemacos/chopstickshq-mirror) |
+---
 
-## Web app
+## What's new in 3.6.10
 
-Open **cs.AI in your browser** (no install):
+- **Coding stays on live models** — code and build requests no longer get Chopsticks HQ knowledge-base answers when the live model misses
+- **cs.AI Online** does not fall back to the local KB after a failed model call
+- **cs.AI Offline** is a separate Mac app and web edition for on-device product docs only
 
-https://chopstickshq.com/chopsticks-ai/web/
+Full notes: [changelog.json](changelog.json)
 
-Short link: https://chopstickshq.com/csai/
+---
 
-## Install (macOS app)
+## Install (macOS)
+
+**Online**
 
 ```bash
 curl -fsSL https://chopstickshq.com/chopsticks-ai/install-chopsticks-ai.sh | bash
 ```
 
-Or download the zip from [chopstickshq.com/chopsticks-ai/](https://chopstickshq.com/chopsticks-ai/) or [Releases](https://github.com/ilikemacos/ChopsticksAI/releases).
+**Offline**
 
-## Terminal CLI
+```bash
+curl -fsSL https://chopstickshq.com/chopsticks-ai/install-chopsticks-ai-offline.sh | bash
+```
 
-Full-screen terminal agent (Grok Build style). Requires Python 3.9+.
+Or download **chopsticksAI-v3.6.10.zip** / **chopsticksAI-offline-v3.6.10.zip** from the product pages or [Releases](https://github.com/ilikemacos/ChopsticksAI/releases).
+
+---
+
+## Terminal CLI (`csai`)
 
 ```bash
 curl -fsSL https://chopstickshq.com/chopsticks-ai/install-csai-cli.sh | bash
 csai
 ```
 
-Commands: `csai ask`, `csai login`, `csai update`, `csai version`. From repo: `cli/install.sh`.
+From repo: `cli/install.sh`
+
+---
+
+## Layout
+
+| Component | Path |
+|-----------|------|
+| macOS app (SwiftUI) | [`macos-app/`](macos-app/) |
+| Terminal CLI (`csai`) | [`cli/`](cli/) |
+| Offline KB + engine | [`engine/`](engine/) |
+| API handler | [`server/chopsticks-ai.js`](server/chopsticks-ai.js) |
+| Web app | [`web/`](web/) |
+
+---
 
 ## Build macOS app
 
 Requires macOS 14+ and Swift (`swiftc`). From `macos-app/`:
 
 ```bash
-./build-app.sh v2.5.1
+./build-app.sh v3.6.10 online
+./build-app.sh v3.6.10 offline
 ```
+
+---
 
 ## Run your own API
 
-Deploy `server/chopsticks-ai.js` as a Netlify/serverless function (see [chopstickshq-mirror](https://github.com/ilikemacos/chopstickshq-mirror) for `netlify.toml` reference). Set `OPENROUTER_API_KEY` in the host environment — **never commit keys**.
+Deploy `server/chopsticks-ai.js` as a Netlify/serverless function. Set `OPENROUTER_API_KEY` in the host environment — **never commit keys**.
 
-## Sync to GitHub
+Enterprise sales: chopstickshq@lam.ws · [enterprise page](https://chopstickshq.com/chopsticks-ai/enterprise/)
 
-Before pushing the open-source mirror:
-
-```bash
-./scripts/sync-to-github.sh
-./scripts/install-git-hooks.sh   # strips Cursor co-author from commits
-./scripts/push-clean-github.py   # optional: force-push clean history via API
-```
+---
 
 ## License
 
 MIT — see [LICENSE](LICENSE). Copyright Chopsticks HQ / ilikemacos.
-
-## Links
-
-- Product page: https://chopstickshq.com/chopsticks-ai/
-- Lab: https://chopstickshq.com/chopailab/
-- Open-source hub: https://chopstickshq.com/opensource/
-- GitHub: https://github.com/ilikemacos/ChopsticksAI

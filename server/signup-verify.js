@@ -23,6 +23,32 @@ function validEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+const EMAIL_BANNED = "This email cannot be used.";
+
+async function isEmailBlacklisted(email) {
+  const url = env("SUPABASE_URL");
+  const key = env("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) return false;
+  const e = normalizeEmail(email);
+  if (!e.includes("@")) return false;
+  const domain = "@" + e.split("@").pop();
+  const filter = `or=(email.eq.${encodeURIComponent(e)},email.eq.${encodeURIComponent(domain)})`;
+  try {
+    const res = await fetch(`${url}/rest/v1/email_blacklist?${filter}&select=email`, {
+      headers: {
+        apikey: key,
+        authorization: `Bearer ${key}`,
+        accept: "application/json",
+      },
+    });
+    if (!res.ok) return false;
+    const rows = await res.json().catch(() => []);
+    return Array.isArray(rows) && rows.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 function generateSignupCode() {
   return String(crypto.randomInt(100000, 1000000));
 }
@@ -202,6 +228,9 @@ async function handleSignupSendCode(event, payload, rateLimited) {
   if (!validEmail(email)) {
     return json(400, { error: "Enter a valid email address." });
   }
+  if (await isEmailBlacklisted(email)) {
+    return json(403, { error: EMAIL_BANNED });
+  }
   if (signupSendRateLimited(email)) {
     return json(429, { error: "Wait a minute before requesting another code.", retryInMs: SIGNUP_RESEND_MS });
   }
@@ -246,6 +275,9 @@ async function handleSignupVerify(event, payload, rateLimited) {
 
   if (!validEmail(email)) {
     return json(400, { error: "Enter a valid email address." });
+  }
+  if (await isEmailBlacklisted(email)) {
+    return json(403, { error: EMAIL_BANNED });
   }
   if (password.length < 6) {
     return json(400, { error: "Password must be at least 6 characters." });
@@ -304,6 +336,9 @@ async function handleAuthSignUp(event, payload, rateLimited) {
   if (!validEmail(email)) {
     return json(400, { error: "Enter a valid email address." });
   }
+  if (await isEmailBlacklisted(email)) {
+    return json(403, { error: EMAIL_BANNED });
+  }
   if (password.length < 6) {
     return json(400, { error: "Password must be at least 6 characters." });
   }
@@ -352,6 +387,9 @@ async function handleAuthSignIn(event, payload, rateLimited) {
   if (!validEmail(email)) {
     return json(400, { error: "Enter a valid email address." });
   }
+  if (await isEmailBlacklisted(email)) {
+    return json(403, { error: EMAIL_BANNED });
+  }
   if (password.length < 6) {
     return json(400, { error: "Password must be at least 6 characters." });
   }
@@ -395,6 +433,14 @@ async function handleAuthRefresh(event, payload) {
     const raw = body.error_description || body.msg || body.message || "Session expired";
     return json(401, { error: typeof raw === "string" ? raw : JSON.stringify(raw) });
   }
+  if (!body.user && body.access_token) {
+    try {
+      const userRes = await fetch(`${url}/auth/v1/user`, {
+        headers: { apikey: anon, authorization: `Bearer ${body.access_token}` },
+      });
+      if (userRes.ok) body.user = await userRes.json();
+    } catch (e) {  }
+  }
   return json(200, {
     mode: "authRefresh",
     ok: true,
@@ -407,10 +453,238 @@ async function handleAuthRefresh(event, payload) {
   });
 }
 
+function allowedOAuthRedirect(raw) {
+  try {
+    const u = new URL(String(raw || "").trim());
+    if (u.protocol === "chopsticksai:") {
+      return u.host === "auth-callback" || u.pathname.replace(/^\//, "") === "auth-callback";
+    }
+    if (u.protocol === "http:" && (u.hostname === "127.0.0.1" || u.hostname === "localhost")) {
+      return true;
+    }
+    if (u.protocol !== "https:") return false;
+    const host = u.hostname.toLowerCase();
+    if (host === "chopstickshq.com" || host === "www.chopstickshq.com") {
+      return u.pathname.startsWith("/chopsticks-ai/");
+    }
+    if (host.endsWith(".netlify.app")) {
+      return u.pathname.startsWith("/chopsticks-ai/");
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+async function attachUser(body, url, anon) {
+  if (!body.user && body.access_token) {
+    try {
+      const userRes = await fetch(`${url}/auth/v1/user`, {
+        headers: { apikey: anon, authorization: `Bearer ${body.access_token}` },
+      });
+      if (userRes.ok) body.user = await userRes.json();
+    } catch {
+      
+    }
+  }
+  return body;
+}
+
+function bearerFromEvent(event) {
+  const h = (event && event.headers) || {};
+  const raw = String(h.authorization || h.Authorization || "").trim();
+  const m = raw.match(/^Bearer\s+(.+)$/i);
+  return m ? m[1].trim() : "";
+}
+
+async function handleAuthOAuthStart(event, payload, rateLimited) {
+  const who = (event && event.headers && (
+    event.headers["x-nf-client-connection-ip"] ||
+    event.headers["cf-connecting-ip"] ||
+    (event.headers["x-forwarded-for"] || "").split(",")[0].trim()
+  )) || "anon";
+  if (rateLimited && rateLimited(who)) {
+    return json(429, { error: "rate limited", retryInMs: 60000 });
+  }
+
+  const provider = String(payload.provider || "").trim().toLowerCase();
+  if (provider !== "google" && provider !== "github") {
+    return json(400, { error: "Use Google or GitHub." });
+  }
+  const redirectTo = String(payload.redirectTo || payload.redirect_to || "").trim();
+  if (!allowedOAuthRedirect(redirectTo)) {
+    return json(400, { error: "Invalid OAuth redirect." });
+  }
+  const challenge = String(payload.codeChallenge || payload.code_challenge || "").trim();
+  if (challenge.length < 16) {
+    return json(400, { error: "Missing PKCE challenge." });
+  }
+
+  const url = env("SUPABASE_URL");
+  const anon = env("SUPABASE_ANON_KEY");
+  if (!url || !anon) return json(503, { error: "Account backend not configured." });
+
+  const link = payload.link === true || payload.link === "true";
+  if (link) {
+    const token = bearerFromEvent(event) || String(payload.access_token || payload.accessToken || "").trim();
+    if (!token) return json(401, { error: "Sign in first, then connect Google or GitHub." });
+    const auth = new URL(`${url.replace(/\/$/, "")}/auth/v1/user/identities/authorize`);
+    auth.searchParams.set("provider", provider);
+    auth.searchParams.set("redirect_to", redirectTo);
+    auth.searchParams.set("code_challenge", challenge);
+    auth.searchParams.set("code_challenge_method", "S256");
+    auth.searchParams.set("skip_http_redirect", "true");
+    const res = await fetch(auth.toString(), {
+      headers: { apikey: anon, authorization: `Bearer ${token}` },
+      redirect: "manual",
+    });
+    let dest = res.headers.get("location") || "";
+    const body = await res.json().catch(() => ({}));
+    if (!dest) dest = (body && (body.url || body.authorization_url)) || "";
+    if (!dest) {
+      const raw = (body && (body.error_description || body.msg || body.message || body.error)) || "Could not start account linking.";
+      return json(res.ok ? 502 : res.status, { error: typeof raw === "string" ? raw : JSON.stringify(raw) });
+    }
+    return json(200, { mode: "authOAuthStart", ok: true, provider, link: true, url: dest });
+  }
+
+  const auth = new URL(`${url.replace(/\/$/, "")}/auth/v1/authorize`);
+  auth.searchParams.set("provider", provider);
+  auth.searchParams.set("redirect_to", redirectTo);
+  auth.searchParams.set("code_challenge", challenge);
+  auth.searchParams.set("code_challenge_method", "S256");
+  return json(200, {
+    mode: "authOAuthStart",
+    ok: true,
+    provider,
+    url: auth.toString(),
+  });
+}
+
+async function handleAuthOAuthExchange(event, payload, rateLimited) {
+  const who = (event && event.headers && (
+    event.headers["x-nf-client-connection-ip"] ||
+    event.headers["cf-connecting-ip"] ||
+    (event.headers["x-forwarded-for"] || "").split(",")[0].trim()
+  )) || "anon";
+  if (rateLimited && rateLimited(who)) {
+    return json(429, { error: "rate limited", retryInMs: 60000 });
+  }
+
+  const code = String(payload.auth_code || payload.code || "").trim();
+  const verifier = String(payload.code_verifier || payload.codeVerifier || "").trim();
+  if (!code || verifier.length < 16) {
+    return json(400, { error: "Missing OAuth code." });
+  }
+
+  const url = env("SUPABASE_URL");
+  const anon = env("SUPABASE_ANON_KEY");
+  if (!url || !anon) return json(503, { error: "Account backend not configured." });
+
+  const res = await fetch(`${url}/auth/v1/token?grant_type=pkce`, {
+    method: "POST",
+    headers: {
+      apikey: anon,
+      authorization: `Bearer ${anon}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ auth_code: code, code_verifier: verifier }),
+  });
+  let body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const raw = body.error_description || body.msg || body.message || "OAuth sign-in failed";
+    return json(401, { error: typeof raw === "string" ? raw : JSON.stringify(raw) });
+  }
+  body = await attachUser(body, url, anon);
+  return json(200, {
+    mode: "authOAuthExchange",
+    ok: true,
+    access_token: body.access_token,
+    refresh_token: body.refresh_token,
+    expires_in: body.expires_in,
+    expires_at: body.expires_at,
+    token_type: body.token_type,
+    user: body.user,
+  });
+}
+
+function identityProviders(user) {
+  const ids = (user && Array.isArray(user.identities)) ? user.identities : [];
+  const out = [];
+  for (const row of ids) {
+    const p = String((row && row.provider) || "").toLowerCase();
+    if (p && !out.includes(p)) out.push(p);
+  }
+  return out;
+}
+
+async function fetchAuthUser(token) {
+  const url = env("SUPABASE_URL");
+  const anon = env("SUPABASE_ANON_KEY");
+  if (!url || !anon || !token) return null;
+  const res = await fetch(`${url.replace(/\/$/, "")}/auth/v1/user`, {
+    headers: { apikey: anon, authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return null;
+  return res.json().catch(() => null);
+}
+
+async function handleAuthIdentities(event) {
+  const token = bearerFromEvent(event);
+  if (!token) return json(401, { error: "Not signed in." });
+  const user = await fetchAuthUser(token);
+  if (!user) return json(401, { error: "Not signed in." });
+  return json(200, {
+    mode: "authIdentities",
+    ok: true,
+    providers: identityProviders(user),
+    identities: (user.identities || []).map((row) => ({
+      id: row.id,
+      provider: row.provider,
+      identity_id: row.identity_id || row.id,
+    })),
+  });
+}
+
+async function handleAuthUnlinkIdentity(event, payload) {
+  const token = bearerFromEvent(event);
+  if (!token) return json(401, { error: "Not signed in." });
+  const provider = String(payload.provider || "").trim().toLowerCase();
+  if (provider !== "google" && provider !== "github") {
+    return json(400, { error: "Use Google or GitHub." });
+  }
+  const user = await fetchAuthUser(token);
+  if (!user) return json(401, { error: "Not signed in." });
+  const row = (user.identities || []).find((i) => String(i.provider || "").toLowerCase() === provider);
+  if (!row) return json(404, { error: `${provider} is not connected.` });
+  const url = env("SUPABASE_URL");
+  const anon = env("SUPABASE_ANON_KEY");
+  const ident = encodeURIComponent(row.identity_id || row.id);
+  const res = await fetch(`${url.replace(/\/$/, "")}/auth/v1/user/identities/${ident}`, {
+    method: "DELETE",
+    headers: { apikey: anon, authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const raw = body.error_description || body.msg || body.message || "Could not disconnect.";
+    return json(res.status, { error: typeof raw === "string" ? raw : JSON.stringify(raw) });
+  }
+  const fresh = await fetchAuthUser(token);
+  return json(200, {
+    mode: "authUnlinkIdentity",
+    ok: true,
+    providers: identityProviders(fresh || user),
+  });
+}
+
 module.exports = {
   handleSignupSendCode,
   handleSignupVerify,
   handleAuthSignUp,
   handleAuthSignIn,
   handleAuthRefresh,
+  handleAuthOAuthStart,
+  handleAuthOAuthExchange,
+  handleAuthIdentities,
+  handleAuthUnlinkIdentity,
 };

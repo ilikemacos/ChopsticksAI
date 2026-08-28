@@ -70,11 +70,11 @@ final class AppAutoUpdate: ObservableObject {
                 if manual { self.showAlert("Could Not Check for Updates", "Could not reach chopstickshq.com. Check your connection and try again.") }
                 return
             }
-            let remote = manifest.latest
+            let remote = Self.installableVersion(manifest)
             guard Self.isNewer(remote, than: self.currentVersion) else {
                 self.updateAvailable = nil
                 if manual {
-                    self.showAlert("You're Up to Date", "\(config.productName) v\(Self.display(remote)) is the newest build.")
+                    self.showAlert("You're Up to Date", "\(config.productName) v\(Self.display(self.currentVersion)) is the newest installable build.")
                 }
                 return
             }
@@ -91,7 +91,11 @@ final class AppAutoUpdate: ObservableObject {
         guard let config else { return }
         let alert = NSAlert()
         alert.messageText = "Update Available"
-        alert.informativeText = "\(config.productName) v\(Self.display(version)) is available (you have v\(Self.display(currentVersion)))."
+            alert.informativeText = """
+\(config.productName) v\(Self.display(version)) is available (you have v\(Self.display(currentVersion))).
+
+The update replaces the app you are running. If you installed cs.AI in /Applications without write access, move it to ~/Applications first or re-download from chopstickshq.com/chopsticks-ai/.
+"""
         alert.alertStyle = .informational
         alert.addButton(withTitle: "Update Now")
         alert.addButton(withTitle: "Later")
@@ -205,7 +209,7 @@ final class AppAutoUpdate: ObservableObject {
         let dest = Self.installDestination(bundleName: config.bundleName)
         guard Self.isAllowedDestination(dest) else {
             try? fm.removeItem(at: stagedKeep.deletingLastPathComponent())
-            return .failure("Refusing to install outside ~/Applications.")
+            return .failure("Cannot install the update here — move cs.AI to ~/Applications or re-download from chopstickshq.com/chopsticks-ai/.")
         }
 
         return Self.scheduleReplace(
@@ -270,18 +274,29 @@ final class AppAutoUpdate: ObservableObject {
 
     
     private static func installDestination(bundleName: String) -> URL {
-        let homeApps = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Applications", isDirectory: true)
+        let fm = FileManager.default
         let running = Bundle.main.bundleURL
+        let parent = running.deletingLastPathComponent()
+        if fm.isWritableFile(atPath: parent.path) {
+            return running
+        }
+        let homeApps = fm.homeDirectoryForCurrentUser
+            .appendingPathComponent("Applications", isDirectory: true)
         if running.path.hasPrefix(homeApps.path) { return running }
         return homeApps.appendingPathComponent(bundleName, isDirectory: true)
     }
 
     private static func isAllowedDestination(_ url: URL) -> Bool {
-        let homeApps = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Applications", isDirectory: true).path
+        let fm = FileManager.default
         let p = url.path
-        return p.hasPrefix(homeApps) && !p.contains("AppTranslocation")
+        if p.contains("AppTranslocation") { return false }
+        let homeApps = fm.homeDirectoryForCurrentUser
+            .appendingPathComponent("Applications", isDirectory: true).path
+        if p.hasPrefix(homeApps) { return true }
+        if p.hasPrefix("/Applications/") {
+            return fm.isWritableFile(atPath: url.deletingLastPathComponent().path)
+        }
+        return false
     }
 
     private static func findApp(named bundleName: String, under root: URL) -> URL? {
@@ -324,6 +339,26 @@ final class AppAutoUpdate: ObservableObject {
         var stableSha: String? { releases?.stable?.sha256 }
     }
 
+    /// Prefer the version encoded in the zip filename. Marketing `latest` can
+    /// get ahead of the published archive and cause an update loop.
+    private static func installableVersion(_ manifest: ReleaseManifest) -> String {
+        if let fromZip = versionFromZipName(manifest.stableZip) {
+            return fromZip
+        }
+        return display(manifest.latest)
+    }
+
+    static func versionFromZipName(_ zip: String?) -> String? {
+        guard var s = zip, !s.isEmpty else { return nil }
+        if s.lowercased().hasSuffix(".zip") { s = String(s.dropLast(4)) }
+        guard let range = s.range(of: #"v?\d+(?:\.\d+)+[a-zA-Z0-9]*$"#, options: .regularExpression) else {
+            return nil
+        }
+        var v = String(s[range])
+        if v.lowercased().hasPrefix("v") { v.removeFirst() }
+        return v
+    }
+
     private func fetchManifest(config: AppUpdateConfig, completion: @escaping (ReleaseManifest?) -> Void) {
         var req = URLRequest(url: config.manifestURL)
         req.cachePolicy = .reloadIgnoringLocalCacheData
@@ -341,15 +376,29 @@ final class AppAutoUpdate: ObservableObject {
     }
 
     static func isNewer(_ remote: String, than current: String) -> Bool {
-        if remote == current { return false }
-        let rn = versionNumbers(remote), cn = versionNumbers(current)
+        let rNorm = display(remote).lowercased()
+        let cNorm = display(current).lowercased()
+        if rNorm == cNorm { return false }
+        let rn = versionNumbers(rNorm), cn = versionNumbers(cNorm)
         let count = max(rn.count, cn.count)
         for i in 0..<count {
             let r = i < rn.count ? rn[i] : 0
             let c = i < cn.count ? cn[i] : 0
             if r != c { return r > c }
         }
-        return remote.localizedCaseInsensitiveCompare(current) == .orderedDescending
+        let rSuffix = versionSuffix(rNorm)
+        let cSuffix = versionSuffix(cNorm)
+        if rSuffix != cSuffix { return rSuffix > cSuffix }
+        return false
+    }
+
+    static func versionSuffix(_ v: String) -> String {
+        var s = display(v).lowercased()
+        while let last = s.last, last.isNumber || last == "." || last == "v" {
+            s.removeLast()
+            if s.isEmpty { break }
+        }
+        return s
     }
 
     static func versionNumbers(_ v: String) -> [Int] {

@@ -9,7 +9,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-VERSION = "2.3.9b"
+VERSION = "3.3.10"
 MANIFEST_URL = os.environ.get(
     "CS_AI_CLI_MANIFEST",
     "https://chopstickshq.com/chopsticks-ai/cli-version.json",
@@ -25,6 +25,7 @@ DEFAULT_FILES = [
     "csai_tui.py",
     "csai_client.py",
     "csai_update.py",
+    "csai.cmd",
 ]
 
 

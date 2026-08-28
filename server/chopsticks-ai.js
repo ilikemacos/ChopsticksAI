@@ -7,182 +7,221 @@ const {
   handleAuthSignIn,
   handleAuthRefresh,
 } = require("./signup-verify.js");
+const { runChopCodeEnsemble, CHOPCODE_AGENTS } = require("./chopcode-ensemble.js");
 
 const TIERS = {
-  low: {
-    label: "Low",
-    models: ["nvidia/nemotron-3-nano-30b-a3b:free"],
-    longModels: ["nvidia/nemotron-3-nano-30b-a3b:free"],
-    context: 12000,
+  rice: {
+    label: "Rice",
+    models: [
+      "nvidia/llama-3.3-nemotron-super-49b-v1:free",
+      "nvidia/nemotron-3-nano-30b-a3b:free",
+    ],
+    longModels: [
+      "nvidia/llama-3.3-nemotron-super-49b-v1:free",
+      "nvidia/nemotron-3-nano-30b-a3b:free",
+    ],
+    context: 16000,
     refine: false,
-    maxReply: 400,
+    maxReply: 800,
     grounding: 3,
     searchMax: 4,
+    timeoutMs: 18000,
   },
-  medium: {
-    label: "Medium",
+  tamago: {
+    label: "Tamago",
     models: [
-      "openai/gpt-oss-20b:free",
-      "nvidia/nemotron-3-nano-30b-a3b:free",
-    ],
-    longModels: [
-      "openai/gpt-oss-20b:free",
-      "nvidia/nemotron-3-nano-30b-a3b:free",
-    ],
-    context: 24000,
-    refine: true,
-    maxReply: 600,
-    grounding: 5,
-    searchMax: 8,
-  },
-  high: {
-    label: "High",
-    models: [
-      "nvidia/nemotron-3-nano-30b-a3b:free",
-      "openai/gpt-oss-20b:free",
       "nvidia/nemotron-3-super-120b-a12b:free",
+      "nvidia/llama-3.3-nemotron-super-49b-v1:free",
     ],
     longModels: [
-      "nvidia/nemotron-3-nano-30b-a3b:free",
-      "openai/gpt-oss-20b:free",
-    ],
-    context: 36000,
-    refine: true,
-    maxReply: 1000,
-    grounding: 6,
-    searchMax: 10,
-  },
-  xhigh: {
-    label: "Xhigh",
-    models: [
-      "openai/gpt-oss-20b:free",
-      "nvidia/nemotron-3-nano-30b-a3b:free",
-      "nvidia/nemotron-3-super-120b-a12b:free",
-      "nvidia/nemotron-3-ultra-550b-a55b:free",
-    ],
-    longModels: [
-      "openai/gpt-oss-20b:free",
-      "nvidia/nemotron-3-nano-30b-a3b:free",
       "nvidia/nemotron-3-super-120b-a12b:free",
     ],
     context: 48000,
-    refine: true,
+    refine: false,
     maxReply: 2000,
-    grounding: 8,
+    grounding: 6,
+    searchMax: 8,
+    timeoutMs: 22000,
+  },
+  hibachi: {
+    label: "Hibachi",
+    models: [
+      "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "nvidia/nemotron-3-super-120b-a12b:free",
+    ],
+    longModels: [
+      "nvidia/nemotron-3-ultra-550b-a55b:free",
+    ],
+    context: 96000,
+    refine: false,
+    maxReply: 4000,
+    grounding: 10,
     searchMax: 12,
+    timeoutMs: 26000,
   },
-  chopsticks: {
-    label: "Chopsticks",
+  wagyu: {
+    label: "Wagyu A5",
+    wagyuGrade: 5,
     models: [
-      "openai/gpt-oss-20b:free",
-      "nvidia/nemotron-3-nano-30b-a3b:free",
-      "nvidia/nemotron-3-super-120b-a12b:free",
-    ],
-    longModels: [
-      "openai/gpt-oss-20b:free",
-      "nvidia/nemotron-3-nano-30b-a3b:free",
-    ],
-    context: 36000,
-    refine: true,
-    maxReply: 800,
-    grounding: 10,
-    searchMax: 6,
-    chopsticksFocus: true,
-  },
-  xhighplus: {
-    label: "Xhigh+",
-    models: [
-      "openai/gpt-oss-20b:free",
-      "nvidia/nemotron-3-nano-30b-a3b:free",
-      "nvidia/nemotron-3-super-120b-a12b:free",
       "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "google/gemma-4-26b-a4b-it:free",
+      "openai/gpt-oss-120b:free",
     ],
     longModels: [
-      "openai/gpt-oss-20b:free",
-      "nvidia/nemotron-3-nano-30b-a3b:free",
-      "nvidia/nemotron-3-super-120b-a12b:free",
-    ],
-    context: 64000,
-    refine: true,
-    maxReply: 3000,
-    grounding: 10,
-    searchMax: 14,
-  },
-  insane: {
-    label: "Insane",
-    models: [
-      "openai/gpt-oss-20b:free",
-      "nvidia/nemotron-3-nano-30b-a3b:free",
-      "nvidia/nemotron-3-super-120b-a12b:free",
       "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "openai/gpt-oss-120b:free",
     ],
-    longModels: [
-      "openai/gpt-oss-20b:free",
-      "nvidia/nemotron-3-nano-30b-a3b:free",
-      "nvidia/nemotron-3-super-120b-a12b:free",
-    ],
-    context: 96000,
     refine: true,
-    maxReply: 4000,
-    grounding: 12,
+    refineModels: [
+      "google/gemma-4-26b-a4b-it:free",
+      "openai/gpt-oss-120b:free",
+    ],
+    context: 160000,
+    maxReply: 8000,
+    grounding: 16,
     searchMax: 16,
+    timeoutMs: 26000,
   },
-  
-  chopcode: {
+};
+const WAGYU_SHARED = {
+  models: TIERS.wagyu.models,
+  longModels: TIERS.wagyu.longModels,
+  refineModels: TIERS.wagyu.refineModels,
+};
+TIERS.wagyua1 = {
+  label: "Wagyu A1",
+  wagyuGrade: 1,
+  ...WAGYU_SHARED,
+  refine: false,
+  context: 80000,
+  maxReply: 2500,
+  grounding: 8,
+  searchMax: 8,
+  timeoutMs: 22000,
+};
+TIERS.wagyua2 = {
+  label: "Wagyu A2",
+  wagyuGrade: 2,
+  ...WAGYU_SHARED,
+  refine: false,
+  context: 96000,
+  maxReply: 4000,
+  grounding: 10,
+  searchMax: 10,
+  timeoutMs: 24000,
+};
+TIERS.wagyua3 = {
+  label: "Wagyu A3",
+  wagyuGrade: 3,
+  ...WAGYU_SHARED,
+  refine: true,
+  context: 112000,
+  maxReply: 5500,
+  grounding: 12,
+  searchMax: 12,
+  timeoutMs: 26000,
+};
+TIERS.wagyua4 = {
+  label: "Wagyu A4",
+  wagyuGrade: 4,
+  ...WAGYU_SHARED,
+  refine: true,
+  context: 128000,
+  maxReply: 7000,
+  grounding: 14,
+  searchMax: 14,
+  timeoutMs: 26000,
+};
+TIERS.wagyua5 = { ...TIERS.wagyu, label: "Wagyu A5", wagyuGrade: 5 };
+TIERS.chopcode = {
     label: "ChopCode",
+    chopCode: true,
     models: [
-      "poolside/laguna-s-2.1:free",
+      "z-ai/glm-5.2:free",
+      "nvidia/nemotron-3-ultra:free",
       "cohere/north-mini-code:free",
       "openai/gpt-oss-20b:free",
+      "qwen/qwen3-coder:free",
+      "groq/llama-3.3-70b-versatile:free",
+      "poolside/laguna-s-2.1:free",
+      "nvidia/nemotron-3-super-120b-a12b:free",
+      "google/gemma-4-26b-a4b-it:free",
+      "google/gemma-4-31b-it:free",
     ],
     longModels: [
-      "poolside/laguna-s-2.1:free",
-      "openai/gpt-oss-20b:free",
-    ],
-    context: 64000,
-    refine: false,
-    maxReply: 4000,
-    grounding: 4,
-    searchMax: 6,
-    temperature: 0.2,
-    chopCode: true,
-  },
-  
-  stickercoderplus: {
-    label: "StickerCoder+",
-    models: [
-      "cohere/north-mini-code:free",
-      "poolside/laguna-s-2.1:free",
-      "openai/gpt-oss-20b:free",
-    ],
-    longModels: [
+      "z-ai/glm-5.2:free",
+      "nvidia/nemotron-3-ultra:free",
       "cohere/north-mini-code:free",
       "openai/gpt-oss-20b:free",
+      "qwen/qwen3-coder:free",
+      "groq/llama-3.3-70b-versatile:free",
+      "poolside/laguna-s-2.1:free",
+      "nvidia/nemotron-3-super-120b-a12b:free",
+      "google/gemma-4-26b-a4b-it:free",
+      "google/gemma-4-31b-it:free",
     ],
-    context: 96000,
-    refine: false,
-    maxReply: 6000,
-    grounding: 4,
-    searchMax: 6,
-    temperature: 0.15,
-    chopCode: true,
-    stickerCoder: true,
-  },
+    context: 128000,
+    refine: true,
+    refineModels: ["moonshotai/kimi-k2.6:free"],
+    maxReply: 4096,
+    grounding: 8,
+    searchMax: 8,
+    timeoutMs: 26000,
+    temperature: 0.7,
 };
 const TIER_ALIASES = {
-  ultra: "xhigh",
-  super: "medium",
-  "xhigh+": "xhighplus",
+  rice: "rice",
+  haiku: "rice",
+  low: "rice",
+  fast: "rice",
+  tamago: "tamago",
+  sonnet: "tamago",
+  medium: "tamago",
+  high: "tamago",
+  standard: "tamago",
+  chopsticks: "tamago",
+  super: "tamago",
+  hibachi: "hibachi",
+  opus: "hibachi",
+  pro: "hibachi",
+  ultra: "hibachi",
+  xhigh: "hibachi",
+  xhighplus: "hibachi",
+  "xhigh+": "hibachi",
   chopcode: "chopcode",
   "chop-code": "chopcode",
-  stickercoderplus: "stickercoderplus",
-  "stickercoder+": "stickercoderplus",
-  "sticker-coder+": "stickercoderplus",
-  "sticker-coderplus": "stickercoderplus",
-  coderplus: "stickercoderplus",
-  "coder+": "stickercoderplus",
+  code: "chopcode",
+  wagyu: "wagyua5",
+  fable: "wagyua5",
+  insane: "wagyua5",
+  stickercoderplus: "wagyua5",
+  "stickercoder+": "wagyua5",
+  "sticker-coder+": "wagyua5",
+  "sticker-coderplus": "wagyua5",
+  coderplus: "wagyua5",
+  "coder+": "wagyua5",
+  a1: "wagyua1",
+  a2: "wagyua2",
+  a3: "wagyua3",
+  a4: "wagyua4",
+  a5: "wagyua5",
+  "wagyu-a1": "wagyua1",
+  "wagyu-a2": "wagyua2",
+  "wagyu-a3": "wagyua3",
+  "wagyu-a4": "wagyua4",
+  "wagyu-a5": "wagyua5",
+  wagyu1: "wagyua1",
+  wagyu2: "wagyua2",
+  wagyu3: "wagyua3",
+  wagyu4: "wagyua4",
+  wagyu5: "wagyua5",
+  wagyua1: "wagyua1",
+  wagyua2: "wagyua2",
+  wagyua3: "wagyua3",
+  wagyua4: "wagyua4",
+  wagyua5: "wagyua5",
 };
-const DEFAULT_TIER = "high";
+const DEFAULT_TIER = "tamago";
 const tierOf = (name) => {
   const key = String(name || "").toLowerCase().replace(/\s+/g, "");
   const id = TIER_ALIASES[key] || key;
@@ -190,7 +229,7 @@ const tierOf = (name) => {
 };
 
 const AUTH_REQUIRED_TIERS = new Set([
-  "insane", "xhighplus", "stickercoderplus", "chopcode",
+  "wagyu", "wagyua1", "wagyua2", "wagyua3", "wagyua4", "wagyua5", "chopcode",
 ]);
 
 function hmacUnlockSig(body, tag) {
@@ -229,10 +268,10 @@ const FREE_USAGE = {
   id: "free",
   keysRequired: 0,
   limit: Number(process.env.CHOPSTICKS_AI_TOKEN_BUDGET || 775000),
-  cooldownMs: Number(process.env.CHOPSTICKS_AI_COOLDOWN_MS || 3 * 60 * 60 * 1000),
-  contextLimit: Number(process.env.CHOPSTICKS_AI_MAX_CONTEXT || 48000),
+  cooldownMs: Number(process.env.CHOPSTICKS_AI_COOLDOWN_MS || 5 * 60 * 60 * 1000),
+  contextLimit: Number(process.env.CHOPSTICKS_AI_MAX_CONTEXT || 128000),
   label: "Free",
-  detail: "775k tokens · 48k context · 3h cooldown",
+  detail: "775k tokens · 128k context · resets every 5h",
 };
 const CREDIT_TIERS = [
   {
@@ -276,11 +315,14 @@ function entitlementDetail(limit, contextLimit, cooldownMs) {
     }
     return String(n);
   };
-  const coolH = Math.round((cooldownMs || FREE_USAGE.cooldownMs) / 3600000);
+  if (!cooldownMs) {
+    return `${toks(limit)} tokens · ${toks(contextLimit)} context · no cooldown`;
+  }
+  const coolH = Math.round(cooldownMs / 3600000);
   const cool =
     coolH >= 1
       ? `${coolH}h cooldown`
-      : `${Math.round((cooldownMs || FREE_USAGE.cooldownMs) / 60000)}m cooldown`;
+      : `${Math.round(cooldownMs / 60000)}m cooldown`;
   return `${toks(limit)} tokens · ${toks(contextLimit)} context · ${cool}`;
 }
 
@@ -333,7 +375,22 @@ function extractAccessToken(event) {
   const headers = (event && event.headers) || {};
   const auth = headers.authorization || headers.Authorization || "";
   const m = String(auth).match(/^Bearer\s+(.+)$/i);
-  if (m && m[1] && m[1].length > 40) return m[1].trim();
+  if (m && m[1] && m[1].trim().length > 20) return m[1].trim();
+  return "";
+}
+
+function accountEmailFromUser(user) {
+  const direct = String((user && user.email) || "").trim().toLowerCase();
+  if (direct.includes("@")) return direct;
+  const meta = (user && user.user_metadata) || {};
+  const fromMeta = String(meta.email || "").trim().toLowerCase();
+  if (fromMeta.includes("@")) return fromMeta;
+  const ids = (user && Array.isArray(user.identities)) ? user.identities : [];
+  for (const row of ids) {
+    const data = (row && row.identity_data) || {};
+    const e = String(data.email || "").trim().toLowerCase();
+    if (e.includes("@")) return e;
+  }
   return "";
 }
 
@@ -343,6 +400,83 @@ function clientWho(event) {
     headers["cf-connecting-ip"] ||
     (headers["x-forwarded-for"] || "").split(",")[0].trim() ||
     "anon";
+}
+
+const FOUNDER_EMAIL = "mzx@lam.ws";
+const FOUNDER_PLAN = {
+  token_budget: 1_000_000,
+  context_limit: 1_000_000,
+  plan_label: "Founder",
+  cooldown_ms: 0,
+};
+
+async function ensureFounderProfile(userId, email) {
+  if (!userId || String(email || "").toLowerCase() !== FOUNDER_EMAIL) return;
+  try {
+    await sb(
+      "profiles?on_conflict=id",
+      {
+        method: "POST",
+        headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+        body: JSON.stringify({
+          id: userId,
+          email: FOUNDER_EMAIL,
+          token_budget: FOUNDER_PLAN.token_budget,
+          context_limit: FOUNDER_PLAN.context_limit,
+          plan_label: FOUNDER_PLAN.plan_label,
+          cooldown_ms: FOUNDER_PLAN.cooldown_ms,
+        }),
+      },
+      { service: true }
+    );
+  } catch (e) {  }
+}
+
+async function ensureFounderAuthUser() {
+  const password = env("CHOPSTICKS_AI_FOUNDER_PASSWORD");
+  const url = env("SUPABASE_URL");
+  const key = env("SUPABASE_SERVICE_ROLE_KEY");
+  if (!password || !url || !key) return { ok: false, reason: "not configured" };
+  const headers = {
+    apikey: key,
+    authorization: "Bearer " + key,
+    "content-type": "application/json",
+  };
+  const admin = async (method, path, body) => {
+    const res = await fetch(url + path, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const text = await res.text();
+    let parsed = null;
+    try { parsed = text ? JSON.parse(text) : null; } catch { parsed = text; }
+    return { status: res.status, body: parsed };
+  };
+  let uid = "";
+  const listed = await admin("GET", "/auth/v1/admin/users?page=1&per_page=200");
+  const users = (listed.body && listed.body.users) || [];
+  for (const u of users) {
+    if (String(u.email || "").toLowerCase() === FOUNDER_EMAIL) {
+      uid = u.id;
+      break;
+    }
+  }
+  if (uid) {
+    await admin("PUT", "/auth/v1/admin/users/" + uid, {
+      password,
+      email_confirm: true,
+    });
+  } else {
+    const created = await admin("POST", "/auth/v1/admin/users", {
+      email: FOUNDER_EMAIL,
+      password,
+      email_confirm: true,
+    });
+    uid = (created.body && (created.body.id || (created.body.user && created.body.user.id))) || "";
+  }
+  if (uid) await ensureFounderProfile(uid, FOUNDER_EMAIL);
+  return { ok: Boolean(uid) };
 }
 
 async function resolveAccount(accessToken) {
@@ -356,8 +490,8 @@ async function resolveAccount(accessToken) {
     });
     if (!userRes.ok) return null;
     const user = await userRes.json();
-    const email = String(user.email || "").trim().toLowerCase();
-    if (!email || !user.id) return null;
+    if (!user || !user.id) return null;
+    const email = accountEmailFromUser(user);
 
     let entitlement = null;
     try {
@@ -377,10 +511,10 @@ async function resolveAccount(accessToken) {
             const limit = Number.isFinite(tb) && tb > 0 ? tb : FREE_USAGE.limit;
             const contextLimit = Number.isFinite(cl) && cl > 0 ? cl : FREE_USAGE.contextLimit;
             const cooldownMs =
-              Number.isFinite(cool) && cool > 0 ? cool : FREE_USAGE.cooldownMs;
+              Number.isFinite(cool) && cool >= 0 ? cool : FREE_USAGE.cooldownMs;
             entitlement = {
               id: "profile",
-              label: row.plan_label || "Member",
+              label: row.plan_label || (canPickOpenRouterModel({ email }) ? "Founder" : "Member"),
               detail: entitlementDetail(limit, contextLimit, cooldownMs),
               limit,
               contextLimit,
@@ -390,7 +524,20 @@ async function resolveAccount(accessToken) {
           }
         }
       }
-    } catch (e) { /* profiles columns optional until SQL is applied */ }
+    } catch (e) {  }
+
+    if (email === FOUNDER_EMAIL) {
+      await ensureFounderProfile(user.id, email);
+      entitlement = {
+        id: "profile",
+        label: "Founder",
+        detail: entitlementDetail(FOUNDER_PLAN.token_budget, FOUNDER_PLAN.context_limit, FOUNDER_PLAN.cooldown_ms),
+        limit: FOUNDER_PLAN.token_budget,
+        contextLimit: FOUNDER_PLAN.context_limit,
+        cooldownMs: FOUNDER_PLAN.cooldown_ms,
+        bucketId: "user-" + String(user.id).replace(/-/g, "").slice(0, 12),
+      };
+    }
 
     return {
       id: user.id,
@@ -402,10 +549,19 @@ async function resolveAccount(accessToken) {
   }
 }
 
-/** Merge Fathom Pro credit tier with signed-in account entitlements (best wins). */
 function userBucketId(account) {
   if (!account || !account.id) return null;
   return "user-" + String(account.id).replace(/-/g, "").slice(0, 12);
+}
+
+const CHOPCODE_PRO_KEYS = 5;
+
+function canUseChopCode(account, plan) {
+  if (!account || !account.id) return false;
+  if (account.email === FOUNDER_EMAIL) return true;
+  const label = String((account.entitlement && account.entitlement.label) || (plan && plan.account && plan.account.plan) || "").toLowerCase();
+  if (label === "founder") return true;
+  return Number((plan && plan.keysValid) || 0) >= CHOPCODE_PRO_KEYS;
 }
 
 function resolvePlan(rawKeys, account, clientId) {
@@ -422,7 +578,9 @@ function resolvePlan(rawKeys, account, clientId) {
 
   const limit = Math.max(credits.limit, ent.limit || 0);
   const contextLimit = Math.max(credits.contextLimit || 0, ent.contextLimit || 0);
-  const cooldownMs = Math.min(credits.cooldownMs, ent.cooldownMs || credits.cooldownMs);
+  const cooldownMs = Number.isFinite(ent.cooldownMs)
+    ? Math.min(credits.cooldownMs, Math.max(0, ent.cooldownMs))
+    : credits.cooldownMs;
   const fromAccount = (ent.limit || 0) >= credits.limit;
   return {
     ...credits,
@@ -451,6 +609,302 @@ function normalizeOpenRouterKey(raw) {
   return key;
 }
 
+const MODEL_PICKER_EMAILS = new Set(
+  String(process.env.CHOPSTICKS_AI_MODEL_PICKER_EMAILS || "mzx@lam.ws")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+);
+
+function canPickOpenRouterModel(account) {
+  return !!(account && account.email && MODEL_PICKER_EMAILS.has(account.email));
+}
+
+function normalizeOpenRouterModelId(raw) {
+  const id = String(raw || "").trim();
+  if (!id || id.length > 160) return "";
+  if (isClaudeModelId(id)) return id;
+  if (/^groq\/.+/i.test(id)) return id;
+  if (!/^[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._:+\/-]*$/i.test(id)) return "";
+  return id;
+}
+
+function isClaudeModelId(id) {
+  const s = String(id || "").toLowerCase();
+  return s.startsWith("claude-") || s.startsWith("claude/") || s.startsWith("anthropic/claude");
+}
+
+function claudeNativeModelId(id) {
+  return String(id || "")
+    .trim()
+    .replace(/^anthropic\//i, "")
+    .replace(/^claude\//i, "claude-");
+}
+
+function isGroqModelId(id) {
+  return String(id || "").toLowerCase().startsWith("groq/");
+}
+
+function groqNativeModelId(id) {
+  if (!isGroqModelId(id)) return "";
+  return String(id).slice(5);
+}
+
+function normalizeGroqApiKey(raw) {
+  const key = String(raw || "").trim();
+  if (!/^gsk_[a-zA-Z0-9]+/.test(key)) return "";
+  return key;
+}
+
+function normalizeUserOpenRouterKey(raw) {
+  const key = String(raw || "").trim();
+  if (!/^sk-or-v1-[a-zA-Z0-9]+$/.test(key)) return "";
+  return key;
+}
+
+function normalizeAnthropicKey(raw) {
+  const key = String(raw || "").trim();
+  if (!/^sk-ant-[a-zA-Z0-9\-_]+$/.test(key)) return "";
+  return key;
+}
+
+function resolveGroqKey(payload, account, tier) {
+  const server = env("GROQ_API_KEY");
+  if (tier && tier.groqOnly) return server || "";
+  const user = normalizeGroqApiKey(payload && payload.groqKey);
+  return user || server || "";
+}
+
+function resolveOpenRouterKey(payload) {
+  return normalizeUserOpenRouterKey(payload && payload.openRouterKey) || env("OPENROUTER_API_KEY") || "";
+}
+
+function resolveAnthropicKey(payload) {
+  return normalizeAnthropicKey(payload && payload.anthropicKey);
+}
+
+function canUseCustomModel(modelId, payload, account) {
+  if (!modelId) return false;
+  if (canPickOpenRouterModel(account)) return true;
+  if (isClaudeModelId(modelId)) return Boolean(resolveAnthropicKey(payload));
+  if (isGroqModelId(modelId)) return Boolean(resolveGroqKey(payload, account));
+  return Boolean(normalizeUserOpenRouterKey(payload && payload.openRouterKey));
+}
+
+const CLAUDE_MODEL_CATALOG = [
+  { id: "claude-opus-4-6", name: "Claude Opus 4.6", context: 200000, provider: "claude" },
+  { id: "claude-sonnet-4-6", name: "Claude Sonnet 4.6", context: 200000, provider: "claude" },
+  { id: "claude-opus-4-5", name: "Claude Opus 4.5", context: 200000, provider: "claude" },
+  { id: "claude-sonnet-4-5", name: "Claude Sonnet 4.5", context: 200000, provider: "claude" },
+  { id: "claude-haiku-4-5", name: "Claude Haiku 4.5", context: 200000, provider: "claude" },
+  { id: "claude-opus-4-1", name: "Claude Opus 4.1", context: 200000, provider: "claude" },
+  { id: "claude-opus-4", name: "Claude Opus 4", context: 200000, provider: "claude" },
+  { id: "claude-sonnet-4", name: "Claude Sonnet 4", context: 200000, provider: "claude" },
+  { id: "claude-3-7-sonnet-latest", name: "Claude Sonnet 3.7", context: 200000, provider: "claude" },
+  { id: "claude-3-5-sonnet-latest", name: "Claude Sonnet 3.5", context: 200000, provider: "claude" },
+  { id: "claude-3-5-haiku-latest", name: "Claude Haiku 3.5", context: 200000, provider: "claude" },
+  { id: "claude-3-opus-latest", name: "Claude Opus 3", context: 200000, provider: "claude" },
+  { id: "claude-3-haiku-20240307", name: "Claude Haiku 3", context: 200000, provider: "claude" },
+];
+
+async function fetchAnthropicModels(apiKey) {
+  const catalog = CLAUDE_MODEL_CATALOG.slice();
+  if (!apiKey) return catalog;
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/models?limit=1000", {
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+    });
+    if (!res.ok) return catalog;
+    const body = await res.json();
+    const live = (Array.isArray(body.data) ? body.data : [])
+      .map((m) => ({
+        id: String(m.id || "").trim(),
+        name: String(m.display_name || m.id || "").trim(),
+        context: Number(m.max_tokens || m.context_window) || 200000,
+        provider: "claude",
+      }))
+      .filter((m) => m.id);
+    const seen = new Set(live.map((m) => m.id));
+    for (const m of catalog) {
+      if (!seen.has(m.id)) live.push(m);
+    }
+    live.sort((a, b) => a.id.localeCompare(b.id));
+    return live;
+  } catch (e) {
+    return catalog;
+  }
+}
+
+const GROQ_MODEL_CATALOG = [
+  { id: "groq/llama-3.1-8b-instant", name: "Groq · Llama 3.1 8B Instant", context: 131072 },
+  { id: "groq/llama-3.3-70b-versatile", name: "Groq · Llama 3.3 70B Versatile", context: 131072 },
+  { id: "groq/openai/gpt-oss-20b", name: "Groq · GPT-OSS 20B", context: 131072 },
+  { id: "groq/openai/gpt-oss-120b", name: "Groq · GPT-OSS 120B", context: 131072 },
+  { id: "groq/qwen/qwen3.6-27b", name: "Groq · Qwen3.6 27B (preview)", context: 131072 },
+  { id: "groq/openai/gpt-oss-safeguard-20b", name: "Groq · GPT-OSS Safeguard 20B", context: 131072 },
+  { id: "groq/compound-mini", name: "Groq · Compound Mini", context: 131072 },
+  { id: "groq/compound", name: "Groq · Compound", context: 131072 },
+];
+
+let groqModelsCache = { at: 0, models: [] };
+const GROQ_MODELS_CACHE_MS = 10 * 60 * 1000;
+
+async function fetchGroqModelsLive(groqKey) {
+  const now = Date.now();
+  if (
+    groqModelsCache.models.length &&
+    now - groqModelsCache.at < GROQ_MODELS_CACHE_MS
+  ) {
+    return groqModelsCache.models;
+  }
+  const res = await fetch("https://api.groq.com/openai/v1/models", {
+    headers: { Authorization: `Bearer ${groqKey}` },
+  });
+  if (!res.ok) return GROQ_MODEL_CATALOG.slice();
+  const body = await res.json();
+  const names = new Map(GROQ_MODEL_CATALOG.map((m) => [groqNativeModelId(m.id), m.name]));
+  const models = (Array.isArray(body.data) ? body.data : [])
+    .map((m) => {
+      const native = String(m.id || "").trim();
+      if (!native) return null;
+      const id = `groq/${native}`;
+      return {
+        id,
+        name: names.get(native) || `Groq · ${native}`,
+        context: Number(m.context_window) || null,
+        provider: "groq",
+      };
+    })
+    .filter(Boolean);
+  const merged = [...GROQ_MODEL_CATALOG.map((m) => ({ ...m, provider: "groq" }))];
+  const seen = new Set(merged.map((m) => m.id));
+  for (const m of models) {
+    if (!seen.has(m.id)) {
+      merged.push(m);
+      seen.add(m.id);
+    }
+  }
+  merged.sort((a, b) => a.id.localeCompare(b.id));
+  groqModelsCache = { at: now, models: merged };
+  return merged;
+}
+
+function mergePickerModels(openRouterModels, groqModels) {
+  const groq = (groqModels || []).map((m) => ({ ...m, provider: m.provider || "groq" }));
+  const or = (openRouterModels || []).map((m) => ({ ...m, provider: m.provider || "openrouter" }));
+  return [...groq, ...or];
+}
+
+let openRouterModelsCache = { at: 0, models: [] };
+const OPENROUTER_MODELS_CACHE_MS = 15 * 60 * 1000;
+
+async function fetchOpenRouterModels(apiKey) {
+  const now = Date.now();
+  if (
+    openRouterModelsCache.models.length &&
+    now - openRouterModelsCache.at < OPENROUTER_MODELS_CACHE_MS
+  ) {
+    return openRouterModelsCache.models;
+  }
+  const res = await fetch("https://openrouter.ai/api/v1/models", {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  if (!res.ok) throw new Error("OpenRouter models unavailable");
+  const body = await res.json();
+  const models = (Array.isArray(body.data) ? body.data : [])
+    .map((m) => ({
+      id: String(m.id || "").trim(),
+      name: String(m.name || m.id || "").trim(),
+      context: Number(m.context_length) || null,
+      provider: "openrouter",
+    }))
+    .filter((m) => m.id)
+    .sort((a, b) => a.id.localeCompare(b.id));
+  openRouterModelsCache = { at: now, models };
+  return models;
+}
+
+async function handleListModels(event) {
+  let payload = {};
+  try {
+    payload = JSON.parse(event.body || "{}");
+  } catch (e) { }
+  const userOr = normalizeUserOpenRouterKey(payload.openRouterKey);
+  const hqOr = env("OPENROUTER_API_KEY");
+  const groqKey = resolveGroqKey(payload);
+  const anthropicKey = resolveAnthropicKey(payload);
+  const orKey = userOr || hqOr;
+  let openRouterModels = [];
+  let groqModels = GROQ_MODEL_CATALOG.map((m) => ({ ...m, provider: "groq" }));
+  let claudeModels = CLAUDE_MODEL_CATALOG.slice();
+  if (orKey) {
+    try {
+      openRouterModels = await fetchOpenRouterModels(orKey);
+    } catch (e) { }
+  }
+  if (groqKey) {
+    try {
+      groqModels = await fetchGroqModelsLive(groqKey);
+    } catch (e) { }
+  }
+  try {
+    claudeModels = await fetchAnthropicModels(anthropicKey);
+  } catch (e) { }
+  const models = [
+    ...groqModels.map((m) => ({ ...m, provider: "groq" })),
+    ...claudeModels.map((m) => ({ ...m, provider: "claude" })),
+    ...openRouterModels.map((m) => ({ ...m, provider: m.provider || "openrouter" })),
+  ];
+  return json(200, {
+    mode: "listModels",
+    models,
+    counts: {
+      groq: groqModels.length,
+      claude: claudeModels.length,
+      openrouter: openRouterModels.length,
+    },
+    groqConfigured: Boolean(groqKey),
+    claudeConfigured: Boolean(anthropicKey),
+    openRouterConfigured: Boolean(orKey),
+  });
+}
+
+async function handleOpenRouterModels(event) {
+  const account = await requireAccount(event);
+  if (!canPickOpenRouterModel(account)) {
+    return json(403, { error: "Model picker not enabled for this account" });
+  }
+  const apiKey = env("OPENROUTER_API_KEY");
+  if (!apiKey) return json(503, { error: "OpenRouter not configured" });
+  let payload = {};
+  try {
+    payload = JSON.parse(event.body || "{}");
+  } catch (e) {  }
+  const groqKey = resolveGroqKey(payload, account);
+  try {
+    const openRouterModels = await fetchOpenRouterModels(apiKey);
+    let groqModels = GROQ_MODEL_CATALOG.map((m) => ({ ...m, provider: "groq" }));
+    if (groqKey) {
+      try {
+        groqModels = await fetchGroqModelsLive(groqKey);
+      } catch (e) {
+        
+      }
+    }
+    const models = mergePickerModels(openRouterModels, groqModels);
+    return json(200, {
+      mode: "openRouterModels",
+      models,
+      groqConfigured: Boolean(groqKey),
+    });
+  } catch (e) {
+    return json(502, { error: "Could not load models" });
+  }
+}
+
 const MODELS = TIERS[DEFAULT_TIER].models;
 const MODEL = MODELS[0];
 
@@ -466,26 +920,40 @@ const REFINE_SYSTEM = [
   "If the draft is already good, return it unchanged. Never mention the draft, ",
   "the review, or yourself as a reviewer - output only the final reply text.",
 ].join("");
+const CHOPCODE_PAIR_SYSTEM = [
+  "You are the second ChopCode model. A first coding model drafted the reply below. ",
+  "Improve the draft: fix bugs, fill gaps, complete code, and keep it runnable. ",
+  "Return the full improved answer the user should see. Every code file must be a fenced block: ```lang filename then the body. Never dump raw HTML/JS as plain chat text. ",
+  "If the draft is already correct, return it unchanged. ",
+  "Never mention drafts, reviews, pipelines, model names, vendors, or that two models ran.",
+].join("");
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_TIMEOUT_MS || 20000);
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_TIMEOUT_MS || 18000);
 const REFINE_MIN_MS = 5000;
 const LONG_REPLY_TOKENS = 800;
 const REFINE_RESERVE_MS = 6000;
 const draftBudgetMs = (replyTokens, msLeft) =>
   replyTokens > LONG_REPLY_TOKENS ? msLeft - 800 : Math.max(8000, msLeft - REFINE_RESERVE_MS);
 
-const MAX_CONTEXT_TOKENS = Number(process.env.CHOPSTICKS_AI_MAX_CONTEXT || 48000);
+const MAX_CONTEXT_TOKENS = Number(process.env.CHOPSTICKS_AI_MAX_CONTEXT || 128000);
 const contextFor = (effortTier, plan) => {
-  const cap = (plan && plan.contextLimit) || MAX_CONTEXT_TOKENS;
-  const tierCtx = effortTier.context || cap;
-  return Math.min(cap, tierCtx);
+  const planCap = plan && Number(plan.contextLimit) > 0 ? Number(plan.contextLimit) : MAX_CONTEXT_TOKENS;
+  const tierCtx = effortTier.context || planCap;
+  if (planCap > tierCtx) return planCap;
+  return Math.min(planCap, tierCtx);
 };
 const MAX_REPLY_TOKENS = 400;
-const MAX_REPLY_TOKENS_CEILING = 2000;
-/** Flat bill per successful reply so higher tiers do not burn allowance faster. */
+const MAX_REPLY_TOKENS_CEILING = 8000;
+
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 
-const APP_VERSION = "2.5.1";
+const APP_VERSION = "3.6.10";
+const PREVIEW_APP_VERSION = "3.6.10";
+
+function appVersionFor(account) {
+  return canPickOpenRouterModel(account) ? PREVIEW_APP_VERSION : APP_VERSION;
+}
 const LANGUAGES = {
   en: "English",
   zh: "Chinese (Simplified)",
@@ -523,14 +991,15 @@ function languageInstruction(code) {
   return `Respond in ${name}. Match the user's language when they switch.`;
 }
 
-const MAX_MESSAGES = 12;        // trailing turns kept from the client
+const MAX_MESSAGES = 12;
 const MAX_CHARS_PER_MSG = 2000;
 const GROUNDING_INTENTS = 6;
 
 const TOKEN_BUDGET = FREE_USAGE.limit;
 const COOLDOWN_MS = FREE_USAGE.cooldownMs;
+const RESET_WINDOW_MS = Number(process.env.CHOPSTICKS_AI_RESET_MS || 5 * 60 * 60 * 1000);
 const SB_TIMEOUT_MS = 5000;
-const budgets = new Map(); // bucketId -> { used, windowStart, cooldownUntil }
+const budgets = new Map();
 function budgetBucket(id) {
   const key = id || "global";
   let row = budgets.get(key);
@@ -585,11 +1054,23 @@ function contextWindowUsage(messages, limit, turnsTotal) {
   };
 }
 
+function maybeResetBudgetWindow(row, now) {
+  if (!row.windowStart) row.windowStart = now;
+  if (now - row.windowStart >= RESET_WINDOW_MS) {
+    row.used = 0;
+    row.windowStart = now;
+    row.cooldownUntil = 0;
+    return true;
+  }
+  return false;
+}
+
 function memoryBudgetState(now, bucketId, limit, cooldownMs) {
   const row = budgetBucket(bucketId);
   const lim = limit || TOKEN_BUDGET;
-  const cool = cooldownMs || COOLDOWN_MS;
-  if (row.cooldownUntil && now < row.cooldownUntil) {
+  const cool = cooldownMs == null ? COOLDOWN_MS : cooldownMs;
+  maybeResetBudgetWindow(row, now);
+  if (row.cooldownUntil && now < row.cooldownUntil && cool > 0) {
     return { blocked: true, retryInMs: row.cooldownUntil - now, used: row.used, limit: lim };
   }
   if (row.cooldownUntil && now >= row.cooldownUntil) {
@@ -597,15 +1078,22 @@ function memoryBudgetState(now, bucketId, limit, cooldownMs) {
     row.windowStart = now;
     row.cooldownUntil = 0;
   }
-  return { blocked: false, used: row.used, limit: lim, cooldownMs: cool };
+  return {
+    blocked: false,
+    used: row.used,
+    limit: lim,
+    cooldownMs: cool,
+    resetInMs: Math.max(0, RESET_WINDOW_MS - (now - row.windowStart)),
+  };
 }
 
 function memorySpend(tokens, now, bucketId, limit, cooldownMs) {
   const row = budgetBucket(bucketId);
   const lim = limit || TOKEN_BUDGET;
-  const cool = cooldownMs || COOLDOWN_MS;
+  const cool = cooldownMs == null ? COOLDOWN_MS : cooldownMs;
+  maybeResetBudgetWindow(row, now);
   row.used += tokens;
-  if (row.used >= lim) row.cooldownUntil = now + cool;
+  if (row.used >= lim && cool > 0) row.cooldownUntil = now + cool;
   return row;
 }
 
@@ -649,7 +1137,7 @@ async function sb(path, init = {}, opts = {}) {
 async function budgetPeek(now, opts = {}) {
   const bucketId = opts.bucketId || "global";
   const limit = opts.limit || TOKEN_BUDGET;
-  const cooldownMs = opts.cooldownMs || COOLDOWN_MS;
+  const cooldownMs = opts.cooldownMs == null ? COOLDOWN_MS : opts.cooldownMs;
   if (!supabaseConfigured()) {
     budgetMode = "memory";
     const state = memoryBudgetState(now, bucketId, limit, cooldownMs);
@@ -660,14 +1148,14 @@ async function budgetPeek(now, opts = {}) {
       method: "POST",
       body: JSON.stringify({
         p_limit: limit,
-        p_cooldown_ms: cooldownMs,
+        p_cooldown_ms: cooldownMs > 0 ? cooldownMs : 1,
         p_id: bucketId,
       }),
     }, { service: true });
     if ((!res.ok || !res.body || typeof res.body !== "object") && bucketId.startsWith("ip-")) {
       res = await sb("rpc/chopsticks_ai_budget_peek", {
         method: "POST",
-        body: JSON.stringify({ p_limit: limit, p_cooldown_ms: cooldownMs, p_id: bucketId }),
+        body: JSON.stringify({ p_limit: limit, p_cooldown_ms: cooldownMs > 0 ? cooldownMs : 1, p_id: bucketId }),
       }, { service: true });
     }
     if (!res.ok || !res.body || typeof res.body !== "object") {
@@ -678,7 +1166,7 @@ async function budgetPeek(now, opts = {}) {
     budgetMode = "supabase";
     const used = Number(res.body.used) || 0;
     budgetBucket(bucketId).used = used;
-    if (res.body.blocked) {
+    if (res.body.blocked && cooldownMs > 0) {
       return {
         blocked: true,
         retryInMs: Number(res.body.retry_in_ms) || 0,
@@ -689,7 +1177,7 @@ async function budgetPeek(now, opts = {}) {
         cooldownMs,
       };
     }
-    return { blocked: false, used, mode: "supabase", bucketId, limit, cooldownMs };
+    return { blocked: false, used, mode: "supabase", bucketId, limit, cooldownMs, resetInMs: memoryBudgetState(now, bucketId, limit, cooldownMs).resetInMs };
   } catch {
     budgetMode = "memory";
     const state = memoryBudgetState(now, bucketId, limit, cooldownMs);
@@ -701,7 +1189,7 @@ async function budgetSpend(tokens, now, opts = {}) {
   const spent = Math.max(0, Math.min(50000, Math.round(Number(tokens) || 0)));
   const bucketId = opts.bucketId || "global";
   const limit = opts.limit || TOKEN_BUDGET;
-  const cooldownMs = opts.cooldownMs || COOLDOWN_MS;
+  const cooldownMs = opts.cooldownMs == null ? COOLDOWN_MS : opts.cooldownMs;
   const finish = (used, mode, blocked) => {
     const row = budgetBucket(bucketId);
     const retryInMs = blocked ? Math.max(0, (row.cooldownUntil || 0) - now) : 0;
@@ -718,7 +1206,7 @@ async function budgetSpend(tokens, now, opts = {}) {
       body: JSON.stringify({
         p_tokens: spent,
         p_limit: limit,
-        p_cooldown_ms: cooldownMs,
+        p_cooldown_ms: cooldownMs > 0 ? cooldownMs : 1,
         p_id: bucketId,
       }),
     }, { service: true });
@@ -728,7 +1216,7 @@ async function budgetSpend(tokens, now, opts = {}) {
         body: JSON.stringify({
           p_tokens: spent,
           p_limit: limit,
-          p_cooldown_ms: cooldownMs,
+          p_cooldown_ms: cooldownMs > 0 ? cooldownMs : 1,
           p_id: bucketId,
         }),
       }, { service: true });
@@ -740,8 +1228,7 @@ async function budgetSpend(tokens, now, opts = {}) {
     const used = Number(res.body.used) || budgetBucket(bucketId).used;
     budgetBucket(bucketId).used = used;
     budgetMode = "supabase";
-    if (res.body.blocked) budgetBucket(bucketId).cooldownUntil = now + cooldownMs;
-    return finish(used, "supabase", res.body.blocked);
+    return finish(used, "supabase", cooldownMs > 0 && res.body.blocked);
   } catch {
     const row = memorySpend(spent, now, bucketId, limit, cooldownMs);
     return finish(row.used, "memory", row.used >= limit);
@@ -822,11 +1309,104 @@ function retrieve(query, limit = GROUNDING_INTENTS) {
     .map((s) => s.intent);
 }
 
+function isThinFollowUp(text) {
+  const t = String(text || "").trim();
+  if (!t || t.length > 180) return false;
+  return /^(go\s+)?deeper\b/i.test(t)
+    || /\b(go deeper|give me names?|be specific|more detail|list (them|names)|who (are|is) (they|that))\b/i.test(t)
+    || /^(and\s+)?(names?|more|who|expand|continue|again|specifics?)\b/i.test(t);
+}
+
+function searchQueryForTurns(turns, lastContent) {
+  const last = String(lastContent || "").trim();
+  if (!isThinFollowUp(last)) return last;
+  const prior = (turns || [])
+    .filter((m) => m.role === "user")
+    .slice(0, -1)
+    .map((m) => String(m.content || "").trim())
+    .filter(Boolean)
+    .join(" ");
+  return (prior + " " + last).replace(/\s+/g, " ").trim().slice(0, 280);
+}
+
+function namesFromSearchContext(context) {
+  const hits = String(context || "").match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3}\b/g) || [];
+  const skip = new Set([
+    "The", "This", "That", "Live", "Research", "Sources", "Google", "Wikipedia",
+    "Official", "Home", "About", "News", "Today", "Monday", "Tuesday", "Wednesday",
+    "Thursday", "Friday", "Saturday", "Sunday", "January", "February", "March",
+    "April", "June", "July", "August", "September", "October", "November", "December",
+  ]);
+  const uniq = [];
+  for (const n of hits) {
+    if (skip.has(n)) continue;
+    if (n.length < 4) continue;
+    if (!uniq.includes(n)) uniq.push(n);
+  }
+  return uniq.slice(0, 18);
+}
+
 function clientWantsLiveOnly(payload) {
   if (payload.offlineMode === true || payload.offlineChatMode === true) return false;
   if (payload.onlineMode === true) return true;
   if (payload.client === "widget") return true;
   return payload.mode === "agent" || !payload.offlineMode;
+}
+
+function isCodingTask(text) {
+  const ask = String(text || "");
+  if (/\b(write|create|generate|make|build|scaffold|implement|export|download|fix|debug|refactor)\b[\s\S]{0,120}\b(file|files|script|code|program|function|class|module|component|page|app|html|css|python|javascript|swift|json|zip)\b/i.test(ask)) return true;
+  if (/\b(python|javascript|typescript|html|css|swift|react)\b/i.test(ask)) return true;
+  if (/\.\w{1,8}\b|```|write_file/i.test(ask)) return true;
+  return false;
+}
+
+function answerWhenModelsFail(turns, lastUser, webBundle, payload) {
+  const liveOnly = payload ? clientWantsLiveOnly(payload) : false;
+  const coding = isCodingTask((lastUser && lastUser.content) || retrievalQuery(turns));
+  if (!liveOnly && !coding) {
+    const kbQuery = retrievalQuery(turns) || (lastUser && lastUser.content);
+    const kbAnswer = kbFallbackAnswer(kbQuery) || kbBestEffortAnswer(kbQuery);
+    if (kbAnswer) {
+      return { reply: kbAnswer, mode: "live" };
+    }
+  }
+
+  const follow = String((lastUser && lastUser.content) || "").trim();
+  const context = String((webBundle && webBundle.context) || "").trim();
+  const sources = (webBundle && Array.isArray(webBundle.sources) && webBundle.sources) || [];
+  const wantNames = /\bnames?\b/i.test(follow) || /\bwho\b/i.test(follow);
+  const names = namesFromSearchContext(context);
+  const priorAssistant = [...(turns || [])].reverse().find((m) => m.role === "assistant");
+
+  const bits = [];
+  if (wantNames && names.length) {
+    bits.push("Names that show up in the sources for this thread:\n\n" + names.map((n) => "• " + n).join("\n"));
+  } else if (context) {
+    bits.push(context.slice(0, 1600));
+  } else if (priorAssistant && priorAssistant.content && isThinFollowUp(follow)) {
+    bits.push(String(priorAssistant.content).slice(0, 1800));
+    bits.push("That’s the last pass I had. The live model dropped before I could expand it with more names.");
+  }
+
+  if (sources.length) {
+    bits.push(
+      "**Sources**\n" +
+      sources.slice(0, 6).map((s) => {
+        const title = s.title || s.url || "source";
+        return s.url ? `- [${title}](${s.url})` : `- ${title}`;
+      }).join("\n")
+    );
+  }
+
+  if (bits.length) {
+    return { reply: bits.join("\n\n"), mode: "live" };
+  }
+
+  return {
+    reply: "The live model dropped on that turn. Ask once more in this same thread — I’ll keep the topic and go specific (names, numbers, steps).",
+    mode: "live",
+  };
 }
 
 function kbFallbackAnswer(query) {
@@ -845,10 +1425,35 @@ function kbBestEffortAnswer(query) {
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const SEARCH_ENABLED = (process.env.CHOPSTICKS_AI_SEARCH || "on") !== "off";
-const SEARCH_TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_SEARCH_TIMEOUT_MS || 4500);
+const SEARCH_TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_SEARCH_TIMEOUT_MS || 2200);
 const SEARCH_MIN_LEN = 3;
 const MAX_SOURCES = 12;
-const UA = "cs.AI/2.0 (+https://chopstickshq.com/chopsticks-ai/)";
+const UA = "cs.AI-3/3.6.10 (+https://chopstickshq.com/chopsticks-ai/)";
+
+function clockNow() {
+  const d = new Date();
+  const isoDay = d.toISOString().slice(0, 10);
+  const human = new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(d);
+  const year = d.getUTCFullYear();
+  return { isoDay, human, year, iso: d.toISOString() };
+}
+
+function freshnessQuery(q) {
+  const { human, year } = clockNow();
+  const clean = String(q || "")
+    .replace(/\nATTACHED FILES[\s\S]*$/, "")
+    .trim()
+    .slice(0, 220);
+  if (!clean) return `current events ${year} ${human}`;
+  if (/\b(19|20)\d{2}\b/.test(clean)) return clean;
+  return `${clean} as of ${human}`;
+}
 
 function wantsSearch(text) {
   if (!SEARCH_ENABLED) return false;
@@ -867,8 +1472,8 @@ function parseSearchRequest(text) {
 
 function normUrl(src) {
   if (!src) return "";
-  if (/^https?:\/\//i.test(src)) return src;
-  return "https://" + String(src).replace(/^\/\//, "");
+  if (/^https?:\/\//i.test(String(src))) return String(src);
+  return "https://" + String(src).replace(/^\/+/, "");
 }
 
 async function fetchJson(url, signal, init) {
@@ -915,6 +1520,75 @@ function dedupeSources(items) {
     out.push(item);
   }
   return out;
+}
+
+const CHOPSTICKS_HQ_HOME = "https://chopstickshq.com/";
+
+function queryMentionsChopsticks(query) {
+  const q = String(query || "").toLowerCase();
+  return /\bchopsticks?\b/.test(q) || q.includes("chopstickshq");
+}
+
+function chopsticksHQPinnedSources(query) {
+  if (!queryMentionsChopsticks(query)) return [];
+  const q = String(query || "").toLowerCase();
+  const out = [
+    {
+      title: "Chopsticks HQ",
+      text: "Official home for cs.AI, MacBar, Fathom, guides, and downloads.",
+      src: CHOPSTICKS_HQ_HOME,
+      via: "Chopsticks HQ",
+    },
+    {
+      title: "chopsticksAI (cs.AI)",
+      text: "Free macOS AI assistant with Chromium browser, web app, and Terminal CLI.",
+      src: "https://chopstickshq.com/chopsticks-ai/",
+      via: "Chopsticks HQ",
+    },
+  ];
+  if (/\b(rnitro|menu bar|monitor)\b/.test(q)) {
+    out.push({
+      title: "MacBar — macOS menu bar monitor",
+      text: "CPU, memory, disk, network, and battery monitoring.",
+      src: "https://chopstickshq.com/macbar/",
+      via: "Chopsticks HQ",
+    });
+  }
+  if (/\b(fathom|battery|weather)\b/.test(q)) {
+    out.push({
+      title: "Fathom Air & Fathom Pro",
+      text: "Battery monitor and weather apps from Chopsticks HQ.",
+      src: "https://chopstickshq.com/fathom/",
+      via: "Chopsticks HQ",
+    });
+  }
+  if (/\b(lab|agent|chopcode|web app|csai|cs\.ai)\b/.test(q)) {
+    out.push({
+      title: "cs.AI web app",
+      text: "Browser agent with effort tiers, attachments, and Chromium search.",
+      src: "https://chopstickshq.com/chopsticks-ai/web/",
+      via: "Chopsticks HQ",
+    });
+  }
+  return out;
+}
+
+function isChopsticksHQSource(item) {
+  const url = normUrl(item.src || item.url || "");
+  try {
+    return new URL(url).hostname.replace(/^www\./, "") === "chopstickshq.com";
+  } catch (e) {
+    return url.includes("chopstickshq.com");
+  }
+}
+
+/** Pin chopstickshq.com first when the query mentions chopsticks / Chopsticks HQ. */
+function prioritizeChopsticksHQ(query, items) {
+  if (!queryMentionsChopsticks(query)) return items;
+  const pinned = chopsticksHQPinnedSources(query);
+  const hq = items.filter(isChopsticksHQSource);
+  const rest = items.filter((item) => !isChopsticksHQSource(item));
+  return dedupeSources([...pinned, ...hq, ...rest]);
 }
 
 function decodeDdgRedirect(href) {
@@ -999,7 +1673,6 @@ async function searchDuckDuckGoWeb(query, signal) {
   return out;
 }
 
-/** Stack Overflow / Stack Exchange — good for technical questions, no key. */
 async function searchStackExchange(query, signal) {
   const data = await fetchJson(
     "https://api.stackexchange.com/2.3/search/advanced?order=desc&sort=relevance" +
@@ -1014,7 +1687,6 @@ async function searchStackExchange(query, signal) {
   }));
 }
 
-/** Hacker News — tech news and discussions via Algolia (no key). */
 async function searchHackerNews(query, signal) {
   const data = await fetchJson(
     "https://hn.algolia.com/api/v1/search?query=" + encodeURIComponent(query) + "&hitsPerPage=4",
@@ -1031,7 +1703,6 @@ async function searchHackerNews(query, signal) {
   }));
 }
 
-/** GitHub repositories — open-source projects and docs (no key, rate-limited). */
 async function searchGitHub(query, signal) {
   const data = await fetchJson(
     "https://api.github.com/search/repositories?q=" + encodeURIComponent(query) +
@@ -1049,7 +1720,6 @@ async function searchGitHub(query, signal) {
   }));
 }
 
-/** Wikidata — structured facts and entity descriptions (no key). */
 async function searchWikidata(query, signal) {
   const data = await fetchJson(
     "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=" +
@@ -1064,7 +1734,6 @@ async function searchWikidata(query, signal) {
   }));
 }
 
-/** MDN Web Docs — JavaScript, HTML, CSS, and web APIs (no key). */
 async function searchMdn(query, signal) {
   const data = await fetchJson(
     "https://developer.mozilla.org/api/v1/search?q=" + encodeURIComponent(query) +
@@ -1079,12 +1748,10 @@ async function searchMdn(query, signal) {
   }));
 }
 
-/** Chromium UA for Google / web fetch (Blink-compatible). */
 const CHROMIUM_UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
   "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
-/** Google web results via HTML (no API key). */
 async function searchGoogleWeb(query, signal) {
   const html = await fetchText(
     "https://www.google.com/search?q=" + encodeURIComponent(query) + "&num=10&hl=en",
@@ -1097,7 +1764,7 @@ async function searchGoogleWeb(query, signal) {
   let m;
   while ((m = re.exec(html)) && out.length < 8) {
     let url = m[1].replace(/&amp;/g, "&");
-    try { url = decodeURIComponent(url); } catch (e) { /* keep */ }
+    try { url = decodeURIComponent(url); } catch (e) {  }
     const title = m[2].replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").trim();
     if (url.startsWith("http") && title) {
       out.push({ title, text: "", src: url, via: "Chromium" });
@@ -1133,7 +1800,7 @@ async function chromiumEngine(query, signal, maxSources) {
       })));
     }
   }
-  return dedupeSources(found).slice(0, cap);
+  return prioritizeChopsticksHQ(query, dedupeSources(found)).slice(0, cap);
 }
 
 /** @deprecated alias — use chromiumEngine */
@@ -1269,10 +1936,10 @@ async function searchGoogleCse(query, signal) {
 }
 
 /** Returns prompt context plus structured sources for the client UI. */
-async function webSearch(query, maxSources) {
+async function webSearch(query, maxSources, timeoutMs) {
   const cap = Math.max(1, Math.min(MAX_SOURCES, Number(maxSources) || MAX_SOURCES));
   const c = new AbortController();
-  const timer = setTimeout(() => c.abort(), SEARCH_TIMEOUT_MS);
+  const timer = setTimeout(() => c.abort(), timeoutMs || SEARCH_TIMEOUT_MS);
   try {
     const batches = await Promise.allSettled([
       mozillaEngine(query, c.signal, Math.min(6, cap)),
@@ -1293,7 +1960,7 @@ async function webSearch(query, maxSources) {
         found.push(...batch.value);
       }
     }
-    found = dedupeSources(found).slice(0, cap);
+    found = prioritizeChopsticksHQ(query, dedupeSources(found)).slice(0, cap);
 
     if (!found.length) return { context: "", sources: [] };
 
@@ -1317,35 +1984,39 @@ async function webSearch(query, maxSources) {
 
 /** Facts chopsticksAI knows about itself. Built from the live config so the
  *  numbers can never drift from what the endpoint actually enforces. */
-function selfFacts(tier) {
+function selfFacts(tier, appVersion) {
+  const ver = appVersion || APP_VERSION;
   const t = tier || TIERS[DEFAULT_TIER];
   return [
     "ABOUT YOURSELF (answer questions about your own capabilities from this):",
-    `- You are cs.AI ${APP_VERSION} (chopsticksAI), built and run by Chopsticks HQ.`,
-    `- You run on selectable effort levels in ChopsticksAI: Low, Medium, High, Xhigh, Xhigh+, Insane, Chopsticks, ChopCode, and StickerCoder+ (coding specialists).`,
-    `- Current effort: ${t.label}, with a ${contextFor(t).toLocaleString()} token context window.`,
+    `- You are cs.AI-3 (${ver}), built and run by Chopsticks HQ.`,
+    `- You refresh live web research for each user question, dated as of today.`,
+    `- Current date for this session: ${clockNow().human} (${clockNow().isoDay} UTC).`,
+    `- Current plate: ${t.label} (Rice < Tamago < Hibachi < Wagyu A1 < A2 < A3 < A4 < A5), ${contextFor(t).toLocaleString()} token context, up to ${(t.maxReply || MAX_REPLY_TOKENS).toLocaleString()} reply tokens.`,
     t.stickerCoder
       ? "- StickerCoder+ mode: prioritise complete, runnable code, write_file tool use, and sharp engineering answers."
       : t.chopCode
-        ? "- ChopCode mode: prioritise complete, runnable code, clear file fences, and practical engineering answers."
+        ? "- ChopCode mode: ten coding specialists run in parallel (each educated on today's date and live research), then Lead merges their drafts into one answer. Prioritise complete, runnable code and clear file fences."
         : null,
     `- Longest single reply: ${MAX_REPLY_TOKENS_CEILING.toLocaleString()} tokens (in ChopsticksAI Lab); ${MAX_REPLY_TOKENS} in the sidebar widget.`,
     `- Conversation memory: the last ${MAX_MESSAGES} turns.`,
     `- Free usage allowance: ${TOKEN_BUDGET.toLocaleString()} tokens, then a ${Math.round(COOLDOWN_MS / 3600000)}-hour cooldown.`,
-    "- Upgrades are bought with Fathom Pro oi-pl API keys (not OpenRouter keys): 2 keys → 800k + 2h30m cooldown; 5 keys → 900k + 2h; 10 keys → 1m + 1h.",
+    "- Upgrades: sign in and redeem Fathom Pro oi-pl2- keys at https://chopstickshq.com/chopsticks-ai/web/upgrades/ (2 keys → 800k + 2h30m; 5 keys → 900k + 2h + ChopCode; 10 keys → 1m + 1h). Not OpenRouter keys.",
     `- Rate limit: ${RATE_MAX} requests per minute per visitor.`,
-    "- You search with the Chromium engine first (Google web, DuckDuckGo), then wider sources (Stack Overflow, Hacker News, GitHub, npm, arXiv, Google/Brave when configured). Cite sources in your answer.",
-    "- The macOS app includes a built-in Chromium browser rail; visitors can search on https://chopstickshq.com/chopsticks-ai/#search without chatting.",
+    "- You search with the Chromium engine on each question (unless the user turns search off) so answers reflect information as of the current date. Cite sources when you use them.",
+    "- The macOS app and web app include a built-in Chromium browser rail whose home page is https://chopstickshq.com; standalone search is at https://chopstickshq.com/chopsticks-ai/#search. Queries mentioning chopsticks prioritize chopstickshq.com in results.",
     "- You answer general questions on any topic, and are the in-house expert on Chopsticks HQ software.",
     "- You need no OpenRouter API key from the user; Fathom Pro unlock keys can be redeemed as usage credits in the Usage tab.",
+    "- cs.AI Enterprise is for large companies: custom usage, seats, invoice/PO, SSO reviewed on request. There is no public price. Direct orgs to https://chopstickshq.com/chopsticks-ai/enterprise/ and chopstickshq@lam.ws (subject: cs.AI Enterprise). Do not invent certifications or a checkout URL.",
     "- Email sign-in runs on chopstickshq.com — email and password only, no verification email.",
-    "- You are available on every page of chopstickshq.com, in ChopsticksAI at /chopailab, and inside rNitro's Chat tab.",
+    "- You are available on every page of chopstickshq.com, in ChopsticksAI at /chopailab, and inside MacBar's Chat tab.",
     "- You do not use vector embeddings — retrieval is keyword intent scoring plus Chromium web search, never a semantic vector index.",
     "- Do not name or speculate about any underlying model, provider or vendor.",
   ].filter(Boolean).join("\n");
 }
 
-function systemPrompt(grounding, mode, web, tier, language) {
+function systemPrompt(grounding, mode, web, tier, language, appVersion) {
+  const ver = appVersion || APP_VERSION;
   const agent = mode === "agent" || tier.chopCode ? [
     "\n\nYou are running as the ChopsticksAI agent",
     tier.stickerCoder
@@ -1357,6 +2028,8 @@ function systemPrompt(grounding, mode, web, tier, language) {
     "write code, config, scripts, documents or data files.\n",
     "- Prefer the write_file tool for each file you create (path + full content).\n",
     "- You may also put files in fenced code blocks: ```lang filename then the body.\n",
+    "- Supported outputs include HTML, Markdown (.md), JSON, CSV, Python/JS/Swift code, ZIP (use write_file with encoding base64), and any other text format.\n",
+    "- Never dump code as plain chat text. Every code sample must be inside a fenced block with a language tag and a filename so the app can Copy and Download it.\n",
     "- Give complete, runnable files rather than fragments or ellipses.\n",
     "- Keep explanation outside tools/fences and brief.",
     tier.chopsticksFocus
@@ -1365,7 +2038,7 @@ function systemPrompt(grounding, mode, web, tier, language) {
     tier.stickerCoder
       ? "\n- StickerCoder+: prefer correct, idiomatic code; use tools aggressively for file creation; include imports and edge cases; keep prose short."
       : tier.chopCode
-        ? "\n- ChopCode: prefer correct, idiomatic code; include imports and edge-case handling; add short usage notes only when helpful; do not pad with long essays."
+        ? "\n- ChopCode: coding models work together, grounded in 2026 live research. Put every file in a ```lang filename fence. Prefer current stable APIs; include imports and edge-case handling; keep prose short."
         : "",
   ].join("") : "";
 
@@ -1386,7 +2059,7 @@ function systemPrompt(grounding, mode, web, tier, language) {
         "Be precise and practical. Prefer working solutions over theory.\n\n",
       ].join("")
     : [
-        "You are cs.AI " + APP_VERSION + " (chopsticksAI), a helpful and knowledgeable general-purpose assistant, ",
+        "You are cs.AI-3 (" + ver + "), a helpful and knowledgeable general-purpose assistant, ",
         "made by Chopsticks HQ.\n\n",
         "Answer ANY question the user asks — general knowledge, science, history, coding, ",
         "writing, maths, recommendations, advice, casual conversation, anything. You are a ",
@@ -1397,13 +2070,32 @@ function systemPrompt(grounding, mode, web, tier, language) {
         "use markdown only when structure really helps, such as code blocks for code.\n\n",
       ].join("");
 
+  const clock = clockNow();
+  const dateBlock = [
+    `\nCURRENT DATE (authoritative for this reply): ${clock.human} (${clock.isoDay} UTC).`,
+    `The current year is ${clock.year}. It is not 2024 or 2025. Do not write as if those years are “now”.`,
+    "You have been given live web research retrieved just now for this question.",
+    "Prefer those results over memorized training data for anything time-sensitive",
+    "(news, versions, prices, APIs, SDKs, sports, politics, product status).",
+    "If search and memory conflict, trust search and cite it. If search is empty, say the date and be clear you may be missing today's developments.\n",
+  ].join(" ");
+  const yearKnowledge = [
+    `\n\n2026 WORKING KNOWLEDGE (use with live research; do not freeze on older training cutoffs):`,
+    `- Calendar: ${clock.human}. macOS 26 is current on Apple Silicon Macs; Swift 6 is the shipping language.`,
+    "- Treat library/framework docs, CLI flags, and package versions as needing a 2026 check via live research.",
+    "- For code, prefer current stable APIs. Do not recommend deprecated 2023–2024-only patterns when a current replacement exists.",
+    "- If the user asks what is current (Node, Python, Swift, Xcode, browsers, CSS, React, Rust, Go), answer for 2026 using live research, not a stale cutoff.\n",
+  ].join("\n");
+
   return [
     persona,
-    "You are also the in-house expert on Chopsticks HQ's own software: rNitro (macOS menu ",
+    dateBlock,
+    yearKnowledge,
+    "You are also the in-house expert on Chopsticks HQ's own software: MacBar (macOS menu ",
     "bar system monitor), Fathom Air (battery monitor), Fathom Pro (battery, weather and AI ",
     "chat), ARENA (an FPS game), and Chopsticks Shaders. When a question touches those, the ",
     "reference material below is authoritative.\n\n",
-    selfFacts(tier),
+    selfFacts(tier, ver),
     web ? web : "",
     "\n\nREFERENCE MATERIAL:\n\n",
     facts,
@@ -1413,6 +2105,8 @@ function systemPrompt(grounding, mode, web, tier, language) {
     "detail, say you're not certain and point to chopstickshq.com rather than guessing.\n",
     "- Never invent a download link, command, or version number for Chopsticks software.\n",
     "- Never imply Chopsticks software costs money or needs a subscription.\n",
+    "- For news, software versions, current events, and anything that changes over time, ",
+    "use the live web research and today's date — the year is 2026, not 2024 or 2025.\n",
     "- For everything else, just answer the question well using your own knowledge. Do not ",
     "steer the conversation back to Chopsticks HQ, and do not mention the reference material ",
     "when it isn't relevant.\n",
@@ -1497,21 +2191,26 @@ const AGENT_TOOLS = [
     function: {
       name: "write_file",
       description:
-        "Create a downloadable file for the user. Call once per file. Prefer this over pasting huge code in prose.",
+        "Create a downloadable file for the user (HTML, Markdown, JSON, Python, ZIP, CSV, etc.). Call once per file. For binary files like ZIP, pass encoding base64.",
       parameters: {
         type: "object",
         properties: {
           path: {
             type: "string",
-            description: "File name only, e.g. analyse.py or src/app.swift",
+            description: "File name only, e.g. index.html, README.md, bundle.zip",
           },
           content: {
             type: "string",
-            description: "Full file contents",
+            description: "Full file contents (UTF-8 text, or base64 when encoding is base64)",
           },
           language: {
             type: "string",
-            description: "Optional language tag for highlighting (python, swift, …)",
+            description: "Optional language tag for highlighting (python, html, markdown, …)",
+          },
+          encoding: {
+            type: "string",
+            enum: ["utf8", "base64"],
+            description: "Use base64 for binary files such as ZIP archives",
           },
         },
         required: ["path", "content"],
@@ -1533,6 +2232,7 @@ function langFromName(name) {
     swift: "swift", md: "markdown", json: "json", html: "html", css: "css",
     sh: "bash", rs: "rust", go: "go", java: "java", rb: "ruby", php: "php",
     sql: "sql", yaml: "yaml", yml: "yaml", toml: "toml", c: "c", cpp: "cpp", h: "c",
+    zip: "zip", gz: "gzip", tar: "tar", csv: "csv", xml: "xml", txt: "text",
   };
   return map[ext] || "text";
 }
@@ -1574,9 +2274,73 @@ function mergeFiles(a, b) {
       name: f.name,
       content: String(f.content || ""),
       language: f.language || langFromName(f.name),
+      ...(f.encoding ? { encoding: f.encoding } : {}),
     });
   }
   return [...map.values()];
+}
+
+function looksLikeCodeLine(line) {
+  const t = String(line || "").trim();
+  if (!t) return false;
+  if (/^<\/?[a-zA-Z!][^>]*>/.test(t)) return true;
+  if (/^(const|let|var|function|class|import |export |return |document\.|window\.|console\.)/.test(t)) return true;
+  if (/[{};]\s*$/.test(t) && t.length < 240 && !/^[A-Z][^<{]{12,}[.!?]$/.test(t)) return true;
+  return false;
+}
+
+function guessLangFromBlock(block) {
+  const s = String(block || "");
+  if (/<!DOCTYPE|<html\b|<head\b|<body\b|<\/?(div|span|script|style|p|section)\b/i.test(s)) return "html";
+  if (/\b(const|let|function|=>|document\.)\b/.test(s)) return "javascript";
+  if (/\b(def |import |print\()/.test(s)) return "python";
+  if (/[{:][^;]*;/.test(s) && /[.#][\w-]+\s*\{/.test(s)) return "css";
+  return "text";
+}
+
+function fenceLooseInProse(prose) {
+  const lines = String(prose || "").split("\n");
+  const chunks = [];
+  let i = 0;
+  while (i < lines.length) {
+    const twoCode = looksLikeCodeLine(lines[i]) && i + 1 < lines.length && looksLikeCodeLine(lines[i + 1]);
+    if (twoCode) {
+      const start = i;
+      i += 2;
+      while (i < lines.length && (looksLikeCodeLine(lines[i]) || !String(lines[i]).trim())) i += 1;
+      while (i > start && !String(lines[i - 1]).trim()) i -= 1;
+      const block = lines.slice(start, i).join("\n").replace(/\n+$/, "");
+      const lang = guessLangFromBlock(block);
+      const ext = lang === "javascript" ? "js" : lang === "text" ? "txt" : lang;
+      chunks.push("```" + lang + " chopsticksai-file." + ext + "\n" + block + "\n```");
+      continue;
+    }
+    const start = i;
+    i += 1;
+    while (i < lines.length) {
+      const nextTwo = looksLikeCodeLine(lines[i]) && i + 1 < lines.length && looksLikeCodeLine(lines[i + 1]);
+      if (nextTwo) break;
+      i += 1;
+    }
+    const block = lines.slice(start, i).join("\n").trim();
+    if (block) chunks.push(block);
+  }
+  return chunks.join("\n\n");
+}
+
+function liftLooseCodeIntoFences(text) {
+  const raw = String(text || "");
+  const parts = raw.split("```");
+  const out = [];
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 2 === 1) {
+      out.push("```" + parts[i].replace(/\n+$/, "") + "\n```");
+      continue;
+    }
+    const lifted = fenceLooseInProse(parts[i]);
+    if (lifted) out.push(lifted);
+  }
+  return out.join("\n\n").replace(/\n{3,}/g, "\n\n");
 }
 
 /** Ensure each file appears as a downloadable fence in the reply text. */
@@ -1608,7 +2372,7 @@ function parseToolArgs(raw) {
  * tools and ask the model to finish. Returns { text, files, tokens }.
  */
 async function continueWithTools({
-  model, messages, first, key, signal, maxTokens, temperature,
+  model, messages, first, openRouterKey, groqKey, anthropicKey, signal, maxTokens, temperature,
 }) {
   const files = [];
   let tokens = first.tokens || 0;
@@ -1635,10 +2399,12 @@ async function continueWithTools({
         if (content.length > 1_500_000) {
           result = { ok: false, error: "file too large" };
         } else {
+          const enc = String(args.encoding || "utf8").toLowerCase();
           files.push({
             name: path,
             content,
             language: String(args.language || langFromName(path)).slice(0, 40),
+            ...(enc === "base64" ? { encoding: "base64" } : {}),
           });
           result = { ok: true, path, bytes: content.length };
         }
@@ -1650,10 +2416,12 @@ async function continueWithTools({
       });
     }
     try {
-      cur = await callModel({
+      cur = await callChatModel({
         model,
         messages: msgs,
-        key,
+        openRouterKey,
+        groqKey,
+        anthropicKey,
         signal,
         maxTokens,
         temperature,
@@ -1697,6 +2465,165 @@ function messageText(msg) {
   return "";
 }
 
+/** One Groq chat completion (OpenAI-compatible). */
+async function callGroqModel({ model, messages, key, signal, maxTokens, temperature, tools, toolChoice }) {
+  const asked = maxTokens ?? MAX_REPLY_TOKENS;
+  const body = {
+    model,
+    messages,
+    temperature: temperature ?? 0.3,
+    max_tokens: Math.max(asked, Math.min(asked + 256, asked * 2, 8192)),
+  };
+  if (tools && tools.length) {
+    body.tools = tools;
+    body.tool_choice = toolChoice || "auto";
+  }
+  let res;
+  try {
+    res = await fetch(GROQ_URL, {
+    method: "POST",
+    signal,
+    headers: {
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  } catch (e) {
+    return { ok: false, status: 0, detail: String((e && e.name) || e) };
+  }
+  if (!res.ok) {
+    return { ok: false, status: res.status, detail: await res.text().catch(() => "") };
+  }
+  const data = await res.json();
+  const choice = (data.choices && data.choices[0]) || {};
+  const msg = choice.message || {};
+  let text = messageText(msg);
+  const toolCalls = Array.isArray(msg.tool_calls) ? msg.tool_calls : [];
+  if (!text && !toolCalls.length) {
+    return {
+      ok: false,
+      status: res.status,
+      detail: "empty groq completion finish=" + String(choice.finish_reason || ""),
+    };
+  }
+  const reported = data.usage && Number(data.usage.total_tokens);
+  return {
+    ok: true,
+    text,
+    toolCalls,
+    tokens: Number.isFinite(reported) && reported > 0 ? reported : null,
+  };
+}
+
+/** Anthropic Messages API. */
+async function callAnthropicModel({ model, messages, key, signal, maxTokens, temperature }) {
+  if (!key) return { ok: false, status: 503, detail: "Anthropic API key not configured" };
+  const native = claudeNativeModelId(model);
+  let system = "";
+  const conv = [];
+  for (const m of messages || []) {
+    if (!m) continue;
+    if (m.role === "system") {
+      system += (system ? "\n\n" : "") + String(m.content || "");
+      continue;
+    }
+    const role = m.role === "assistant" ? "assistant" : "user";
+    const text = typeof m.content === "string" ? m.content : messageText(m);
+    if (!text) continue;
+    if (conv.length && conv[conv.length - 1].role === role) {
+      conv[conv.length - 1].content += "\n\n" + text;
+    } else {
+      conv.push({ role, content: text });
+    }
+  }
+  if (!conv.length) return { ok: false, status: 400, detail: "no messages" };
+  if (conv[0].role !== "user") conv.unshift({ role: "user", content: "(continue)" });
+  const body = {
+    model: native,
+    max_tokens: Math.min(Math.max(maxTokens || 1024, 256), 8192),
+    temperature: temperature ?? 0.3,
+    messages: conv,
+  };
+  if (system) body.system = system;
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      signal,
+      headers: {
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      return { ok: false, status: res.status, detail: await res.text().catch(() => "") };
+    }
+    const data = await res.json();
+    const text = (Array.isArray(data.content) ? data.content : [])
+      .map((p) => (p && p.type === "text" ? p.text : ""))
+      .join("")
+      .trim();
+    if (!text) return { ok: false, status: 200, detail: "empty claude completion" };
+    const reported = data.usage
+      ? Number(data.usage.input_tokens || 0) + Number(data.usage.output_tokens || 0)
+      : null;
+    return { ok: true, text, toolCalls: [], tokens: reported };
+  } catch (e) {
+    return { ok: false, status: 0, detail: String((e && e.name) || e) };
+  }
+}
+
+async function callChatModel({
+  model,
+  messages,
+  openRouterKey,
+  groqKey,
+  anthropicKey,
+  signal,
+  maxTokens,
+  temperature,
+  tools,
+  toolChoice,
+}) {
+  if (isClaudeModelId(model)) {
+    return callAnthropicModel({
+      model,
+      messages,
+      key: anthropicKey,
+      signal,
+      maxTokens,
+      temperature,
+    });
+  }
+  if (isGroqModelId(model)) {
+    if (!groqKey) {
+      return { ok: false, status: 503, detail: "Groq API key not configured" };
+    }
+    return callGroqModel({
+      model: groqNativeModelId(model),
+      messages,
+      key: groqKey,
+      signal,
+      maxTokens,
+      temperature,
+      tools,
+      toolChoice,
+    });
+  }
+  return callModel({
+    model,
+    messages,
+    key: openRouterKey,
+    signal,
+    maxTokens,
+    temperature,
+    tools,
+    toolChoice,
+  });
+}
+
 /** One chat completion. Supports optional OpenAI-style tools. */
 async function callModel({ model, messages, key, signal, maxTokens, temperature, tools, toolChoice }) {
   const asked = maxTokens ?? MAX_REPLY_TOKENS;
@@ -1710,7 +2637,9 @@ async function callModel({ model, messages, key, signal, maxTokens, temperature,
     body.tools = tools;
     body.tool_choice = toolChoice || "auto";
   }
-  const res = await fetch(OPENROUTER_URL, {
+  let res;
+  try {
+    res = await fetch(OPENROUTER_URL, {
     method: "POST",
     signal,
     headers: {
@@ -1721,6 +2650,9 @@ async function callModel({ model, messages, key, signal, maxTokens, temperature,
     },
     body: JSON.stringify(body),
   });
+  } catch (e) {
+    return { ok: false, status: 0, detail: String((e && e.name) || e) };
+  }
   if (!res.ok) {
     return { ok: false, status: res.status, detail: await res.text().catch(() => "") };
   }
@@ -1805,6 +2737,11 @@ function usagePayload(plan, state) {
     limit,
     contextLimit: plan.contextLimit || MAX_CONTEXT_TOKENS,
     cooldownMs: plan.cooldownMs,
+    resetInMs: state.blocked ? 0 : (state.resetInMs || 0),
+    resetsAt:
+      !state.blocked && state.resetInMs
+        ? new Date(Date.now() + state.resetInMs).toISOString()
+        : null,
     cooldown: state.blocked
       ? { blocked: true, retryInMs: state.retryInMs || 0 }
       : null,
@@ -1832,6 +2769,19 @@ function usagePayload(plan, state) {
     creditSource: "fathom-pro-oi-pl",
     product: "cs.AI",
     version: "2.0",
+    chopcode: {
+      allowed: canUseChopCode(accountFromPlan(plan), plan),
+      requiresKeys: CHOPCODE_PRO_KEYS,
+    },
+  };
+}
+
+function accountFromPlan(plan) {
+  if (!plan || !plan.account) return null;
+  return {
+    id: plan.account.id,
+    email: plan.account.email,
+    entitlement: { label: plan.account.plan },
   };
 }
 
@@ -1852,12 +2802,14 @@ async function healthHandler(event) {
   let cooldown = null;
   let budgetModeNow = "memory";
   let used = 0;
+  let peekState = {};
   try {
     const state = await budgetPeek(now, {
       bucketId: plan.bucketId,
       limit: plan.limit,
       cooldownMs: plan.cooldownMs,
     });
+    peekState = state;
     budgetModeNow = state.mode || budgetMode;
     used = state.used || 0;
     if (state.blocked) {
@@ -1877,12 +2829,159 @@ async function healthHandler(event) {
       used,
       blocked: Boolean(cooldown && cooldown.blocked),
       retryInMs: cooldown && cooldown.retryInMs,
+      resetInMs: peekState.resetInMs,
       mode: budgetModeNow,
     }),
     budgetMode: budgetModeNow,
     search: SEARCH_ENABLED,
     time: new Date(now).toISOString(),
   });
+}
+
+async function requireAccount(event) {
+  const accessToken = extractAccessToken(event);
+  if (!accessToken) return null;
+  return resolveAccount(accessToken);
+}
+
+async function chatOwnedBy(account, chatId) {
+  const res = await sb(
+    `chats?id=eq.${encodeURIComponent(chatId)}&user_id=eq.${encodeURIComponent(account.id)}&select=id`,
+    { method: "GET", headers: { accept: "application/json" } },
+    { service: true }
+  );
+  return res.ok && Array.isArray(res.body) && res.body.length > 0;
+}
+
+async function handleAuthMe(event) {
+  const account = await requireAccount(event);
+  if (!account) return json(401, { error: "Not signed in", mode: "authMe" });
+  return json(200, {
+    mode: "authMe",
+    ok: true,
+    user: { id: account.id, email: account.email },
+    modelPicker: canPickOpenRouterModel(account),
+    appVersion: appVersionFor(account),
+  });
+}
+
+async function handleChatsList(event) {
+  const account = await requireAccount(event);
+  if (!account) return json(401, { error: "Sign in required", mode: "chatsList" });
+  const res = await sb(
+    `chats?user_id=eq.${encodeURIComponent(account.id)}&select=id,title,client,tier,created_at,updated_at&order=updated_at.desc&limit=50`,
+    { method: "GET", headers: { accept: "application/json" } },
+    { service: true }
+  );
+  if (!res.ok) return json(502, { error: "Could not list chats" });
+  return json(200, { mode: "chatsList", chats: Array.isArray(res.body) ? res.body : [] });
+}
+
+async function handleChatCreate(event, payload) {
+  const account = await requireAccount(event);
+  if (!account) return json(401, { error: "Sign in required", mode: "chatCreate" });
+  const row = {
+    user_id: account.id,
+    title: String(payload.title || "New Chat").slice(0, 120),
+    client: String(payload.client || "web").slice(0, 16),
+    tier: payload.tier ? String(payload.tier).slice(0, 32) : null,
+  };
+  const res = await sb("chats", {
+    method: "POST",
+    headers: { accept: "application/json", Prefer: "return=representation" },
+    body: JSON.stringify(row),
+  }, { service: true });
+  if (!res.ok || !Array.isArray(res.body) || !res.body[0]) {
+    return json(502, { error: "Could not create chat" });
+  }
+  return json(200, { mode: "chatCreate", chat: res.body[0] });
+}
+
+async function handleChatMessages(event, payload) {
+  const account = await requireAccount(event);
+  if (!account) return json(401, { error: "Sign in required", mode: "chatMessages" });
+  const chatId = String(payload.chatId || payload.id || "").trim();
+  if (!chatId) return json(400, { error: "Missing chatId" });
+  if (!(await chatOwnedBy(account, chatId))) return json(404, { error: "Chat not found" });
+  const res = await sb(
+    `chat_messages?chat_id=eq.${encodeURIComponent(chatId)}&select=role,content,sources,seq&order=seq.asc`,
+    { method: "GET", headers: { accept: "application/json" } },
+    { service: true }
+  );
+  if (!res.ok) return json(502, { error: "Could not load messages" });
+  return json(200, { mode: "chatMessages", messages: Array.isArray(res.body) ? res.body : [] });
+}
+
+async function handleChatPatch(event, payload) {
+  const account = await requireAccount(event);
+  if (!account) return json(401, { error: "Sign in required", mode: "chatPatch" });
+  const chatId = String(payload.chatId || payload.id || "").trim();
+  if (!chatId) return json(400, { error: "Missing chatId" });
+  if (!(await chatOwnedBy(account, chatId))) return json(404, { error: "Chat not found" });
+  const patch = { updated_at: new Date().toISOString() };
+  if (payload.title) patch.title = String(payload.title).slice(0, 120);
+  if (payload.tier) patch.tier = String(payload.tier).slice(0, 32);
+  await sb(`chats?id=eq.${encodeURIComponent(chatId)}`, {
+    method: "PATCH",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify(patch),
+  }, { service: true });
+  return json(200, { mode: "chatPatch", ok: true });
+}
+
+async function handleChatSave(event, payload) {
+  const account = await requireAccount(event);
+  if (!account) return json(401, { error: "Sign in required", mode: "chatSave" });
+  const chatId = String(payload.chatId || payload.id || "").trim();
+  if (!chatId) return json(400, { error: "Missing chatId" });
+  if (!(await chatOwnedBy(account, chatId))) return json(404, { error: "Chat not found" });
+
+  const patch = { updated_at: new Date().toISOString() };
+  if (payload.title) patch.title = String(payload.title).slice(0, 120);
+  if (payload.tier) patch.tier = String(payload.tier).slice(0, 32);
+  await sb(`chats?id=eq.${encodeURIComponent(chatId)}`, {
+    method: "PATCH",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify(patch),
+  }, { service: true });
+
+  await sb(`chat_messages?chat_id=eq.${encodeURIComponent(chatId)}`, {
+    method: "DELETE",
+  }, { service: true });
+
+  const messages = Array.isArray(payload.messages) ? payload.messages : [];
+  const rows = messages.map(function (m, i) {
+    return {
+      chat_id: chatId,
+      role: m.role === "user" ? "user" : (m.role === "system" ? "system" : "assistant"),
+      content: String(m.content || "").slice(0, 100000),
+      sources: Array.isArray(m.sources) ? m.sources : [],
+      seq: i,
+    };
+  });
+
+  if (rows.length) {
+    for (let i = 0; i < rows.length; i += 40) {
+      const chunk = rows.slice(i, i + 40);
+      const ins = await sb("chat_messages", {
+        method: "POST",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify(chunk),
+      }, { service: true });
+      if (!ins.ok) return json(502, { error: "Could not save messages" });
+    }
+  }
+  return json(200, { mode: "chatSave", ok: true });
+}
+
+async function handleChatDelete(event, payload) {
+  const account = await requireAccount(event);
+  if (!account) return json(401, { error: "Sign in required", mode: "chatDelete" });
+  const chatId = String(payload.chatId || payload.id || "").trim();
+  if (!chatId) return json(400, { error: "Missing chatId" });
+  if (!(await chatOwnedBy(account, chatId))) return json(404, { error: "Chat not found" });
+  await sb(`chats?id=eq.${encodeURIComponent(chatId)}`, { method: "DELETE" }, { service: true });
+  return json(200, { mode: "chatDelete", ok: true });
 }
 
 async function handler(event) {
@@ -1914,13 +3013,20 @@ async function handler(event) {
   const tier = tierOf(payload.tier);
   const tierKey = String(payload.tier || DEFAULT_TIER).toLowerCase().replace(/\s+/g, "");
   const tierId = TIER_ALIASES[tierKey] || tierKey || DEFAULT_TIER;
-  const apiKey = key;
+  const apiKey = resolveOpenRouterKey(payload);
+  const anthropicKey = resolveAnthropicKey(payload);
   const unlockKeys = Array.isArray(payload.unlockKeys)
     ? payload.unlockKeys
     : (Array.isArray(payload.fathomProKeys) ? payload.fathomProKeys : []);
   const who = clientWho(event);
   const accessToken = extractAccessToken(event);
   const account = await resolveAccount(accessToken);
+  const groqKey = resolveGroqKey(payload, account, tier);
+
+  if (payload.action === "bootstrapFounder") {
+    const result = await ensureFounderAuthUser();
+    return json(result.ok ? 200 : 503, { ok: result.ok, mode: "bootstrapFounder" });
+  }
 
   if (payload.action === "mintUnlockKey") {
     return handleMintUnlockKey(event, payload);
@@ -1941,6 +3047,43 @@ async function handler(event) {
   if (payload.action === "authRefresh") {
     return handleAuthRefresh(event, payload);
   }
+  if (
+    payload.action === "authOAuthStart" ||
+    payload.action === "authOAuthExchange" ||
+    payload.action === "authIdentities" ||
+    payload.action === "authUnlinkIdentity"
+  ) {
+    return json(410, {
+      error: "Google and GitHub sign-in is no longer available. Use email and password.",
+    });
+  }
+  if (payload.action === "authMe") {
+    return handleAuthMe(event);
+  }
+  if (payload.action === "chatsList") {
+    return handleChatsList(event);
+  }
+  if (payload.action === "chatCreate") {
+    return handleChatCreate(event, payload);
+  }
+  if (payload.action === "chatMessages") {
+    return handleChatMessages(event, payload);
+  }
+  if (payload.action === "chatPatch") {
+    return handleChatPatch(event, payload);
+  }
+  if (payload.action === "chatSave") {
+    return handleChatSave(event, payload);
+  }
+  if (payload.action === "chatDelete") {
+    return handleChatDelete(event, payload);
+  }
+  if (payload.action === "listModels") {
+    return handleListModels(event);
+  }
+  if (payload.action === "openRouterModels") {
+    return handleOpenRouterModels(event);
+  }
 
   if (payload.action === "vaultCheck") {
     const vaultPw = env("FATHOM_VAULT_PASSWORD");
@@ -1960,6 +3103,21 @@ async function handler(event) {
   }
 
   const plan = resolvePlan(unlockKeys, account, who);
+  if (tier.chopCode && !canUseChopCode(account, plan)) {
+    return json(403, {
+      error: "ChopCode is included with Pro. Redeem 5 Fathom Pro API keys in Usage, then try again.",
+      mode: "chopcode_pro",
+      tier: tier.label,
+    });
+  }
+  if (tier.groqOnly && !env("GROQ_API_KEY")) {
+    return json(503, {
+      error: "This plate is not available — Groq is not configured on the server.",
+      mode: "groq_unconfigured",
+      tier: tier.label,
+    });
+  }
+  const appVer = appVersionFor(account);
   const budgetOpts = {
     bucketId: plan.bucketId,
     limit: plan.limit,
@@ -1971,9 +3129,28 @@ async function handler(event) {
     const stateU = await budgetPeek(nowU, budgetOpts);
     return json(200, {
       mode: "usage",
+      appVersion: appVer,
       usage: usagePayload(plan, stateU),
       budget: { used: stateU.used || 0, limit: plan.limit },
       budgetMode: stateU.mode || budgetMode,
+    });
+  }
+
+  if (payload.action === "educate" || payload.mode === "educate") {
+    const clock = clockNow();
+    if (!SEARCH_ENABLED) {
+      return json(200, { mode: "educate", date: clock.human, isoDay: clock.isoDay, sources: [], searched: false });
+    }
+    const q = String(payload.q || "").trim().slice(0, 180) || `technology and world news as of ${clock.human}`;
+    const bundle = await webSearch(freshnessQuery(q), 6);
+    return json(200, {
+      mode: "educate",
+      appVersion: appVer,
+      date: clock.human,
+      isoDay: clock.isoDay,
+      query: q,
+      searched: true,
+      sources: bundle.sources || [],
     });
   }
 
@@ -2063,7 +3240,7 @@ async function handler(event) {
       if (a.url) block += `\n   URL: ${a.url}`;
       if (a.text) {
         block += `\n   --- file text preview ---\n${a.text}\n   --- end preview ---`;
-      } else if (/^image\//i.test(a.mime)) {
+      } else if (/^image\//.test(String(a.mime || ""))) {
         block += "\n   (image attached — describe using the filename/URL; do not invent pixel details)";
       } else {
         block += "\n   (binary/large file — use the URL/name; contents not inlined)";
@@ -2105,22 +3282,27 @@ async function handler(event) {
     ? Math.max(100, Math.min(tierCap, MAX_REPLY_TOKENS_CEILING, Math.round(wanted)))
     : (payload.mode === "agent" ? tierCap : MAX_REPLY_TOKENS);
 
-  const { query: searchQuery, hadPrefix } = parseSearchRequest(lastUser.content);
+  const { query: parsedSearch, hadPrefix } = parseSearchRequest(lastUser.content);
+  const searchQuery = searchQueryForTurns(turns, parsedSearch) || parsedSearch;
   const clientSearchOff = payload.disableSearch === true || payload.client === "widget";
   const isWidget = payload.client === "widget";
-  const searchOn = wantsSearch(searchQuery) && (!tier.chopCode || hadPrefix) && (!clientSearchOff || hadPrefix);
-  const searchMax = isWidget ? 3 : Math.min(tier.searchMax || 6, 5);
+  const searchOn = wantsSearch(searchQuery) && (!clientSearchOff || hadPrefix);
+  const searchMax = isWidget ? 3 : Math.min(tier.searchMax || 8, MAX_SOURCES);
   const searchStarted = Date.now();
+  const liveQuery = freshnessQuery(searchQuery);
   const webBundle = searchOn
-    ? await webSearch(searchQuery, searchMax)
+    ? await webSearch(liveQuery, searchMax)
     : { context: "", sources: [] };
   const searchMs = Date.now() - searchStarted;
+  const clock = clockNow();
   let webSection = "";
   if (searchOn) {
-    const clipped = String(webBundle.context || "").slice(0, 2800);
+    const clipped = String(webBundle.context || "").slice(0, 3200);
     webSection = clipped
-      ? "\n\nWEB SEARCH RESULTS (retrieved just now for this question — weave in anything useful; cite URLs when you rely on one, and add a **Sources** section at the end with markdown links when you used them):\n" + clipped
-      : "\n\nWEB SEARCH: no snippets returned for this query — answer from your knowledge and the reference material below.";
+      ? `\n\nLIVE RESEARCH as of ${clock.human} (retrieved just now for this question — prefer this over training memory for anything current; cite URLs when you rely on one, and add a **Sources** section at the end with markdown links when you used them):\n` + clipped
+      : `\n\nLIVE RESEARCH as of ${clock.human}: no snippets returned — answer from your knowledge, and say if the topic may have changed since your training data.`;
+  } else {
+    webSection = `\n\nLIVE RESEARCH skipped (search off). Today's date is still ${clock.human}. Do not invent today's headlines.`;
   }
 
   const modelTurns = turns.map((m) => ({ ...m }));
@@ -2129,21 +3311,25 @@ async function handler(event) {
     if (last.role === "user") last.content = searchQuery;
   }
 
+  const skipHqGrounding = Boolean(tier.chopCode || isCodingTask(lastUser && lastUser.content));
+  const kbFacts = (n) => skipHqGrounding ? [] : retrieve(retrievalQuery(modelTurns), n);
+
   const system = {
     role: "system",
     content: systemPrompt(
-      retrieve(retrievalQuery(modelTurns), tier.grounding || GROUNDING_INTENTS),
-      payload.mode, webSection, tier, language
+      kbFacts(tier.grounding || GROUNDING_INTENTS),
+      payload.mode, webSection, tier, language, appVer
     ),
   };
   const messages = fitContext(system, modelTurns, contextFor(tier, plan));
 
-  const RESCUE_RESERVE_MS = 9000;
-  const platformLeft = Math.max(8000, 22000 - searchMs);
-  const modelWindow = Math.min(TIMEOUT_MS, platformLeft);
+  const RESCUE_RESERVE_MS = 7000;
+  const PAIR_RESERVE_MS = 0;
+  const platformLeft = Math.max(8000, (tier.timeoutMs || TIMEOUT_MS) - searchMs);
+  const modelWindow = Math.min(tier.timeoutMs || TIMEOUT_MS, platformLeft, 22000);
   const deadline = Date.now() + modelWindow;
-  const modelDeadline = deadline - RESCUE_RESERVE_MS;
-  const ATTEMPT_CAP_MS = 7000;
+  const modelDeadline = deadline - RESCUE_RESERVE_MS - PAIR_RESERVE_MS;
+  const ATTEMPT_CAP_MS = 5000;
   const withTimeout = (ms) => {
     const c = new AbortController();
     const t = setTimeout(() => c.abort(), Math.max(500, ms));
@@ -2157,20 +3343,101 @@ async function handler(event) {
     let producedFiles = [];
 
     const ask = String(lastUser.content || "");
-    const wantsFiles = /\b(write|create|generate|make|build|scaffold|implement)\b[\s\S]{0,80}\b(file|script|code|program|function|class|module|component|app)\b|\.\w{1,8}\b|```|write_file/i.test(ask);
+    const wantsFiles = /\b(write|create|generate|make|build|scaffold|implement|export|download)\b[\s\S]{0,80}\b(file|files|script|code|program|function|class|module|component|app|html|markdown|md|zip|archive|pdf|csv|json)\b|\.\w{1,8}\b|```|write_file/i.test(ask);
     const useTools = payload.enableTools !== false
-      && (tier.chopCode || payload.tools === true || wantsFiles);
+      && (payload.tools === true || wantsFiles);
 
     const longRun = replyTokens > LONG_REPLY_TOKENS;
-    const chain = (longRun
-      ? (tier.longModels || tier.models)
-      : tier.models
-    ).slice(0, 2);
+    const pickedModel = normalizeOpenRouterModelId(payload.model);
+    const customModel = pickedModel && canUseCustomModel(pickedModel, payload, account);
+    if (pickedModel && !customModel) {
+      return json(403, {
+        error: isClaudeModelId(pickedModel)
+          ? "Add a Claude API key in More models to use that model."
+          : isGroqModelId(pickedModel)
+            ? "Add a Groq API key in More models to use that model."
+            : "Add an OpenRouter API key in More models to use that model.",
+        mode: "model_forbidden",
+      });
+    }
+    const chain = (customModel
+      ? [pickedModel]
+      : (longRun ? (tier.longModels || tier.models) : tier.models))
+      .filter((m) => !isGroqModelId(m) || groqKey)
+      .slice(0, customModel ? 1 : (tier.chopCode ? 4 : 3));
 
+    const slimFast = fitContext(
+      {
+        role: "system",
+        content: systemPrompt(
+          kbFacts(2),
+          payload.mode, "", tier, language, appVer
+        ),
+      },
+      modelTurns,
+      10000
+    );
+    const fastModels = [
+      ...(groqKey ? ["groq/llama-3.1-8b-instant"] : []),
+      "nvidia/nemotron-3-nano-30b-a3b:free",
+      "openai/gpt-oss-20b:free",
+    ];
+    const fastPromise = (async () => {
+      for (const m of fastModels) {
+        if (deadline - Date.now() < 1400) return null;
+        const g = withTimeout(Math.min(4200, deadline - Date.now() - 200));
+        try {
+          const r = await callChatModel({
+            model: m,
+            messages: slimFast,
+            openRouterKey: apiKey,
+            groqKey,
+            anthropicKey,
+            signal: g.signal,
+            maxTokens: Math.min(500, replyTokens),
+            temperature: 0.35,
+          });
+          if (r.ok && r.text) return { ...r, model: m };
+        } catch (e) {
+          lastDetail = String(e && e.name) + " [fast]";
+        } finally {
+          g.done();
+        }
+      }
+      return null;
+    })();
+
+    let agentsTrace = null;
+    let conversationTrace = null;
+    if (tier.chopCode && !customModel) {
+      const ensDeadline = Date.now() + Math.min(4500, Math.max(2500, modelDeadline - Date.now()));
+      const ens = await runChopCodeEnsemble({
+        callChatModel,
+        messages,
+        openRouterKey: apiKey,
+        groqKey,
+        maxTokens: Math.min(replyTokens, 1200),
+        deadlineMs: ensDeadline,
+        question: String(lastUser.content || ask || ""),
+        clockHuman: clock.human,
+        webSection: searchOn ? String(webBundle.context || "").slice(0, 2800) : "",
+      });
+      agentsTrace = ens.agents;
+      conversationTrace = ens.conversation;
+      if (ens.reply) {
+        draft = { text: ens.reply, tokens: ens.tokens || 0 };
+        draftModel = ens.leadModel;
+      }
+    }
+
+    if (!draft) {
     for (let ci = 0; ci < chain.length; ci++) {
       const candidate = chain[ci];
+      const modelTag = isGroqModelId(candidate)
+        ? groqNativeModelId(candidate)
+        : candidate.split("/").slice(1).join("/");
       const msLeft = modelDeadline - Date.now();
-      if (msLeft <= 1500) break;
+      if (msLeft <= (tier.chopCode ? 400 : 1500)) break;
       const share = ci === 0
         ? Math.floor(msLeft * 0.75)
         : msLeft - 400;
@@ -2181,10 +3448,12 @@ async function handler(event) {
       const tryCall = async (ms, withTools) => {
         const g = withTimeout(Math.min(ATTEMPT_CAP_MS, ms));
         try {
-          return await callModel({
+          return await callChatModel({
             model: candidate,
             messages,
-            key: apiKey,
+            openRouterKey: apiKey,
+            groqKey,
+            anthropicKey,
             signal: g.signal,
             maxTokens: replyTokens,
             temperature: tier.temperature,
@@ -2199,7 +3468,7 @@ async function handler(event) {
       };
 
       r = await tryCall(budgetMs, useTools);
-      if (!r.ok && useTools) {
+      if (!r.ok && useTools && r.status !== 404 && r.status !== 402 && r.status !== 400) {
         const left = modelDeadline - Date.now() - 300;
         if (left > 2000) {
           r = await tryCall(Math.min(left, Math.max(reserveRetry, 3500)), false);
@@ -2222,7 +3491,9 @@ async function handler(event) {
                 model: candidate,
                 messages,
                 first: r,
-                key: apiKey,
+                openRouterKey: apiKey,
+                groqKey,
+                anthropicKey,
                 signal: g3.signal,
                 maxTokens: replyTokens,
                 temperature: tier.temperature,
@@ -2259,33 +3530,38 @@ async function handler(event) {
         break;
       }
       lastStatus = r.status || 0;
-      lastDetail = (r.detail || "") + ` [${candidate.split("/")[1]} ${Date.now() - attemptStart}/${budgetMs}ms]`;
-      if (ci === 0 && Date.now() - attemptStart > 8000) break;
+      lastDetail = (r.detail || "") + ` [${modelTag} ${Date.now() - attemptStart}/${budgetMs}ms]`;
+      if (ci === 0 && Date.now() - attemptStart > 8000 && lastStatus !== 404 && lastStatus !== 402) continue;
     }
 
-    if (!draft) {
+    if (!draft && !tier.groqOnly) {
       const slimSystem = {
         role: "system",
         content: systemPrompt(
-          retrieve(retrievalQuery(modelTurns), Math.min(3, tier.grounding || 3)),
-          payload.mode, "", tier, language
+          kbFacts(Math.min(3, tier.grounding || 3)),
+          payload.mode, "", tier, language, appVer
         ),
       };
       const slimMessages = fitContext(slimSystem, modelTurns, 12000);
-      const rescues = [
-        "nvidia/nemotron-3-nano-30b-a3b:free",
-        "openai/gpt-oss-20b:free",
-      ];
+      const rescues = customModel
+        ? []
+        : [
+          ...(groqKey ? ["groq/llama-3.1-8b-instant"] : []),
+          "nvidia/nemotron-3-nano-30b-a3b:free",
+          "openai/gpt-oss-20b:free",
+        ];
       for (const rescue of rescues) {
         const left = deadline - Date.now() - 200;
         if (left < 2000) break;
         const slice = Math.min(4500, left);
         const gR = withTimeout(slice);
         try {
-          const r = await callModel({
+          const r = await callChatModel({
             model: rescue,
             messages: slimMessages,
-            key: apiKey,
+            openRouterKey: apiKey,
+            groqKey,
+            anthropicKey,
             signal: gR.signal,
             maxTokens: Math.min(350, replyTokens),
             temperature: 0.3,
@@ -2304,48 +3580,40 @@ async function handler(event) {
         }
       }
     }
+    }
 
     if (!draft) {
       console.error("chopsticksAI: all models failed", {
         tier: tier.label, status: lastStatus, detail: String(lastDetail).slice(0, 300),
         replyTokens, msLeft: deadline - Date.now(),
       });
-      const liveOnly = clientWantsLiveOnly(payload);
-      if (!liveOnly) {
-        const kbQuery = retrievalQuery(turns) || lastUser.content;
-        const kbAnswer = kbFallbackAnswer(kbQuery);
-        if (kbAnswer) {
-          return json(200, {
-            reply: kbAnswer,
-            mode: "offline",
-          });
-        }
-      }
       const panicLeft = deadline - Date.now();
-      if (panicLeft > 1800) {
+      if (!customModel && panicLeft > 1800 && !tier.groqOnly) {
         const gP = withTimeout(panicLeft - 300);
         try {
-          const r = await callModel({
-            model: "nvidia/nemotron-3-nano-30b-a3b:free",
+          const r = await callChatModel({
+            model: groqKey ? "groq/llama-3.1-8b-instant" : "nvidia/nemotron-3-nano-30b-a3b:free",
             messages: fitContext(
               {
                 role: "system",
                 content: systemPrompt(
-                  retrieve(retrievalQuery(modelTurns), 2),
-                  payload.mode, "", tier, language
+                  kbFacts(2),
+                  payload.mode, "", tier, language, appVer
                 ),
               },
               modelTurns,
               10000
             ),
-            key: apiKey,
+            openRouterKey: apiKey,
+            groqKey,
+            anthropicKey,
             signal: gP.signal,
             maxTokens: Math.min(320, replyTokens),
             temperature: 0.35,
           });
           if (r.ok && r.text) {
             draft = r;
-            draftModel = "nvidia/nemotron-3-nano-30b-a3b:free";
+            draftModel = groqKey ? "groq/llama-3.1-8b-instant" : "nvidia/nemotron-3-nano-30b-a3b:free";
           }
         } catch (e) {
           lastDetail = String(e && e.name) + " [panic]";
@@ -2356,28 +3624,16 @@ async function handler(event) {
     }
 
     if (!draft) {
-      const liveOnly = clientWantsLiveOnly(payload);
-      if (!liveOnly) {
-        const kbQuery = retrievalQuery(turns) || lastUser.content;
-        const kbAnswer = kbFallbackAnswer(kbQuery);
-        if (kbAnswer) {
-          return json(200, {
-            reply: kbAnswer,
-            mode: "offline",
-            ...(DEBUG_ENABLED && payload.debug ? {
-              diag: {
-                status: lastStatus,
-                detail: String(lastDetail || "").slice(0, 400),
-                replyTokens,
-                msLeft: deadline - Date.now(),
-              },
-            } : {}),
-          });
-        }
+      const fast = await fastPromise;
+      if (fast && fast.text) {
+        draft = fast;
+        draftModel = fast.model;
       }
+    }
+
+    if (!draft) {
       return json(200, {
-        reply: "Try sending that again — the live model is still responding.",
-        mode: "error",
+        ...answerWhenModelsFail(turns, lastUser, webBundle, payload),
         ...(DEBUG_ENABLED && payload.debug ? {
           diag: {
             status: lastStatus,
@@ -2394,35 +3650,46 @@ async function handler(event) {
     let refinedBy = null;
 
     producedFiles = mergeFiles(producedFiles, extractFencedFiles(reply));
+    reply = liftLooseCodeIntoFences(reply);
+    producedFiles = mergeFiles(producedFiles, extractFencedFiles(reply));
     if (producedFiles.length) {
       reply = ensureFileFences(reply, producedFiles);
     }
 
     const hasCodeBlock = reply.includes("```") || producedFiles.length > 0;
-    const timeLeft = deadline - Date.now();
-    const refineOn = REFINE_ENABLED && tier.refine !== false && !isWidget;
-    const refineModel = tier.refineModel || REFINE_MODEL;
-    if (refineOn && refineModel && refineModel !== draftModel
-        && !hasCodeBlock && timeLeft >= REFINE_MIN_MS) {
-      const question = [...turns].reverse().find((m) => m.role === "user");
-      const g = withTimeout(timeLeft - 500);
+    const refineOn = REFINE_ENABLED && tier.refine !== false && !isWidget && !agentsTrace;
+    const refineQueue = Array.isArray(tier.refineModels) && tier.refineModels.length
+      ? tier.refineModels
+      : (tier.refineModel ? [tier.refineModel] : (tier.refine ? [REFINE_MODEL] : []));
+    const question = [...turns].reverse().find((m) => m.role === "user");
+    const pairPass = Boolean(tier.chopCode);
+    for (const refineModel of refineQueue) {
+      const timeLeft = deadline - Date.now();
+      if (!refineOn || !refineModel) break;
+      if (refineModel === draftModel || refineModel === refinedBy) continue;
+      if (!pairPass && (hasCodeBlock || timeLeft < REFINE_MIN_MS)) break;
+      if (pairPass && timeLeft < 1800) break;
+      const g = withTimeout(Math.min(timeLeft - 400, pairPass ? 7500 : timeLeft - 500));
       let r;
       try {
-      r = await callModel({
-        model: refineModel,
-        key: apiKey,
-        signal: g.signal,
-        temperature: 0.2,
-        messages: [
-          { role: "system", content: REFINE_SYSTEM },
-          {
-            role: "user",
-            content:
-              "QUESTION:\n" + (question ? question.content : "") +
-              "\n\nDRAFT REPLY:\n" + reply,
-          },
-        ],
-      });
+        r = await callChatModel({
+          model: refineModel,
+          openRouterKey: apiKey,
+          groqKey,
+          anthropicKey,
+          signal: g.signal,
+          temperature: pairPass ? 0.4 : 0.2,
+          maxTokens: pairPass ? Math.min(replyTokens, 4096) : undefined,
+          messages: [
+            { role: "system", content: pairPass ? CHOPCODE_PAIR_SYSTEM : REFINE_SYSTEM },
+            {
+              role: "user",
+              content:
+                "QUESTION:\n" + (question ? question.content : "") +
+                "\n\nDRAFT REPLY:\n" + reply,
+            },
+          ],
+        });
       } catch (e) {
         r = { ok: false };
       } finally {
@@ -2432,6 +3699,11 @@ async function handler(event) {
         reply = r.text;
         refinedBy = refineModel;
         spent += r.tokens || estimateTokens(draft.text || "") + MAX_REPLY_TOKENS;
+        if (pairPass) {
+          reply = liftLooseCodeIntoFences(reply);
+          producedFiles = mergeFiles(producedFiles, extractFencedFiles(reply));
+        }
+        if (pairPass) break;
       }
     }
 
@@ -2449,7 +3721,8 @@ async function handler(event) {
     return json(200, {
       reply,
       mode: "live",
-      model: "cs.AI " + APP_VERSION,
+      appVersion: appVer,
+      model: customModel && draftModel ? draftModel : ("cs.AI " + appVer),
       tier: tier.label,
       context: ctxLimit,
       contextWindow: contextWindowUsage(messages, ctxLimit, turns.length),
@@ -2467,14 +3740,15 @@ async function handler(event) {
         mode: spentResult.mode,
       }),
       budgetMode: spentResult.mode,
+      ...(agentsTrace ? {
+        agents: agentsTrace,
+        conversation: conversationTrace || [],
+        chopCodeEnsemble: true,
+      } : {}),
     });
   } catch (e) {
-    const aborted = e && e.name === "AbortError";
     return json(200, {
-      reply: aborted
-        ? "That took too long to answer. Try a shorter question?"
-        : "chopsticksAI hit an error reaching its model. Try again shortly.",
-      mode: "error",
+      ...answerWhenModelsFail(turns, lastUser, typeof webBundle !== "undefined" ? webBundle : null, payload),
     });
   } finally {
   }
@@ -2486,7 +3760,9 @@ module.exports = {
   wantsSearch, parseSearchRequest, webSearch, selfFacts, verifyFathomProUnlock,
   mintFathomProUnlockKey, handleMintUnlockKey,
   resolveCredits, resolvePlan, resolveAccount, usagePayload,
+  canUseChopCode, CHOPCODE_PRO_KEYS, extractAccessToken, clientWho,
   budgetPeek, budgetSpend, budgetState, spend,
+  callChatModel, clockNow,
   _budget: budget, budgetMode, MAX_CONTEXT_TOKENS, TOKEN_BUDGET, COOLDOWN_MS,
   FREE_USAGE, CREDIT_TIERS, mozillaEngine,
 };

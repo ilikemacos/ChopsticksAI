@@ -9,20 +9,26 @@ Usage:
   csai logout              Clear saved session
   csai usage               Show allowance / plan
   csai search "query"      Mozilla search via cs.AI
+  csai ask "question"      One-shot (--json / --quiet for scripts)
   csai update              Update CLI from chopstickshq.com
   csai version             Show version and update status
 
 Install:
   ./cli/install.sh
   curl -fsSL https://chopstickshq.com/chopsticks-ai/install-csai-cli.sh | bash
+  irm https://chopstickshq.com/chopsticks-ai/install-chopsticks-ai.ps1 | iex
 """
 
 from __future__ import annotations
 
 import argparse
 import getpass
+import json
 import os
-import readline
+try:
+    import readline
+except ImportError:
+    readline = None  # type: ignore[assignment]
 import sys
 import textwrap
 from pathlib import Path
@@ -31,7 +37,7 @@ CLI_DIR = Path(__file__).resolve().parent
 if str(CLI_DIR) not in sys.path:
     sys.path.insert(0, str(CLI_DIR))
 
-from csai_client import CsAIClient  # noqa: E402
+from csai_client import CsAIClient, format_usage, progress_bar  # noqa: E402
 from csai_update import VERSION, cmd_update, cmd_version  # noqa: E402
 
 try:
@@ -41,8 +47,9 @@ except ImportError:
 
 # VERSION imported from csai_update
 BANNER = f"""\
-cs.AI {VERSION} · chopsticksAI CLI
-chopstickshq.com · type /help for commands · /exit to quit
+┌ cs.AI {VERSION} ─ chopsticksAI CLI ─────────────────────────
+│ chopstickshq.com · allowance resets every 5h
+└ type /help for commands · /exit to quit
 """
 
 DIM = "\033[2m"
@@ -73,6 +80,9 @@ def print_banner(client: CsAIClient) -> None:
     else:
         print(c("Guest mode · /login for synced account & higher tiers", DIM))
     print(c(f"Tier: {client.tier}", DIM))
+    search_state = "on" if client.web_search else "off"
+    keys_note = f" · {len(client.unlock_keys)} unlock key(s)" if client.unlock_keys else ""
+    print(c(f"Auto search: {search_state}{keys_note}", DIM))
     print()
 
 
@@ -125,10 +135,13 @@ def print_reply(body: dict, indent: str = "") -> None:
 
     budget = body.get("budget") or body.get("usage")
     if isinstance(budget, dict) and budget.get("limit"):
-        used = budget.get("used", 0)
-        limit = budget.get("limit", 0)
+        used = int(budget.get("used", 0))
+        limit = int(budget.get("limit", 0))
+        bar = progress_bar(used, limit, width=20)
         print()
         print(c(f"Usage: {used:,} / {limit:,} tokens", DIM))
+        if bar:
+            print(c(f"        {bar}", DIM))
 
 
 def cmd_login(client: CsAIClient, email: str | None) -> int:
@@ -137,8 +150,8 @@ def cmd_login(client: CsAIClient, email: str | None) -> int:
     if not email:
         print(c("Email required.", RED), file=sys.stderr)
         return 1
-    password = getpass.getpass("Password: ")
     try:
+        password = getpass.getpass("Password: ")
         client.sign_in(email, password)
     except RuntimeError as exc:
         print(c(str(exc), RED), file=sys.stderr)
@@ -147,21 +160,33 @@ def cmd_login(client: CsAIClient, email: str | None) -> int:
     return 0
 
 
-def cmd_usage(client: CsAIClient) -> int:
+def body_to_json(body: dict) -> str:
+    payload = {
+        "mode": body.get("mode"),
+        "reply": body.get("reply"),
+        "error": body.get("error") or body.get("message"),
+        "sources": body.get("sources"),
+        "files": body.get("files"),
+        "usage": body.get("usage") or body.get("budget"),
+    }
+    return json.dumps(payload, ensure_ascii=False)
+
+
+def cmd_usage(client: CsAIClient, *, as_json: bool = False) -> int:
     body = client.usage()
-    usage = body.get("usage") or body
-    tier = usage.get("tier") or {}
-    label = tier.get("label") or tier.get("id") or "Free"
-    used = usage.get("used", body.get("used", 0))
-    limit = usage.get("limit", body.get("limit", 0))
-    print(f"Plan: {label}")
-    if limit:
-        pct = (100.0 * float(used)) / float(limit) if limit else 0
-        print(f"Tokens: {int(used):,} / {int(limit):,} ({pct:.1f}%)")
-    else:
-        print(f"Tokens used: {int(used):,}")
-    if body.get("cooldown"):
-        print(c("Cooldown active — wait before more requests.", YELLOW))
+    if as_json:
+        print(json.dumps(body, ensure_ascii=False))
+        return 0
+    text = format_usage(body)
+    for line in text.splitlines():
+        if line.startswith("Cooldown") or "almost full" in line or "used " in line.lower():
+            print(c(line, YELLOW))
+        elif line.startswith("Plan:"):
+            print(c(line, BOLD))
+        elif line.startswith("["):
+            print(c(line, CYAN))
+        else:
+            print(line)
     return 0
 
 
@@ -186,20 +211,96 @@ def cmd_search(client: CsAIClient, query: str) -> int:
     return 0
 
 
-def cmd_ask(client: CsAIClient, question: str, tier: str | None) -> int:
+def load_file_attachments(paths: list[str]) -> list[dict]:
+    out = []
+    for raw in paths or []:
+        p = Path(raw).expanduser()
+        if not p.is_file():
+            print(c(f"Not a file: {raw}", YELLOW), file=sys.stderr)
+            continue
+        size = p.stat().st_size
+        item = {
+            "name": p.name,
+            "mime": "text/plain",
+            "size": size,
+            "path": str(p),
+        }
+        if size <= 512 * 1024:
+            try:
+                item["text"] = p.read_text(encoding="utf-8", errors="replace")[:200000]
+            except OSError:
+                pass
+        out.append(item)
+    return out
+
+
+def cmd_ask(
+    client: CsAIClient,
+    question: str,
+    tier: str | None,
+    *,
+    as_json: bool = False,
+    quiet: bool = False,
+    no_search: bool = False,
+    files: list[str] | None = None,
+) -> int:
     messages = [{"role": "user", "content": question}]
-    print(c("Thinking…", DIM))
-    body = client.chat(messages, tier=tier)
+    attachments = load_file_attachments(files or [])
+    if not quiet and not as_json:
+        print(c("Thinking…", DIM))
+    body = client.chat(
+        messages,
+        tier=tier,
+        disable_search=no_search or None,
+        attachments=attachments or None,
+    )
+    if as_json:
+        print(body_to_json(body))
+        return 0 if body.get("reply") and body.get("mode") not in ("error",) else 1
+    if quiet:
+        reply = body.get("reply") or body.get("error") or body.get("message") or ""
+        if reply:
+            print(str(reply).strip())
+        return 0 if body.get("reply") and body.get("mode") not in ("error",) else 1
     print()
     print_reply(body)
     return 0 if body.get("reply") and body.get("mode") not in ("error",) else 1
+
+
+def cmd_keys(client: CsAIClient, arg: str) -> int:
+    parts = arg.split(maxsplit=1)
+    sub = parts[0].lower() if parts else ""
+    rest = parts[1].strip() if len(parts) > 1 else ""
+    if sub in ("", "list"):
+        n = len(client.unlock_keys)
+        if n:
+            print(f"{n} unlock key(s) saved locally (~/.config/chopsticks-ai/unlock-keys.json)")
+        else:
+            print("No unlock keys saved. Add with: /keys add <key>")
+        return 0
+    if sub == "add":
+        if not rest:
+            print(c("Usage: /keys add <unlock-key>", YELLOW))
+            return 1
+        if client.add_unlock_key(rest):
+            print(c("Unlock key saved.", GREEN))
+            return 0
+        print(c("Key not added (empty or duplicate).", YELLOW))
+        return 1
+    if sub == "clear":
+        client.clear_unlock_keys()
+        print(c("Unlock keys cleared.", DIM))
+        return 0
+    print(c("Usage: /keys [list|add <key>|clear]", YELLOW))
+    return 1
 
 
 def run_repl(client: CsAIClient, tier: str | None) -> int:
     history = Path.home() / ".local" / "share" / "chopsticks-ai" / "history"
     history.parent.mkdir(parents=True, exist_ok=True)
     try:
-        readline.read_history_file(str(history))
+        if readline is not None:
+            readline.read_history_file(str(history))
     except OSError:
         pass
 
@@ -217,7 +318,8 @@ def run_repl(client: CsAIClient, tier: str | None) -> int:
             continue
 
         try:
-            readline.write_history_file(str(history))
+            if readline is not None:
+                readline.write_history_file(str(history))
         except OSError:
             pass
 
@@ -230,15 +332,25 @@ def run_repl(client: CsAIClient, tier: str | None) -> int:
                 break
             if cmd == "help":
                 print(textwrap.dedent("""\
-                /help              This help
-                /clear             Clear conversation
-                /login             Sign in
-                /logout            Sign out
-                /usage             Token allowance
-                /tier [name]       Show or set tier (high, medium, chopcode, …)
-                /search <query>    Web search
-                /update            Update CLI
-                /exit              Quit
+                Commands
+                  /help              This help
+                  /clear             Clear conversation
+                  /login [email]     Sign in to chopstickshq.com
+                  /logout            Sign out
+                  /usage             Token allowance (resets every 5h)
+                  /tier [name]       Show or set plate (rice, tamago, hibachi, wagyu a1–a5, chopcode)
+                  /keys [add|clear]  Unlock keys for higher tiers
+                  /search on|off     Toggle auto web search in chat
+                  /search <query>    Standalone web search
+                  /update            Update CLI from chopstickshq.com
+                  /version           Show CLI version
+                  /exit              Quit
+
+                Headless
+                  csai ask "…" --plate chopcode
+                  csai ask "…" --file app.py
+                  csai ask "…" --json
+                  csai --plain
                 """))
                 continue
             if cmd == "clear":
@@ -255,16 +367,25 @@ def run_repl(client: CsAIClient, tier: str | None) -> int:
             if cmd == "usage":
                 cmd_usage(client)
                 continue
+            if cmd == "keys":
+                cmd_keys(client, arg)
+                continue
             if cmd == "tier":
                 if arg:
-                    client.tier = arg.lower()
-                    print(c(f"Tier set to {client.tier}", GREEN))
+                    client.set_tier(arg)
+                    print(c(f"Plate set to {client.tier}", GREEN))
                 else:
-                    print(f"Current tier: {client.tier}")
+                    print(f"Current plate: {client.tier}")
                 continue
             if cmd == "search":
+                if arg.lower() in ("on", "off"):
+                    client.set_web_search(arg.lower() == "on")
+                    state = "on" if client.web_search else "off"
+                    print(c(f"Auto web search: {state}", GREEN))
+                    continue
                 if not arg:
-                    print(c("Usage: /search your query", YELLOW))
+                    state = "on" if client.web_search else "off"
+                    print(c(f"Auto web search is {state}. Use /search on|off or /search <query>", YELLOW))
                     continue
                 cmd_search(client, arg)
                 continue
@@ -296,21 +417,42 @@ def build_parser() -> argparse.ArgumentParser:
         description="cs.AI terminal CLI — chopsticksAI agent chat",
     )
     parser.add_argument("--version", action="version", version=f"cs.AI {VERSION}")
-    parser.add_argument("--tier", default=None, help="Effort tier (default: high or CS_AI_TIER)")
+    parser.add_argument("--tier", "--plate", dest="tier", default=None, help="Plate (rice, tamago, hibachi, wagyua1–wagyua5, chopcode)")
     parser.add_argument(
         "--plain",
         action="store_true",
         help="Simple line prompt instead of full-screen TUI",
     )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="JSON output (ask, usage)",
+    )
+    parser.add_argument(
+        "--quiet",
+        "-q",
+        action="store_true",
+        help="Reply text only (ask)",
+    )
+    parser.add_argument(
+        "--no-search",
+        action="store_true",
+        help="Disable web search for this request (ask)",
+    )
 
     sub = parser.add_subparsers(dest="command")
 
-    sub.add_parser("login", help="Sign in to chopstickshq.com")
+    login_p = sub.add_parser("login", help="Sign in with email and password")
+    login_p.add_argument("email", nargs="?", default=None, help="Email address")
     sub.add_parser("logout", help="Sign out")
     sub.add_parser("usage", help="Show token allowance")
 
     ask_p = sub.add_parser("ask", help="Ask one question and exit")
     ask_p.add_argument("question", nargs="+", help="Your question")
+    ask_p.add_argument("--json", action="store_true", help="JSON output")
+    ask_p.add_argument("--quiet", "-q", action="store_true", help="Reply text only")
+    ask_p.add_argument("--no-search", action="store_true", help="Disable web search")
+    ask_p.add_argument("--file", "-f", action="append", dest="files", default=[], help="Attach a file (repeatable)")
 
     search_p = sub.add_parser("search", help="Mozilla search")
     search_p.add_argument("query", nargs="+", help="Search query")
@@ -339,20 +481,28 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     client = CsAIClient()
     if args.tier:
-        client.tier = args.tier.lower()
+        client.set_tier(args.tier)
 
     cmd = args.command
     if cmd == "login":
-        return cmd_login(client, None)
+        return cmd_login(client, getattr(args, "email", None))
     if cmd == "logout":
         client.sign_out()
         print("Signed out.")
         return 0
     if cmd == "usage":
-        return cmd_usage(client)
+        return cmd_usage(client, as_json=getattr(args, "json", False))
     if cmd == "ask":
         question = " ".join(args.question).strip()
-        return cmd_ask(client, question, args.tier)
+        return cmd_ask(
+            client,
+            question,
+            args.tier,
+            as_json=getattr(args, "json", False),
+            quiet=getattr(args, "quiet", False),
+            no_search=getattr(args, "no_search", False),
+            files=getattr(args, "files", None),
+        )
     if cmd == "search":
         query = " ".join(args.query).strip()
         return cmd_search(client, query)
@@ -364,7 +514,12 @@ def main(argv: list[str] | None = None) -> int:
     if cmd == "version":
         return cmd_version()
 
-    use_plain = args.plain or os.environ.get("CS_AI_PLAIN") == "1" or not sys.stdout.isatty()
+    use_plain = (
+        args.plain
+        or os.environ.get("CS_AI_PLAIN") == "1"
+        or not sys.stdout.isatty()
+        or (sys.platform == "win32" and run_tui is None)
+    )
     if not use_plain and run_tui is not None:
         return run_tui(client, args.tier)
     return run_repl(client, args.tier)
