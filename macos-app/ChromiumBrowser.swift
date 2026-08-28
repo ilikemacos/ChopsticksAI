@@ -59,6 +59,7 @@ struct ChromiumWebView: NSViewRepresentable {
     func makeNSView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.defaultWebpagePreferences.allowsContentJavaScript = true
+        config.websiteDataStore = .nonPersistent()
         let view = WKWebView(frame: .zero, configuration: config)
         view.customUserAgent = chromiumUA
         view.navigationDelegate = context.coordinator
@@ -100,7 +101,9 @@ struct ChromiumWebView: NSViewRepresentable {
         private func allowInWebView(_ url: URL) -> Bool {
             guard let scheme = url.scheme?.lowercased() else { return true }
             switch scheme {
-            case "http", "https", "about", "blob", "data", "javascript", "file":
+            case "https", "about":
+                return true
+            case "http":
                 return true
             default:
                 return false
@@ -160,9 +163,9 @@ struct ChromiumBrowserView: View {
                 toolbarButton("house", enabled: true) { web.goHome() }
 
                 HStack(spacing: 8) {
-                    Image(systemName: "lock.fill")
+                    Image(systemName: web.addressText.lowercased().hasPrefix("https://") ? "lock.fill" : "lock.open.fill")
                         .font(.system(size: 10))
-                        .foregroundStyle(Cursor.chromium.opacity(0.85))
+                        .foregroundStyle(web.addressText.lowercased().hasPrefix("https://") ? Cursor.chromium.opacity(0.85) : Color.orange.opacity(0.9))
                     TextField("Search or enter URL", text: $web.addressText)
                         .textFieldStyle(.plain)
                         .font(.system(size: 13))
@@ -198,7 +201,7 @@ struct ChromiumBrowserView: View {
             .background(Cursor.panel)
 
             HStack {
-                Text("Chromium browser · chopstickshq.com home")
+                Text("In-app browser (WebKit) · chopstickshq.com home")
                     .font(.system(size: 10.5, design: .monospaced))
                     .foregroundStyle(Cursor.muted)
                 Spacer()

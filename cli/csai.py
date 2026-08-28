@@ -152,7 +152,10 @@ def cmd_login(client: CsAIClient, email: str | None) -> int:
         return 1
     try:
         password = getpass.getpass("Password: ")
-        client.sign_in(email, password)
+        body = client.sign_in(email, password)
+        if body.get("needsCode"):
+            code = input("Email code: ").strip()
+            client.verify_login(email, password, code, str(body.get("loginToken") or ""))
     except RuntimeError as exc:
         print(c(str(exc), RED), file=sys.stderr)
         return 1

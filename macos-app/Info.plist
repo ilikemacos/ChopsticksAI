@@ -26,5 +26,9 @@
 	<true/>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>cs.AI saves generated files and attachments you choose.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>cs.AI can write generated files to Downloads/cs.AI when you confirm a save.</string>
 </dict>
 </plist>

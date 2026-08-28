@@ -82,9 +82,9 @@ Requires macOS 14+ and Swift (`swiftc`). From `macos-app/`:
 
 ---
 
-## Run your own API
+## Hosted API
 
-Deploy `server/chopsticks-ai.js` as a Netlify/serverless function. Set `OPENROUTER_API_KEY` in the host environment — **never commit keys**.
+The live function is deployed from the Chopsticks HQ site repo (`api/_lib/`), not from this mirror alone. This tree includes `server/chopsticks-ai.js`, `signup-verify.js`, `usage-email.js`, and `chopsticks-ai-kb.json` so the layout is complete, but running your own copy still needs Supabase, Resend, OpenRouter/Groq keys, and HMAC secrets that are **not** in git.
 
 Enterprise sales: chopstickshq@lam.ws · [enterprise page](https://chopstickshq.com/chopsticks-ai/enterprise/)
 
