@@ -318,8 +318,6 @@ class CsAIClient:
             {"action": "authSignIn", "email": email.strip(), "password": password},
             auth=False,
         )
-        if body.get("needsCode") and body.get("loginToken"):
-            return body
         session = self._normalize_session(body)
         if not session:
             err = body.get("error") or body.get("message") or "Sign in failed"
