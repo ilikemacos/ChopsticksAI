@@ -92,68 +92,37 @@ final class AuthStore: ObservableObject {
         busy = true
         defer { busy = false }
         if session != nil { await signOut() }
-        if let code, !code.isEmpty, let signupToken {
-            let obj = try await apiRequest(action: "signupVerify", body: [
-                "email": email,
-                "password": password,
-                "code": code,
-                "signupToken": signupToken,
-            ])
-            if let access = obj["access_token"] as? String {
-                try applyTokenResponse(obj, access: access)
-                statusMessage = "Account created."
-                return
-            }
-            if (obj["needsSignIn"] as? Bool) == true {
-                statusMessage = obj["message"] as? String ?? "Account created. Sign in."
-                return
-            }
-            throw URLError(.userAuthenticationRequired)
-        }
-        let obj = try await apiRequest(action: "signupSendCode", body: [
-            "email": email,
-        ])
-        guard (obj["needsCode"] as? Bool) == true,
-              let token = obj["signupToken"] as? String else {
-            throw URLError(.userAuthenticationRequired)
-        }
-        statusMessage = "Enter the 6-digit code we emailed you."
-        UserDefaults.standard.set(token, forKey: "chopsticksAI.pendingSignupToken")
-        UserDefaults.standard.set(email, forKey: "chopsticksAI.pendingSignupEmail")
-    }
-
-    func signIn(email: String, password: String, code: String? = nil, loginToken: String? = nil) async throws {
-        busy = true
-        defer { busy = false }
-        if let code, !code.isEmpty, let loginToken {
-            let obj = try await apiRequest(action: "loginVerify", body: [
-                "email": email,
-                "password": password,
-                "code": code,
-                "loginToken": loginToken,
-            ])
-            guard let access = obj["access_token"] as? String else {
-                throw URLError(.userAuthenticationRequired)
-            }
-            try applyTokenResponse(obj, access: access)
-            statusMessage = "Signed in."
-            return
-        }
-        let obj = try await apiRequest(action: "authSignIn", body: [
+        let obj = try await apiRequest(action: "authSignUp", body: [
             "email": email,
             "password": password,
         ])
         if let access = obj["access_token"] as? String {
             try applyTokenResponse(obj, access: access)
-            statusMessage = "Signed in."
+            statusMessage = "Account created."
+            UserDefaults.standard.removeObject(forKey: "chopsticksAI.pendingSignupToken")
+            UserDefaults.standard.removeObject(forKey: "chopsticksAI.pendingSignupEmail")
             return
         }
-        guard (obj["needsCode"] as? Bool) == true,
-              let token = obj["loginToken"] as? String else {
+        if (obj["needsSignIn"] as? Bool) == true {
+            statusMessage = obj["message"] as? String ?? "Account created. Sign in."
+            return
+        }
+        throw URLError(.userAuthenticationRequired)
+    }
+
+    func signIn(email: String, password: String, code: String? = nil, loginToken: String? = nil) async throws {
+        busy = true
+        defer { busy = false }
+        let obj = try await apiRequest(action: "authSignIn", body: [
+            "email": email,
+            "password": password,
+        ])
+        guard let access = obj["access_token"] as? String else {
             throw URLError(.userAuthenticationRequired)
         }
-        UserDefaults.standard.set(token, forKey: "chopsticksAI.pendingLoginToken")
-        statusMessage = "Enter the 6-digit code we emailed you."
+        try applyTokenResponse(obj, access: access)
+        statusMessage = "Signed in."
+        UserDefaults.standard.removeObject(forKey: "chopsticksAI.pendingLoginToken")
     }
 
     func signOut() async {

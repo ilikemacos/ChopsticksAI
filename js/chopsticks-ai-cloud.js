@@ -206,7 +206,7 @@
       return Boolean(session && session.modelPicker);
     },
     getAppVersion: function () {
-      return (session && session.appVersion) || '3.7.1';
+      return (session && session.appVersion) || '3.7.3';
     },
 
     init: async function () {
@@ -221,19 +221,21 @@
       return session;
     },
 
-    sendSignupCode: async function (email) {
-      return apiPost({ action: 'signupSendCode', email: email });
+    sendSignupCode: async function (email, password) {
+      return this.signUp(email, password);
     },
 
-    verifySignup: async function (email, password, code, signupToken) {
+    verifySignup: async function (email, password) {
+      return this.signUp(email, password);
+    },
+
+    signUp: async function (email, password) {
       clearStoredSession();
       emit();
       var body = await apiPost({
-        action: 'signupVerify',
+        action: 'authSignUp',
         email: email,
-        password: password,
-        code: code,
-        signupToken: signupToken
+        password: password
       });
       if (body.access_token) {
         session = normalizeSession(body);
@@ -245,48 +247,19 @@
       if (body.needsSignIn) {
         return { needsConfirm: true, message: body.message };
       }
-      return { needsConfirm: false, session: null };
+      throw new Error(body.error || 'Could not create account.');
     },
 
-    signUp: async function (email, password) {
-      clearStoredSession();
-      emit();
-      var body = await apiPost({
-        action: 'signupSendCode',
-        email: email
-      });
-      if (body.needsCode && body.signupToken) {
-        return { needsCode: true, signupToken: body.signupToken, message: 'Enter the 6-digit code we emailed you.' };
-      }
-      throw new Error(body.error || 'Could not send verification code.');
-    },
-
-    verifyLogin: async function (email, password, code, loginToken) {
-      clearStoredSession();
-      emit();
-      var body = await apiPost({
-        action: 'loginVerify',
-        email: email,
-        password: password,
-        code: code,
-        loginToken: loginToken
-      });
-      session = normalizeSession(body);
-      if (!session) throw new Error('Sign in failed — invalid session.');
-      saveLocalSession(session);
-      await validateSession();
-      return session;
+    verifyLogin: async function (email, password) {
+      return this.signIn(email, password);
     },
 
     signIn: async function (email, password) {
       clearStoredSession();
       emit();
       var body = await apiPost({ action: 'authSignIn', email: email, password: password });
-      if (body.needsCode && body.loginToken) {
-        return { needsCode: true, loginToken: body.loginToken };
-      }
       session = normalizeSession(body);
-      if (!session) throw new Error('Sign in failed — invalid session.');
+      if (!session) throw new Error(body.error || 'Sign in failed — invalid session.');
       saveLocalSession(session);
       await validateSession();
       return session;

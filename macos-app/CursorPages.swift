@@ -406,7 +406,6 @@ struct AccountView: View {
     var onSignedIn: (() -> Void)?
     @State private var email = ""
     @State private var password = ""
-    @State private var code = ""
     @State private var error = ""
 
     var body: some View {
@@ -444,11 +443,6 @@ struct AccountView: View {
                                 .padding(10)
                                 .background(RoundedRectangle(cornerRadius: 8).fill(Cursor.hover))
                             SecureField("Password (min 6)", text: $password)
-                                .textFieldStyle(.plain)
-                                .foregroundStyle(Cursor.text)
-                                .padding(10)
-                                .background(RoundedRectangle(cornerRadius: 8).fill(Cursor.hover))
-                            TextField("6-digit email code (after first step)", text: $code)
                                 .textFieldStyle(.plain)
                                 .foregroundStyle(Cursor.text)
                                 .padding(10)
@@ -495,13 +489,7 @@ struct AccountView: View {
         error = ""
         do {
             let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
-            let digits = code.trimmingCharacters(in: .whitespacesAndNewlines)
-            if digits.count == 6 {
-                let token = UserDefaults.standard.string(forKey: "chopsticksAI.pendingLoginToken") ?? ""
-                try await auth.signIn(email: trimmed, password: password, code: digits, loginToken: token)
-            } else {
-                try await auth.signIn(email: trimmed, password: password)
-            }
+            try await auth.signIn(email: trimmed, password: password)
             if auth.isSignedIn { onSignedIn?() }
         } catch {
             self.error = error.localizedDescription
@@ -512,13 +500,7 @@ struct AccountView: View {
         error = ""
         do {
             let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
-            let digits = code.trimmingCharacters(in: .whitespacesAndNewlines)
-            if digits.count == 6 {
-                let token = UserDefaults.standard.string(forKey: "chopsticksAI.pendingSignupToken") ?? ""
-                try await auth.signUp(email: trimmed, password: password, code: digits, signupToken: token)
-            } else {
-                try await auth.signUp(email: trimmed, password: password)
-            }
+            try await auth.signUp(email: trimmed, password: password)
             if auth.isSignedIn { onSignedIn?() }
         } catch {
             self.error = error.localizedDescription
