@@ -4,7 +4,7 @@ import WebKit
 
 private let chromiumUA =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
-    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 cs.AI/3.6.10"
+    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 cs.AI/3.7.0"
 
 private let browserHome = URL(string: "https://chopstickshq.com/")!
 
@@ -142,6 +142,7 @@ struct ChromiumWebView: NSViewRepresentable {
 }
 
 struct ChromiumBrowserView: View {
+    @ObservedObject var store = AppStore.shared
     @StateObject private var web = ChromiumWebState()
     @FocusState private var addressFocused: Bool
 
@@ -152,6 +153,11 @@ struct ChromiumBrowserView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(Cursor.bg)
+        .onChange(of: store.pendingBrowserURL) { _, href in
+            guard href.lowercased().hasPrefix("https://"), let url = URL(string: href) else { return }
+            web.load(url)
+            web.addressText = href
+        }
     }
 
     private var browserToolbar: some View {

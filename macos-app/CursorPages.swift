@@ -949,12 +949,15 @@ struct CloudAgentsView: View {
 }
 
 struct MarketplaceView: View {
+    @ObservedObject var store = AppStore.shared
+
     var body: some View {
         VStack(spacing: 0) {
             PageHeader(title: "Marketplace", subtitle: "Plugins and extensions for agents.")
             ScrollView {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                     pluginCard(name: "Chromium Browser", desc: "Built-in web browser + Google search — Browser rail.", installed: true)
+                    kajiCard
                     pluginCard(name: "Product KB", desc: "Offline Chopsticks HQ knowledge base.", installed: true)
                     pluginCard(name: "MCP Bridge", desc: "Connect Model Context Protocol servers.", installed: false)
                     pluginCard(name: "GitHub", desc: "Repos, PRs, and issues context.", installed: false)
@@ -989,6 +992,38 @@ struct MarketplaceView: View {
         .frame(maxWidth: .infinity, minHeight: 140, alignment: .topLeading)
         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Cursor.panel))
         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Cursor.hairline))
+    }
+
+    @ViewBuilder
+    private var kajiCard: some View {
+        if CSAIEdition.current.isOffline {
+            EmptyView()
+        } else {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("Kaji")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Cursor.text)
+                    Spacer()
+                    Text("App")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Cursor.chromium)
+                }
+                Text("Think different. Ask Kaji. Grok-style Pro assistant. The web is the computer — no VM.")
+                    .font(.system(size: 12.5))
+                    .foregroundStyle(Cursor.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                GhostButton(title: "Open") {
+                    store.nav = .kaji
+                    store.setTier("kaji")
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, minHeight: 140, alignment: .topLeading)
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Cursor.panel))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Cursor.hairline))
+        }
     }
 }
 
@@ -1173,12 +1208,13 @@ struct SettingsView: View {
                     }
 
                 case .models:
-                    SettingsCard(title: "Plate", subtitle: "Rice → Tamago → Hibachi → Wagyu A1–A5. ChopCode is the 10-agent coding room (Pro / founder).") {
+                    SettingsCard(title: "Plate", subtitle: "Rice → Tamago → Hibachi → Wagyu. ChopCode and Kaji are Pro (5 keys / founder). Think different. Ask Kaji.") {
                         ForEach([
                             ("rice", "Rice"), ("tamago", "Tamago"), ("hibachi", "Hibachi"),
                             ("wagyua1", "Wagyu A1"), ("wagyua2", "Wagyu A2"), ("wagyua3", "Wagyu A3"),
                             ("wagyua4", "Wagyu A4"), ("wagyua5", "Wagyu A5"),
                             ("chopcode", "ChopCode"),
+                            ("kaji", "Kaji"),
                             ("stickercoderplus", "StickerCoder+"),
                         ], id: \.0) { id, label in
                             Button {

@@ -170,6 +170,29 @@ TIERS.chopcode = {
     timeoutMs: 26000,
     temperature: 0.7,
 };
+TIERS.kaji = {
+  label: "Kaji",
+  kaji: true,
+  models: [
+    "x-ai/grok-4-fast",
+    "x-ai/grok-4",
+    "x-ai/grok-3-mini",
+    "nvidia/nemotron-3-super-120b-a12b:free",
+    "nvidia/llama-3.3-nemotron-super-49b-v1:free",
+  ],
+  longModels: [
+    "x-ai/grok-4",
+    "nvidia/nemotron-3-super-120b-a12b:free",
+  ],
+  refine: true,
+  refineModels: ["x-ai/grok-4-fast", "moonshotai/kimi-k2.6:free"],
+  context: 128000,
+  maxReply: 6000,
+  grounding: 48,
+  searchMax: 12,
+  timeoutMs: 32000,
+  temperature: 0.85,
+};
 const TIER_ALIASES = {
   rice: "rice",
   haiku: "rice",
@@ -192,6 +215,10 @@ const TIER_ALIASES = {
   chopcode: "chopcode",
   "chop-code": "chopcode",
   code: "chopcode",
+  kaji: "kaji",
+  grok: "kaji",
+  grokbot: "kaji",
+  "grok-bot": "kaji",
   wagyu: "wagyua5",
   fable: "wagyua5",
   insane: "wagyua5",
@@ -230,7 +257,7 @@ const tierOf = (name) => {
 };
 
 const AUTH_REQUIRED_TIERS = new Set([
-  "wagyu", "wagyua1", "wagyua2", "wagyua3", "wagyua4", "wagyua5", "chopcode",
+  "wagyu", "wagyua1", "wagyua2", "wagyua3", "wagyua4", "wagyua5", "chopcode", "kaji",
 ]);
 
 function timingSafeString(a, b) {
@@ -573,6 +600,10 @@ function canUseChopCode(account, plan) {
   const label = String((account.entitlement && account.entitlement.label) || (plan && plan.account && plan.account.plan) || "").toLowerCase();
   if (label === "founder") return true;
   return Number((plan && plan.keysValid) || 0) >= CHOPCODE_PRO_KEYS;
+}
+
+function canUseKaji(account, plan) {
+  return canUseChopCode(account, plan);
 }
 
 function resolvePlan(rawKeys, account, clientId) {
@@ -960,8 +991,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 
-const APP_VERSION = "3.6.10";
-const PREVIEW_APP_VERSION = "3.6.10";
+const APP_VERSION = "3.7.0";
+const PREVIEW_APP_VERSION = "3.7.0";
 
 function appVersionFor(account) {
   return canPickOpenRouterModel(account) ? PREVIEW_APP_VERSION : APP_VERSION;
@@ -1321,6 +1352,23 @@ function retrieve(query, limit = GROUNDING_INTENTS) {
     .map((s) => s.intent);
 }
 
+/** Kaji is trained on the whole HQ catalog: ranked hits first, then remaining intents. */
+function retrieveForKaji(query, limit = 48) {
+  const kb = knowledgeBase();
+  const intents = Array.isArray(kb.intents) ? kb.intents : [];
+  const picked = new Map();
+  for (const s of scoreQuery(query)) {
+    if (picked.size >= limit) break;
+    picked.set(s.intent.id, s.intent);
+  }
+  const rest = intents.slice().sort((a, b) => (b.priority || 0) - (a.priority || 0));
+  for (const intent of rest) {
+    if (picked.size >= limit) break;
+    if (intent && intent.id) picked.set(intent.id, intent);
+  }
+  return Array.from(picked.values());
+}
+
 function isThinFollowUp(text) {
   const t = String(text || "").trim();
   if (!t || t.length > 180) return false;
@@ -1440,7 +1488,7 @@ const SEARCH_ENABLED = (process.env.CHOPSTICKS_AI_SEARCH || "on") !== "off";
 const SEARCH_TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_SEARCH_TIMEOUT_MS || 2200);
 const SEARCH_MIN_LEN = 3;
 const MAX_SOURCES = 12;
-const UA = "cs.AI-3/3.6.10 (+https://chopstickshq.com/chopsticks-ai/)";
+const UA = "cs.AI-3/3.7.0 (+https://chopstickshq.com/chopsticks-ai/)";
 
 function clockNow() {
   const d = new Date();
@@ -2007,13 +2055,15 @@ function selfFacts(tier, appVersion) {
     `- Current plate: ${t.label} (Rice < Tamago < Hibachi < Wagyu A1 < A2 < A3 < A4 < A5), ${contextFor(t).toLocaleString()} token context, up to ${(t.maxReply || MAX_REPLY_TOKENS).toLocaleString()} reply tokens.`,
     t.stickerCoder
       ? "- StickerCoder+ mode: prioritise complete, runnable code, write_file tool use, and sharp engineering answers."
+      : t.kaji
+        ? "- Kaji mode: Grok-style assistant. Catchphrase: Think different. Ask Kaji. You have the full Chopsticks HQ knowledge catalog plus live web research. Your computer is the in-app web browser (open_page) — there is no Linux VM."
       : t.chopCode
         ? "- ChopCode mode: ten coding specialists run in parallel (each educated on today's date and live research), then Lead merges their drafts into one answer. Prioritise complete, runnable code and clear file fences."
         : null,
     `- Longest single reply: ${MAX_REPLY_TOKENS_CEILING.toLocaleString()} tokens (in ChopsticksAI Lab); ${MAX_REPLY_TOKENS} in the sidebar widget.`,
     `- Conversation memory: the last ${MAX_MESSAGES} turns.`,
     `- Free usage allowance: ${TOKEN_BUDGET.toLocaleString()} tokens, then a ${Math.round(COOLDOWN_MS / 3600000)}-hour cooldown.`,
-    "- Upgrades: sign in and redeem Fathom Pro oi-pl2- keys at https://chopstickshq.com/chopsticks-ai/web/upgrades/ (2 keys → 800k + 2h30m; 5 keys → 900k + 2h + ChopCode; 10 keys → 1m + 1h). Not OpenRouter keys.",
+    "- Upgrades: sign in and redeem Fathom Pro oi-pl2- keys at https://chopstickshq.com/chopsticks-ai/web/upgrades/ (2 keys → 800k + 2h30m; 5 keys → 900k + 2h + ChopCode + Kaji; 10 keys → 1m + 1h). Not OpenRouter keys.",
     `- Rate limit: ${RATE_MAX} requests per minute per visitor.`,
     "- You search with the Chromium engine on each question (unless the user turns search off) so answers reflect information as of the current date. Cite sources when you use them.",
     "- The macOS app and web app include a built-in Chromium browser rail whose home page is https://chopstickshq.com; standalone search is at https://chopstickshq.com/chopsticks-ai/#search. Queries mentioning chopsticks prioritize chopstickshq.com in results.",
@@ -2063,6 +2113,14 @@ function systemPrompt(grounding, mode, web, tier, language, appVersion) {
         "You are cs.AI StickerCoder+ — a coding mode of chopsticksAI, made by Chopsticks HQ.\n\n",
         "Focus on software engineering: write, debug, refactor, and explain code. ",
         "Be precise and practical. Prefer working solutions over theory.\n\n",
+      ].join("")
+    : tier.kaji
+    ? [
+        "You are Kaji — Chopsticks HQ’s Grok-style assistant. Catchphrase: Think different. Ask Kaji.\n\n",
+        "Be maximally helpful, irreverent when it fits, and never boring. Answer anything. ",
+        "You were trained on the full Chopsticks HQ product catalog (MacBar, Fathom, ARENA, rNitro, cs.AI) plus live web research. ",
+        "You do not have a Linux VM. The in-app web browser is your computer: use the open_page tool to load https URLs there, then reason about what you opened. ",
+        "When you need a machine, browse. Never claim you can SSH, spawn a container, or run a desktop VM.\n\n",
       ].join("")
     : tier.chopCode
     ? [
@@ -2263,6 +2321,35 @@ const AGENT_TOOLS = [
   },
 ];
 
+const KAJI_TOOLS = AGENT_TOOLS.concat([
+  {
+    type: "function",
+    function: {
+      name: "open_page",
+      description:
+        "Open an https URL in Kaji’s web computer (the in-app browser). This is your only machine — no VM. Use for docs, news, product pages, and anything you would otherwise ‘run’ in a browser.",
+      parameters: {
+        type: "object",
+        properties: {
+          url: { type: "string", description: "https URL to load" },
+          title: { type: "string", description: "Short label for the tab" },
+        },
+        required: ["url"],
+      },
+    },
+  },
+]);
+
+function sanitizeOpenUrl(raw) {
+  try {
+    const u = new URL(String(raw || "").trim());
+    if (u.protocol !== "https:") return "";
+    return u.toString();
+  } catch {
+    return "";
+  }
+}
+
 function sanitizeFileName(raw) {
   let name = String(raw || "file.txt").replace(/\\/g, "/").split("/").filter(Boolean).pop() || "file.txt";
   name = name.replace(/[^\w.\-()+ ]+/g, "_").replace(/^\.+/, "").slice(0, 180);
@@ -2416,16 +2503,18 @@ function parseToolArgs(raw) {
  * tools and ask the model to finish. Returns { text, files, tokens }.
  */
 async function continueWithTools({
-  model, messages, first, openRouterKey, groqKey, anthropicKey, signal, maxTokens, temperature,
+  model, messages, first, openRouterKey, groqKey, anthropicKey, signal, maxTokens, temperature, tools,
 }) {
   const files = [];
+  const pages = [];
+  const toolset = tools || AGENT_TOOLS;
   let tokens = first.tokens || 0;
   let msgs = messages.map((m) => ({ ...m }));
   let cur = first;
   for (let round = 0; round < 4; round++) {
     const calls = cur.toolCalls || [];
     if (!calls.length) {
-      return { text: cur.text || "", files, tokens };
+      return { text: cur.text || "", files, pages, tokens };
     }
     msgs.push({
       role: "assistant",
@@ -2452,6 +2541,14 @@ async function continueWithTools({
           });
           result = { ok: true, path, bytes: content.length };
         }
+      } else if (name === "open_page") {
+        const url = sanitizeOpenUrl(args.url || args.href);
+        if (!url) {
+          result = { ok: false, error: "https URL required" };
+        } else {
+          pages.push({ url, title: String(args.title || url).slice(0, 120) });
+          result = { ok: true, url, machine: "web-browser" };
+        }
       }
       msgs.push({
         role: "tool",
@@ -2469,13 +2566,14 @@ async function continueWithTools({
         signal,
         maxTokens,
         temperature,
-        tools: AGENT_TOOLS,
+        tools: toolset,
         toolChoice: "auto",
       });
     } catch (e) {
       return {
         text: first.text || (files.length ? "Created files via tools." : ""),
         files,
+        pages,
         tokens,
       };
     }
@@ -2483,12 +2581,13 @@ async function continueWithTools({
       return {
         text: first.text || (files.length ? "Created files via tools." : ""),
         files,
+        pages,
         tokens,
       };
     }
     tokens += cur.tokens || 0;
   }
-  return { text: cur.text || "", files, tokens };
+  return { text: cur.text || "", files, pages, tokens };
 }
 
 /** Normalize assistant message content (string or text parts). */
@@ -2817,6 +2916,10 @@ function usagePayload(plan, state) {
       allowed: canUseChopCode(accountFromPlan(plan), plan),
       requiresKeys: CHOPCODE_PRO_KEYS,
     },
+    kaji: {
+      allowed: canUseKaji(accountFromPlan(plan), plan),
+      requiresKeys: CHOPCODE_PRO_KEYS,
+    },
   };
 }
 
@@ -3128,6 +3231,13 @@ async function handler(event) {
       tier: tier.label,
     });
   }
+  if (tier.kaji && !canUseKaji(account, plan)) {
+    return json(403, {
+      error: "Kaji is Pro. Redeem 5 Fathom Pro keys in Usage, then Ask Kaji.",
+      mode: "kaji_pro",
+      tier: tier.label,
+    });
+  }
   if (tier.groqOnly && !env("GROQ_API_KEY")) {
     return json(503, {
       error: "This plate is not available — Groq is not configured on the server.",
@@ -3304,7 +3414,7 @@ async function handler(event) {
   const searchQuery = searchQueryForTurns(turns, parsedSearch) || parsedSearch;
   const clientSearchOff = payload.disableSearch === true || payload.client === "widget";
   const isWidget = payload.client === "widget";
-  const searchOn = wantsSearch(searchQuery) && (!clientSearchOff || hadPrefix);
+  const searchOn = tier.kaji || (wantsSearch(searchQuery) && (!clientSearchOff || hadPrefix));
   const searchMax = isWidget ? 3 : Math.min(tier.searchMax || 8, MAX_SOURCES);
   const searchStarted = Date.now();
   const liveQuery = freshnessQuery(searchQuery);
@@ -3329,8 +3439,12 @@ async function handler(event) {
     if (last.role === "user") last.content = searchQuery;
   }
 
-  const skipHqGrounding = Boolean(tier.chopCode || isCodingTask(lastUser && lastUser.content));
-  const kbFacts = (n) => skipHqGrounding ? [] : retrieve(retrievalQuery(modelTurns), n);
+  const skipHqGrounding = Boolean((tier.chopCode && !tier.kaji) || (isCodingTask(lastUser && lastUser.content) && !tier.kaji));
+  const kbFacts = (n) => {
+    if (skipHqGrounding) return [];
+    if (tier.kaji) return retrieveForKaji(retrievalQuery(modelTurns), n);
+    return retrieve(retrievalQuery(modelTurns), n);
+  };
 
   const system = {
     role: "system",
@@ -3359,11 +3473,13 @@ async function handler(event) {
     let lastStatus = 0;
     let lastDetail = "";
     let producedFiles = [];
+    let producedPages = [];
 
     const ask = String(lastUser.content || "");
     const wantsFiles = /\b(write|create|generate|make|build|scaffold|implement|export|download)\b[\s\S]{0,80}\b(file|files|script|code|program|function|class|module|component|app|html|markdown|md|zip|archive|pdf|csv|json)\b|\.\w{1,8}\b|```|write_file/i.test(ask);
     const useTools = payload.enableTools !== false
-      && (payload.tools === true || wantsFiles);
+      && (tier.kaji || payload.tools === true || wantsFiles);
+    const activeTools = tier.kaji ? KAJI_TOOLS : AGENT_TOOLS;
 
     const longRun = replyTokens > LONG_REPLY_TOKENS;
     const pickedModel = normalizeOpenRouterModelId(payload.model);
@@ -3475,7 +3591,7 @@ async function handler(event) {
             signal: g.signal,
             maxTokens: replyTokens,
             temperature: tier.temperature,
-            tools: withTools ? AGENT_TOOLS : undefined,
+            tools: withTools ? activeTools : undefined,
             toolChoice: withTools ? "auto" : undefined,
           });
         } catch (e) {
@@ -3515,6 +3631,7 @@ async function handler(event) {
                 signal: g3.signal,
                 maxTokens: replyTokens,
                 temperature: tier.temperature,
+                tools: activeTools,
               });
               draft = {
                 ok: true,
@@ -3523,6 +3640,7 @@ async function handler(event) {
                 toolCalls: [],
               };
               producedFiles = cont.files || [];
+              producedPages = cont.pages || [];
             } catch (e) {
               draft = {
                 ok: true,
@@ -3751,6 +3869,7 @@ async function handler(event) {
         content: f.content,
         language: f.language,
       })),
+      browser: producedPages,
       budget: { used: spentResult.used, limit: plan.limit },
       usage: usagePayload(plan, {
         used: spentResult.used,

@@ -23,6 +23,7 @@ private let effortTiers: [(id: String, label: String)] = [
     ("wagyua4", "Wagyu A4"),
     ("wagyua5", "Wagyu A5"),
     ("chopcode", "ChopCode"),
+    ("kaji", "Kaji"),
     ("stickercoderplus", "StickerCoder+"),
 ]
 
@@ -784,6 +785,16 @@ final class ChatModel: ObservableObject {
             let mode = obj?["mode"] as? String
             if http?.statusCode == 403 {
                 let err = (obj?["error"] as? String) ?? ""
+                if mode == "kaji_pro" || err.lowercased().contains("kaji") {
+                    return ReplyResult(
+                        text: err.isEmpty
+                            ? "Kaji is Pro. Redeem 5 Fathom Pro keys in Usage. Think different. Ask Kaji."
+                            : err,
+                        usage: UsageStats(),
+                        sources: [],
+                        offline: false
+                    )
+                }
                 if mode == "chopcode_pro" || err.lowercased().contains("chopcode") {
                     return ReplyResult(
                         text: err.isEmpty
@@ -820,6 +831,13 @@ final class ChatModel: ObservableObject {
             let stats = parseUsage(obj)
             let sources = parseSources(obj)
             let files = parseFiles(obj, reply: reply)
+            if let pages = obj["browser"] as? [[String: Any]],
+               let first = pages.first,
+               let href = first["url"] as? String,
+               href.lowercased().hasPrefix("https://") {
+                AppStore.shared.pendingBrowserURL = href
+                AppStore.shared.nav = .search
+            }
             let agents = parseAgents(obj)
             let conversation = parseConversation(obj)
             AppStore.shared.applyUsage(
@@ -1118,6 +1136,7 @@ final class ChatModel: ObservableObject {
         case "wagyua4": return 7000
         case "wagyua5", "stickercoderplus": return 8000
         case "chopcode": return 4096
+        case "kaji": return 6000
         default: return 1600
         }
     }
@@ -1130,7 +1149,7 @@ struct RootShell: View {
     @ObservedObject private var auth = AuthStore.shared
 
     private var secondaryWidth: CGFloat {
-        guard store.sidebarExpanded, store.nav != .settings else { return 0 }
+        guard store.sidebarExpanded, store.nav != .settings, store.nav != .kaji else { return 0 }
         if store.nav == .agents {
             return store.compact ? 180 : 220
         }
@@ -1220,7 +1239,7 @@ struct RootShell: View {
             .help(store.sidebarExpanded ? "Collapse sidebar" : "Expand sidebar")
             .padding(.bottom, 4)
 
-            ForEach([AppNav.agents, .search, .cloudAgents, .automations, .repos, .marketplace, .moreModels, .usage, .account], id: \.id) { item in
+            ForEach(railItems, id: \.id) { item in
                 railButton(item)
             }
             Spacer()
@@ -1270,6 +1289,13 @@ struct RootShell: View {
         .help(item.title)
     }
 
+    private var railItems: [AppNav] {
+        if CSAIEdition.current.isOffline {
+            return [.agents, .search, .cloudAgents, .automations, .repos, .marketplace, .moreModels, .usage, .account]
+        }
+        return [.agents, .kaji, .search, .cloudAgents, .automations, .repos, .marketplace, .moreModels, .usage, .account]
+    }
+
     
 
     @ViewBuilder
@@ -1312,6 +1338,7 @@ struct RootShell: View {
     private var sidebarBlurb: String {
         switch store.nav {
         case .search: return "Chromium browser · Google search"
+        case .kaji: return "Think different. Ask Kaji. · web computer, no VM"
         case .cloudAgents: return "Remote agent runs"
         case .automations: return "Schedules & event triggers"
         case .repos: return "Local repositories"
@@ -1696,6 +1723,8 @@ struct RootShell: View {
         switch store.nav {
         case .agents:
             AgentChatView(model: chat, store: store, updater: updater)
+        case .kaji:
+            KajiAppView(store: store)
         case .search:
             ChromiumBrowserView()
         case .cloudAgents:

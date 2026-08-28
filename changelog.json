@@ -1,7 +1,17 @@
 {
   "product": "cs.AI",
-  "latest": "3.6.10",
+  "latest": "3.7.0",
   "entries": [
+    {
+      "version": "3.7.0",
+      "date": "2026-08-28",
+      "title": "Kaji — Think different. Ask Kaji.",
+      "changes": [
+        "Kaji is a first-class cs.AI Online app: Grok-style chat, Chopsticks HQ knowledge, web computer (no VM)",
+        "Pro only — same path as ChopCode (5 Fathom keys or founder)",
+        "Web: chopstickshq.com/chopsticks-ai/web/kaji/"
+      ]
+    },
     {
       "version": "3.6.10",
       "date": "2026-08-27",

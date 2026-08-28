@@ -21,6 +21,8 @@ PLATE_ALIASES = {
     "code": "chopcode",
     "chop-code": "chopcode",
     "chopcode": "chopcode",
+    "kaji": "kaji",
+    "grok": "kaji",
     "low": "rice",
     "fast": "rice",
     "haiku": "rice",

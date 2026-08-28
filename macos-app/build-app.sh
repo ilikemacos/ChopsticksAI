@@ -7,7 +7,7 @@ AI="$REPO/engine"
 SITE="${CHOPSTICKS_AI_SITE:-$REPO/../chopstickshq-site/chopsticks-ai}"
 BUNDLE="chopsticksAI.app"
 EXEC="chopsticksAI"
-VERSION="${1:-v3.6.10}"
+VERSION="${1:-v3.7.0}"
 EDITION="${2:-online}"
 BUILD="$ROOT/build"
 if [[ "$EDITION" == "offline" ]]; then
@@ -106,6 +106,7 @@ SWIFT_CMD+=(
   "$ROOT/ChromiumBrowser.swift"
   "$ROOT/MoreModelsStore.swift"
   "$ROOT/MoreModelsView.swift"
+  "$ROOT/KajiApp.swift"
   "$ROOT/ChopsticksAIApp.swift"
 )
 "${SWIFT_CMD[@]}"
@@ -114,7 +115,9 @@ SWIFT_CMD+=(
 chmod +x "$BIN"
 
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VERSION#v}" "$APP/Contents/Info.plist" 2>/dev/null || true
-/usr/libexec/PlistBuddy -c "Set :CFBundleVersion 3610" "$APP/Contents/Info.plist" 2>/dev/null || true
+BUNDLE_VER="${VERSION#v}"
+BUNDLE_BUILD="$(python3 -c 'v=__import__("sys").argv[1].split("."); print(int(v[0])*1000+int(v[1])*100+int(v[2] if len(v)>2 else 0))' "$BUNDLE_VER")"
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUNDLE_BUILD" "$APP/Contents/Info.plist" 2>/dev/null || true
 /usr/libexec/PlistBuddy -c "Set :CSAIEdition $EDITION" "$APP/Contents/Info.plist" 2>/dev/null || \
   /usr/libexec/PlistBuddy -c "Add :CSAIEdition string $EDITION" "$APP/Contents/Info.plist"
 if [[ "$EDITION" == "offline" ]]; then
