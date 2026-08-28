@@ -1,8 +1,8 @@
 {
   "meta": {
     "name": "chopsticksAI",
-    "tagline": "The Chopsticks HQ assistant — runs entirely on your device.",
-    "version": "1.0.0"
+    "tagline": "The Chopsticks HQ assistant — live answers via chopstickshq.com, offline KB for product help.",
+    "version": "2.5.4"
   },
   "synonyms": {
     "rnitro": [
@@ -125,7 +125,7 @@
       "keywords": [
         "chopsticksai"
       ],
-      "answer": "I'm chopsticksAI v1.0 — the assistant built by Chopsticks HQ.\n\nAsk me anything: general knowledge, code, writing, or anything about the Chopsticks apps. Product answers come from a maintained knowledge base, so version numbers and install commands are the real ones.\n\nNo account, no API key, and nothing you type is stored."
+      "answer": "I'm cs.AI {{VERSION:chopsticks-ai}} (chopsticksAI) — the assistant built by Chopsticks HQ.\n\nAsk me anything: general knowledge, code, writing, or anything about the Chopsticks apps. Product answers come from a maintained knowledge base, so version numbers and install commands are the real ones.\n\nAvailable on macOS, in your browser, and in Terminal (csai). No API key on your side. In live mode your question is sent to chopstickshq.com (then a language model) to answer; we don't keep a chat history or analytics on what you ask. Details: chopstickshq.com/chopsticks-ai/privacy.html"
     },
     {
       "id": "meta.capabilities",
@@ -142,7 +142,7 @@
         "capabilities",
         "commands"
       ],
-      "answer": "I can answer general questions — coding, writing, science, recommendations, casual chat — and I'm also the in-house expert on Chopsticks HQ software:\n\n• rNitro — install, features, troubleshooting, CLI, Linux, Windows, Homebrew\n• Fathom Air — battery monitor, install, uninstall\n• Fathom Pro — weather, AI chat, unlock keys\n• ARENA — the FPS game\n• Guides, privacy, licensing, and downloads\n\nJust ask in plain English."
+      "answer": "I can answer general questions — coding, writing, science, recommendations, casual chat — and I'm also the in-house expert on Chopsticks HQ software:\n\n• rNitro — install, features, troubleshooting, CLI, Linux, Windows, Homebrew\n• Fathom Air — battery monitor, install, uninstall\n• Fathom Pro — weather, AI chat, unlock keys\n• Chopsticks HQ — macOS catalog app\n• cs.AI / chopsticksAI — macOS Agents app, web app, Terminal CLI (csai), and Lab\n• ARENA — the FPS game\n• Guides, privacy, licensing, and downloads\n\nOffline fallback covers Chopsticks HQ topics only. Just ask in plain English."
     },
     {
       "id": "meta.how-it-works",
@@ -160,7 +160,7 @@
         "openrouter",
         "offline mode"
       ],
-      "answer": "chopsticksAI answers in two layers:\n\n1. Live answers — your question goes to chopstickshq.com/api/chopsticks-ai, which retrieves facts from a knowledge base (version numbers, install commands, unlock steps), then calls a language model to answer naturally. No account and no API key on your side.\n\n2. Offline fallback — if the endpoint is unreachable, on cooldown, or errors out, chopsticksAI answers from the compiled knowledge base on your device for Chopsticks HQ topics.\n\nInside rNitro's Chat tab, chopsticksAI is the default provider and works the same way."
+      "answer": "chopsticksAI answers in two layers:\n\n1. Live answers — your question goes to chopstickshq.com/api/chopsticks-ai, which matches facts from a keyword-scored knowledge base (not vector embeddings), optionally runs Chromium web search (Google + DuckDuckGo), then calls a language model. No account and no API key on your side.\n\n2. Offline fallback — if the endpoint is unreachable, on cooldown, or errors out, chopsticksAI answers from the compiled knowledge base on your device for Chopsticks HQ topics.\n\nThere is no embedding index or semantic vector store. Inside rNitro's Chat tab, chopsticksAI is the default provider and works the same way."
     },
     {
       "id": "meta.privacy",
@@ -179,7 +179,130 @@
         "analytics",
         "privacy"
       ],
-      "answer": "No. chopsticksAI runs locally — in your browser on the website, and on-device inside rNitro.\n\nYour questions are never uploaded, logged, or sent to any server. There's no account, no cookie tracking, and no analytics on what you ask.\n\nThe same applies to the apps: rNitro and Fathom send no usage telemetry."
+      "answer": "Live mode: your question goes to chopstickshq.com/api/chopsticks-ai, which may call a language-model provider to draft the reply. Chopsticks HQ does not create an account for you, does not require your own API key, and does not keep a searchable log or analytics of what you ask.\n\nOffline fallback: if the API is down or on cooldown, ChopsticksAI answers from the on-device knowledge base for Chopsticks HQ topics only — nothing leaves your device in that path.\n\nrNitro and Fathom themselves send no usage telemetry. Full note: chopstickshq.com/chopsticks-ai/privacy.html"
+    },
+    {
+      "id": "meta.versions",
+      "product": "general",
+      "priority": 75,
+      "label": "What are the current app versions?",
+      "phrases": [
+        "what version is rnitro",
+        "current version",
+        "latest version",
+        "what version is chopsticks hq",
+        "what version is chopsticksai"
+      ],
+      "keywords": [
+        "version",
+        "latest release"
+      ],
+      "answer": "Current published builds (from the site manifests):\n\n• rNitro — {{VERSION:rnitro}}\n• Chopsticks HQ — {{VERSION:chopsticks-hq}}\n• ChopsticksAI macOS — {{VERSION:chopsticks-ai}}\n\nDownload pages always show the live number if this drifts."
+    },
+    {
+      "id": "chopsticksai.app",
+      "product": "chopsticks-ai",
+      "priority": 70,
+      "label": "How do I install the ChopsticksAI macOS app?",
+      "phrases": [
+        "install chopsticksai",
+        "download chopsticksai app",
+        "chopsticksai mac app",
+        "how do i get chopsticksai"
+      ],
+      "keywords": [
+        "chopsticksai app",
+        "macos app"
+      ],
+      "answer": "ChopsticksAI for macOS is free (currently {{VERSION:chopsticks-ai}}).\n\n1. Download the App ZIP from chopstickshq.com/chopsticks-ai/\n2. Or run: curl -fsSL https://chopstickshq.com/chopsticks-ai/install-chopsticks-ai.sh | bash\n3. It installs to ~/Applications/chopsticksAI.app\n\nThe Agents Window includes a Chromium browser rail whose home page is chopstickshq.com. Live chat uses chopstickshq.com — no API key from you. If the network is down, product questions fall back to the on-device knowledge base."
+    },
+    {
+      "id": "chopsticksai.gatekeeper",
+      "product": "chopsticks-ai",
+      "priority": 72,
+      "label": "macOS says ChopsticksAI can't be opened",
+      "phrases": [
+        "chopsticksai can't be opened",
+        "apple could not verify chopsticksai",
+        "gatekeeper chopsticksai",
+        "chopsticksai damaged"
+      ],
+      "keywords": [
+        "quarantine",
+        "gatekeeper"
+      ],
+      "answer": "That's Gatekeeper on an unsigned download — not malware.\n\nFix:\n1. Right-click chopsticksAI.app → Open → Open\n2. Or clear quarantine: xattr -cr ~/Applications/chopsticksAI.app\n3. Re-run the Terminal installer if needed\n\nThe install script already clears quarantine for ~/Applications installs."
+    },
+    {
+      "id": "chopsticksai.lab",
+      "product": "chopsticks-ai",
+      "priority": 92,
+      "label": "What is the cs.AI web app or Lab?",
+      "phrases": [
+        "what is chopsticksai lab",
+        "chopsticksai lab",
+        "what is c.ai",
+        "what is chopai lab",
+        "open the lab",
+        "effort levels",
+        "cs ai web app",
+        "web app chopsticks"
+      ],
+      "keywords": [
+        "chopailab",
+        "web agent"
+      ],
+      "answer": "cs.AI runs in the browser two ways:\n\n• Main web app — chopstickshq.com/chopsticks-ai/web/ (Cursor-style Agents UI, Chromium browser rail, attachments, account sync)\n• Legacy Lab — chopstickshq.com/chopailab/ (full-page agent with effort tiers and file export)\n\nThe sidebar widget on other HQ pages is the lighter chat. All use the same live model and allowance as macOS."
+    },
+    {
+      "id": "chopsticksai.cli",
+      "product": "chopsticks-ai",
+      "priority": 88,
+      "label": "Is there a Terminal CLI for cs.AI?",
+      "phrases": [
+        "csai cli",
+        "terminal cli chopsticks",
+        "install csai",
+        "command line chopsticksai"
+      ],
+      "keywords": [
+        "csai",
+        "terminal cli"
+      ],
+      "answer": "Yes — the cs.AI Terminal CLI (command: csai) is a full-screen terminal agent.\n\nInstall:\ncurl -fsSL https://chopstickshq.com/chopsticks-ai/install-csai-cli.sh | bash\n\nThen run csai for the interactive UI, or csai ask \"question\" for one-shot answers. Same live model and allowance as macOS and web. Update with csai update."
+    },
+    {
+      "id": "chopsticksai.chromium",
+      "product": "chopsticks-ai",
+      "priority": 86,
+      "label": "What is the Chromium browser in cs.AI?",
+      "phrases": [
+        "chromium browser csai",
+        "browser rail chopsticks",
+        "chopstickshq homepage browser"
+      ],
+      "keywords": [
+        "chromium",
+        "browser rail"
+      ],
+      "answer": "cs.AI {{VERSION:chopsticks-ai}} includes a Chromium-style browser in the macOS Agents Window and the web app.\n\n• Home page: chopstickshq.com\n• Address bar accepts URLs or Google search queries\n• Standalone search on chopstickshq.com/chopsticks-ai/#search uses the same Chromium engine (Google + DuckDuckGo)\n• Queries mentioning chopsticks always prioritize chopstickshq.com in search results"
+    },
+    {
+      "id": "chopstickshq.app",
+      "product": "chopsticks-hq",
+      "priority": 65,
+      "label": "What is the Chopsticks HQ macOS app?",
+      "phrases": [
+        "what is chopsticks hq app",
+        "install chopsticks hq",
+        "chopsticks hq catalog",
+        "hq launcher"
+      ],
+      "keywords": [
+        "chopstickshq app",
+        "catalog"
+      ],
+      "answer": "Chopsticks HQ is a free macOS catalog app (currently {{VERSION:chopsticks-hq}}) that lists Chopsticks products and opens their pages.\n\nInstall from chopstickshq.com or the downloads on the HQ site. It uses a WebView for product pages and links into ChopsticksAI Lab — it is not a separate AI model."
     },
     {
       "id": "hq.what",
@@ -274,7 +397,7 @@
         "feedback",
         "reach"
       ],
-      "answer": "Email mzx+chopsticks@lam.ws.\n\nFor bugs in rNitro specifically, opening a GitHub issue is faster:\nhttps://github.com/ilikemacos/rNitro/issues/new"
+      "answer": "Email chopstickshq@lam.ws.\n\nFor bugs in rNitro specifically, opening a GitHub issue is faster:\nhttps://github.com/ilikemacos/rNitro/issues/new"
     },
     {
       "id": "hq.opensource",
@@ -295,7 +418,7 @@
         "repo",
         "code"
       ],
-      "answer": "rNitro is open source: https://github.com/ilikemacos/rNitro\n\nThe shell installers also contain the full app source inline — you can read every line before running them.\n\nFathom and ARENA are distributed as builds rather than source."
+      "answer": "Chopsticks HQ publishes open-source software under the MIT license.\n\n• cs.AI / chopsticksAI (macOS app, API, Lab): https://github.com/ilikemacos/ChopsticksAI\n• rNitro: https://github.com/ilikemacos/rNitro\n• Fathom: https://github.com/ilikemacos/Fathom\n• This website mirror: https://github.com/ilikemacos/chopstickshq-mirror\n\nOverview: https://chopstickshq.com/opensource/\n\nShell installers embed readable source. ARENA game builds are distributed as binaries only."
     },
     {
       "id": "hq.terms",

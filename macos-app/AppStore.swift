@@ -120,6 +120,19 @@ struct UsageSnapshot: Equatable {
     }
 }
 
+enum CSAIEdition: String {
+    case online, offline
+
+    static var current: CSAIEdition {
+        let raw = (Bundle.main.object(forInfoDictionaryKey: "CSAIEdition") as? String ?? "online")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        return raw == "offline" ? .offline : .online
+    }
+
+    var isOffline: Bool { self == .offline }
+}
+
 @MainActor
 final class AppStore: ObservableObject {
     static let shared = AppStore()
@@ -131,10 +144,9 @@ final class AppStore: ObservableObject {
     @Published var sidebarExpanded: Bool = UserDefaults.standard.object(forKey: sidebarExpandedKey) as? Bool ?? true
     
     @Published var railLabels: Bool = UserDefaults.standard.object(forKey: railLabelsKey) as? Bool ?? true
-    @Published var tier: String = UserDefaults.standard.string(forKey: tierKey) ?? "high"
+    @Published var tier: String = AppStore.normalizeTier(UserDefaults.standard.string(forKey: tierKey) ?? "tamago")
     @Published var userRules: String = UserDefaults.standard.string(forKey: rulesKey) ?? ""
     @Published var privacyMode = UserDefaults.standard.bool(forKey: privacyModeKey)
-    /// Local KB only — off by default; online mode uses the live model whenever the network is up.
     @Published var offlineChatMode = UserDefaults.standard.bool(forKey: offlineChatModeKey)
     @Published var language: String = UserDefaults.standard.string(forKey: languageKey) ?? "en"
     @Published var autoRun = UserDefaults.standard.object(forKey: autoRunKey) as? Bool ?? true
@@ -168,6 +180,15 @@ final class AppStore: ObservableObject {
         repos = Self.load(reposKey) ?? []
         unlockKeys = []
         if selectedModeId == nil { selectedModeId = customModes.first(where: { $0.name == "Agent" })?.id ?? customModes.first?.id }
+        if CSAIEdition.current.isOffline {
+            offlineChatMode = true
+            UserDefaults.standard.set(true, forKey: offlineChatModeKey)
+        } else {
+            offlineChatMode = false
+            privacyMode = false
+            UserDefaults.standard.set(false, forKey: offlineChatModeKey)
+            UserDefaults.standard.set(false, forKey: privacyModeKey)
+        }
     }
 
     func bootstrapAccountState() {
@@ -193,9 +214,25 @@ final class AppStore: ObservableObject {
         UserDefaults.standard.set(on, forKey: railLabelsKey)
     }
 
+    static func normalizeTier(_ raw: String) -> String {
+        switch raw.lowercased().replacingOccurrences(of: " ", with: "") {
+        case "low", "haiku", "fast": return "rice"
+        case "medium", "high", "sonnet", "chopsticks", "standard": return "tamago"
+        case "xhigh", "xhighplus", "xhigh+", "opus", "pro", "ultra": return "hibachi"
+        case "insane", "wagyu", "fable": return "wagyua5"
+        case "a1", "wagyu-a1", "wagyu1": return "wagyua1"
+        case "a2", "wagyu-a2", "wagyu2": return "wagyua2"
+        case "a3", "wagyu-a3", "wagyu3": return "wagyua3"
+        case "a4", "wagyu-a4", "wagyu4": return "wagyua4"
+        case "a5", "wagyu-a5", "wagyu5": return "wagyua5"
+        default: return raw
+        }
+    }
+
     func setTier(_ id: String) {
-        tier = id
-        UserDefaults.standard.set(id, forKey: tierKey)
+        let next = Self.normalizeTier(id)
+        tier = next
+        UserDefaults.standard.set(next, forKey: tierKey)
     }
 
     func setUserRules(_ text: String) {
@@ -209,12 +246,18 @@ final class AppStore: ObservableObject {
     }
 
     func setOfflineChatMode(_ on: Bool) {
-        offlineChatMode = on
-        UserDefaults.standard.set(on, forKey: offlineChatModeKey)
+        if CSAIEdition.current.isOffline {
+            offlineChatMode = true
+            UserDefaults.standard.set(true, forKey: offlineChatModeKey)
+            return
+        }
+        offlineChatMode = false
+        UserDefaults.standard.set(false, forKey: offlineChatModeKey)
+        _ = on
     }
 
     var chatUsesOnlineModel: Bool {
-        !offlineChatMode && !privacyMode && NetworkStatus.shared.isOnline
+        !offlineChatMode
     }
 
     static let supportedLanguages: [(code: String, label: String)] = [

@@ -1,0 +1,11 @@
+{
+  "latest": "3.6.10",
+  "product": "cs.AI offline",
+  "edition": "offline",
+  "releases": {
+    "stable": {
+      "zip": "chopsticksAI-offline-v3.6.10.zip",
+      "sha256": "51d31c7f7851dc072843790a33d1d6331d41536507b077d94a48d2ab70afdb95"
+    }
+  }
+}
