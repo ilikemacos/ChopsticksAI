@@ -336,23 +336,8 @@ class CsAITui:
                 self.push_system(f"Login failed: {exc}")
                 self.status = "Ready"
                 return
-            if isinstance(body, dict) and body.get("needsCode"):
-                self.login_token = str(body.get("loginToken") or "")
-                self.login_step = "code"
-                self.status = "Login — 6-digit email code"
-                return
             self.login_step = None
             self.push_system(f"Signed in as {self.client.email}")
-            self.status = "Ready"
-            return
-
-        if self.login_step == "code":
-            self.login_step = None
-            try:
-                self.client.verify_login(self.login_email, self.login_password, line, self.login_token)
-                self.push_system(f"Signed in as {self.client.email}")
-            except RuntimeError as exc:
-                self.push_system(f"Login failed: {exc}")
             self.status = "Ready"
             return
 

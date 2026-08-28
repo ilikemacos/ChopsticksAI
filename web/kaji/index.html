@@ -101,14 +101,12 @@
 <div class="auth-modal" id="auth-modal">
   <div class="auth-card">
     <h2>Sign in for Kaji</h2>
-    <p>Email, password, then the 6-digit code we send you.</p>
+    <p>Email and password.</p>
     <label for="auth-email">Email</label>
     <input id="auth-email" type="email" autocomplete="username">
     <label for="auth-password">Password</label>
     <input id="auth-password" type="password" autocomplete="current-password">
-    <label for="auth-code">Email code</label>
-    <input id="auth-code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
-    <div class="auth-err" id="auth-err"></div>
+<div class="auth-err" id="auth-err"></div>
     <div class="auth-ok" id="auth-ok"></div>
     <div class="auth-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
       <button type="button" class="grok-auth-btn grok-auth-btn-fill" id="auth-signin">Sign in</button>
@@ -126,8 +124,6 @@
   var history = [];
   var busy = false;
   var allowed = false;
-  var pendingLogin = '';
-  var pendingSignup = '';
   var log = document.getElementById('log');
   var intro = document.getElementById('intro');
   var input = document.getElementById('input');
@@ -271,7 +267,6 @@
   var ok = document.getElementById('auth-ok');
   var email = document.getElementById('auth-email');
   var pass = document.getElementById('auth-password');
-  var codeEl = document.getElementById('auth-code');
   function openAuth() { modal.classList.add('is-open'); }
   window.openCsAuth = openAuth;
   document.getElementById('account-btn').onclick = openAuth;
@@ -279,11 +274,7 @@
   document.getElementById('auth-close').onclick = function () { modal.classList.remove('is-open'); };
   document.getElementById('auth-signin').onclick = function () {
     err.textContent = '';
-    var digits = (codeEl.value || '').trim();
-    var p = Cloud.signIn(email.value.trim(), pass.value);
-    if (digits.length === 6 && pendingLogin) p = Cloud.verifyLogin(email.value.trim(), pass.value, digits, pendingLogin);
-    Promise.resolve(p).then(function (r) {
-      if (r && r.needsCode) { pendingLogin = r.loginToken; ok.textContent = 'Enter the email code, then Sign in.'; return; }
+    Cloud.signIn(email.value.trim(), pass.value).then(function () {
       ok.textContent = 'Signed in.';
       modal.classList.remove('is-open');
       pollUsage();
@@ -291,13 +282,8 @@
   };
   document.getElementById('auth-signup').onclick = function () {
     err.textContent = '';
-    var digits = (codeEl.value || '').trim();
-    var p = (digits.length === 6 && pendingSignup)
-      ? Cloud.verifySignup(email.value.trim(), pass.value, digits, pendingSignup)
-      : Cloud.signUp(email.value.trim(), pass.value);
-    Promise.resolve(p).then(function (r) {
-      if (r && r.needsCode) { pendingSignup = r.signupToken; ok.textContent = r.message || 'Check email, then Create account.'; return; }
-      ok.textContent = 'Account ready.';
+    Cloud.signUp(email.value.trim(), pass.value).then(function (r) {
+      ok.textContent = (r && r.needsConfirm) ? (r.message || 'Account created. Sign in.') : 'Account ready.';
       pollUsage();
     }).catch(function (e) { err.textContent = e.message || 'Sign up failed'; });
   };

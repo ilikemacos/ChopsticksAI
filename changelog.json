@@ -1,7 +1,16 @@
 {
   "product": "cs.AI",
-  "latest": "3.7.1",
+  "latest": "3.7.3",
   "entries": [
+    {
+      "version": "3.7.3",
+      "date": "2026-08-28",
+      "title": "Email and password only",
+      "changes": [
+        "Sign in and create account no longer use a 6-digit email code",
+        "Auth is email + password on web, Mac, CLI, Kaji, and Lab"
+      ]
+    },
     {
       "version": "3.7.1",
       "date": "2026-08-28",

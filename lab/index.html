@@ -312,14 +312,12 @@
 <div class="auth-modal" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
   <div class="auth-card">
     <h2 id="auth-title">ChopsticksAI account</h2>
-    <p>Sign in with email, password, and a 6-digit code we email you.</p>
+    <p>Sign in with email and password.</p>
     <label for="auth-email">Email</label>
     <input id="auth-email" type="email" autocomplete="username" placeholder="you@example.com">
     <label for="auth-password">Password</label>
     <input id="auth-password" type="password" autocomplete="current-password" placeholder="••••••••" minlength="6">
-    <label for="auth-code">Email code</label>
-    <input id="auth-code" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code" maxlength="6">
-    <div class="auth-err" id="auth-err"></div>
+<div class="auth-err" id="auth-err"></div>
     <div class="auth-ok" id="auth-ok"></div>
     <div class="auth-actions">
       <button type="button" class="nbtn primary" id="auth-signin">Sign in</button>
@@ -1343,9 +1341,6 @@
     var ok = document.getElementById('auth-ok');
     var email = document.getElementById('auth-email');
     var pass = document.getElementById('auth-password');
-    var codeEl = document.getElementById('auth-code');
-    var pendingLogin = '';
-    var pendingSignup = '';
     function open() {
       if (!modal) return;
       err.textContent = '';
@@ -1365,18 +1360,8 @@
     document.getElementById('auth-signin').addEventListener('click', function () {
       err.textContent = '';
       ok.textContent = '';
-      var digits = (codeEl && codeEl.value || '').trim();
-      var p = Cloud.signIn(email.value.trim(), pass.value);
-      if (digits.length === 6 && pendingLogin) {
-        p = Cloud.verifyLogin(email.value.trim(), pass.value, digits, pendingLogin);
-      }
-      Promise.resolve(p)
-        .then(function (r) {
-          if (r && r.needsCode) {
-            pendingLogin = r.loginToken;
-            ok.textContent = 'Check your email for a 6-digit code, then Sign in again.';
-            return;
-          }
+      Cloud.signIn(email.value.trim(), pass.value)
+        .then(function () {
           ok.textContent = 'Signed in. Loading your account…';
           updateAccountUI();
           return loadAccountChats();
@@ -1392,17 +1377,8 @@
     document.getElementById('auth-signup').addEventListener('click', function () {
       err.textContent = '';
       ok.textContent = '';
-      var digits = (codeEl && codeEl.value || '').trim();
-      var p = (digits.length === 6 && pendingSignup)
-        ? Cloud.verifySignup(email.value.trim(), pass.value, digits, pendingSignup)
-        : Cloud.signUp(email.value.trim(), pass.value);
-      Promise.resolve(p)
+      Cloud.signUp(email.value.trim(), pass.value)
         .then(function (r) {
-          if (r && r.needsCode) {
-            pendingSignup = r.signupToken;
-            ok.textContent = r.message || 'Check your email, then Create account again.';
-            return;
-          }
           if (r && r.needsConfirm) {
             ok.textContent = r.message || 'Account created. Sign in.';
             return;

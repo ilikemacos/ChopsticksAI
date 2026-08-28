@@ -251,6 +251,14 @@ async function sendLoginCodeEmail(email, code) {
 }
 
 async function handleSignupSendCode(event, payload, rateLimited) {
+  return handleAuthSignUp(event, payload, rateLimited);
+}
+
+async function handleSignupVerify(event, payload, rateLimited) {
+  return handleAuthSignUp(event, payload, rateLimited);
+}
+
+async function handleAuthSignUp(event, payload, rateLimited) {
   const who = (event && event.headers && (
     event.headers["x-nf-client-connection-ip"] ||
     event.headers["cf-connecting-ip"]
@@ -259,98 +267,32 @@ async function handleSignupSendCode(event, payload, rateLimited) {
   if (rateLimited && rateLimited(who)) {
     return json(429, { error: "rate limited", retryInMs: 60000 });
   }
-  if (!signupSecret()) {
-    return json(503, { error: "signup verification not configured" });
+
+  const email = normalizeEmail(payload.email);
+  const password = String(payload.password || "");
+  if (!validEmail(email)) {
+    return json(400, { error: "Enter a valid email address." });
   }
-  if (!env("RESEND_API_KEY")) {
-    return json(503, { error: "email delivery not configured" });
+  if (password.length < 6) {
+    return json(400, { error: "Password must be at least 6 characters." });
+  }
+  if (await isEmailBlacklisted(email)) {
+    return json(403, { error: GENERIC_AUTH });
   }
   if (!env("SUPABASE_URL") || !env("SUPABASE_SERVICE_ROLE_KEY")) {
     return json(503, { error: "account backend not configured" });
   }
 
-  const email = normalizeEmail(payload.email);
-  if (!validEmail(email)) {
-    return json(400, { error: "Enter a valid email address." });
-  }
-  if (await isEmailBlacklisted(email)) {
-    const dummy = mintSignupToken(email, generateSignupCode(), "signup");
-    return json(200, {
-      mode: "signupSendCode",
-      ok: true,
-      needsCode: true,
-      signupToken: dummy,
-      email,
-      expiresInSec: Math.round(SIGNUP_CODE_TTL_MS / 1000),
-    });
-  }
-  if (signupSendRateLimited(email)) {
-    return json(429, { error: "Wait a minute before requesting another code.", retryInMs: SIGNUP_RESEND_MS });
-  }
-
-  const code = generateSignupCode();
-  try {
-    await sendSignupCodeEmail(email, code);
-  } catch (e) {
-    return json(502, { error: e.message || "Could not send verification email." });
-  }
-
-  const signupToken = mintSignupToken(email, code, "signup");
-  return json(200, {
-    mode: "signupSendCode",
-    ok: true,
-    needsCode: true,
-    signupToken,
-    email,
-    expiresInSec: Math.round(SIGNUP_CODE_TTL_MS / 1000),
-    from: env("CHOPSTICKS_AI_FROM_EMAIL") || `cs.AI <${AI_EMAIL}>`,
-  });
-}
-
-async function handleSignupVerify(event, payload, rateLimited) {
-  const who = (event && event.headers && (
-    event.headers["x-nf-client-connection-ip"] ||
-    event.headers["cf-connecting-ip"]
-  )) || "unknown";
-
-  if (rateLimited && rateLimited(who)) {
-    return json(429, { error: "rate limited", retryInMs: 60000 });
-  }
-  if (!signupSecret()) {
-    return json(503, { error: "signup verification not configured" });
-  }
-
-  const email = normalizeEmail(payload.email);
-  const password = String(payload.password || "");
-  const code = String(payload.code || "").trim().replace(/\s/g, "");
-  const signupToken = String(payload.signupToken || "");
-
-  if (!validEmail(email)) {
-    return json(400, { error: "Enter a valid email address." });
-  }
-  if (await isEmailBlacklisted(email)) {
-    return json(403, { error: GENERIC_AUTH });
-  }
-  if (password.length < 6) {
-    return json(400, { error: "Password must be at least 6 characters." });
-  }
-  if (!/^\d{6}$/.test(code)) {
-    return json(400, { error: "Enter the 6-digit verification code from your email." });
-  }
-  if (!verifySignupCode(signupToken, email, code, "signup")) {
-    return json(403, { error: GENERIC_AUTH });
-  }
-
   try {
     await adminCreateUser(email, password);
-  } catch (e) {
+  } catch {
     return json(400, { error: GENERIC_AUTH });
   }
 
   try {
     const session = await passwordSignIn(email, password);
     return json(200, {
-      mode: "signupVerify",
+      mode: "authSignUp",
       ok: true,
       access_token: session.access_token,
       refresh_token: session.refresh_token,
@@ -359,18 +301,14 @@ async function handleSignupVerify(event, payload, rateLimited) {
       token_type: session.token_type,
       user: session.user,
     });
-  } catch (e) {
+  } catch {
     return json(200, {
-      mode: "signupVerify",
+      mode: "authSignUp",
       ok: true,
       needsSignIn: true,
       message: "Account created. Sign in with your email and password.",
     });
   }
-}
-
-async function handleAuthSignUp(event, payload, rateLimited) {
-  return handleSignupSendCode(event, payload, rateLimited);
 }
 
 async function handleAuthSignIn(event, payload, rateLimited) {
@@ -382,12 +320,6 @@ async function handleAuthSignIn(event, payload, rateLimited) {
   if (rateLimited && rateLimited(who)) {
     return json(429, { error: "rate limited", retryInMs: 60000 });
   }
-  if (!loginSecret()) {
-    return json(503, { error: "sign-in verification not configured" });
-  }
-  if (!env("RESEND_API_KEY")) {
-    return json(503, { error: "email delivery not configured" });
-  }
 
   const email = normalizeEmail(payload.email);
   const password = String(payload.password || "");
@@ -397,66 +329,11 @@ async function handleAuthSignIn(event, payload, rateLimited) {
   if (await isEmailBlacklisted(email)) {
     return json(401, { error: GENERIC_SIGNIN });
   }
-  if (signupSendRateLimited("login:" + email)) {
-    return json(429, { error: "Wait a minute before requesting another code.", retryInMs: SIGNUP_RESEND_MS });
-  }
-
-  try {
-    await passwordSignIn(email, password);
-  } catch {
-    return json(401, { error: GENERIC_SIGNIN });
-  }
-
-  const code = generateSignupCode();
-  try {
-    await sendLoginCodeEmail(email, code);
-  } catch (e) {
-    return json(502, { error: e.message || "Could not send verification email." });
-  }
-
-  const loginToken = mintSignupToken(email, code, "login");
-  return json(200, {
-    mode: "authSignIn",
-    ok: true,
-    needsCode: true,
-    loginToken,
-    email,
-    expiresInSec: Math.round(SIGNUP_CODE_TTL_MS / 1000),
-  });
-}
-
-async function handleLoginVerify(event, payload, rateLimited) {
-  const who = (event && event.headers && (
-    event.headers["x-nf-client-connection-ip"] ||
-    event.headers["cf-connecting-ip"]
-  )) || "unknown";
-
-  if (rateLimited && rateLimited(who)) {
-    return json(429, { error: "rate limited", retryInMs: 60000 });
-  }
-  if (!loginSecret()) {
-    return json(503, { error: "sign-in verification not configured" });
-  }
-
-  const email = normalizeEmail(payload.email);
-  const password = String(payload.password || "");
-  const code = String(payload.code || "").trim().replace(/\s/g, "");
-  const loginToken = String(payload.loginToken || "");
-
-  if (!validEmail(email) || password.length < 6 || !/^\d{6}$/.test(code)) {
-    return json(401, { error: GENERIC_SIGNIN });
-  }
-  if (await isEmailBlacklisted(email)) {
-    return json(401, { error: GENERIC_SIGNIN });
-  }
-  if (!verifySignupCode(loginToken, email, code, "login")) {
-    return json(401, { error: GENERIC_SIGNIN });
-  }
 
   try {
     const session = await passwordSignIn(email, password);
     return json(200, {
-      mode: "loginVerify",
+      mode: "authSignIn",
       ok: true,
       access_token: session.access_token,
       refresh_token: session.refresh_token,
@@ -468,6 +345,10 @@ async function handleLoginVerify(event, payload, rateLimited) {
   } catch {
     return json(401, { error: GENERIC_SIGNIN });
   }
+}
+
+async function handleLoginVerify(event, payload, rateLimited) {
+  return handleAuthSignIn(event, payload, rateLimited);
 }
 
 async function handleAuthRefresh(event, payload) {

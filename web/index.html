@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/chopsticks-ai/web/cursor-ui.css?v=20260827mac2">
+<link rel="stylesheet" href="/chopsticks-ai/web/cursor-ui.css?v=20260828grok">
 <style>
   .attach-chip.busy { color: var(--cursor-muted); }
   .search-toggle.off { color: var(--cursor-muted); }
@@ -110,9 +110,7 @@
     <input id="auth-email" type="email" autocomplete="username" placeholder="you@example.com">
     <label for="auth-password">Password</label>
     <input id="auth-password" type="password" autocomplete="current-password" placeholder="••••••••" minlength="6">
-    <label for="auth-code">Email code</label>
-    <input id="auth-code" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code" maxlength="6">
-    <p class="auth-hint">Sign in or create account, then enter the code we email you.</p>
+<p class="auth-hint">Email and password. No verification code.</p>
     </div>
     <div id="auth-member" hidden>
       <p id="auth-member-email">Signed in</p>
@@ -134,25 +132,29 @@
 
 <div class="more-models-modal" id="more-models-modal" hidden>
   <div class="more-models-card">
-    <h2>More models</h2>
-    <p>Paste a Groq, OpenRouter, or Claude key. Load catalogs, then pick a model. Keys stay in this browser.</p>
-    <label>OpenRouter <input id="mm-or-key" type="password" placeholder="sk-or-v1-…" autocomplete="off"></label>
-    <label>Groq <input id="mm-groq-key" type="password" placeholder="gsk_…" autocomplete="off"></label>
-    <label>Claude <input id="mm-claude-key" type="password" placeholder="sk-ant-…" autocomplete="off"></label>
+    <div class="more-models-head">
+      <h2>Models</h2>
+      <button type="button" class="mm-icon-close" id="mm-close" aria-label="Close">×</button>
+    </div>
+    <p class="mm-lead">Bring your own Groq, OpenRouter, or Claude key. Catalogs stay in this browser.</p>
+    <div class="mm-keys">
+      <label>OpenRouter <input id="mm-or-key" type="password" placeholder="sk-or-v1-…" autocomplete="off"></label>
+      <label>Groq <input id="mm-groq-key" type="password" placeholder="gsk_…" autocomplete="off"></label>
+      <label>Claude <input id="mm-claude-key" type="password" placeholder="sk-ant-…" autocomplete="off"></label>
+    </div>
     <div class="more-models-actions">
       <button type="button" class="nbtn primary" id="mm-load">Load catalogs</button>
-      <button type="button" class="nbtn" id="mm-clear">Use plates instead</button>
-      <button type="button" class="nbtn" id="mm-close">Close</button>
+      <button type="button" class="nbtn" id="mm-clear">Use plates</button>
     </div>
     <p class="auth-hint" id="mm-status"></p>
-    <input id="mm-filter" type="search" placeholder="Filter models…" aria-label="Filter models">
+    <input id="mm-filter" type="search" placeholder="Search models" aria-label="Filter models">
     <div class="more-models-tabs">
-      <button type="button" class="nbtn mm-tab on" data-prov="all">All</button>
-      <button type="button" class="nbtn mm-tab" data-prov="groq">Groq</button>
-      <button type="button" class="nbtn mm-tab" data-prov="claude">Claude</button>
-      <button type="button" class="nbtn mm-tab" data-prov="openrouter">OpenRouter</button>
+      <button type="button" class="mm-tab on" data-prov="all">All</button>
+      <button type="button" class="mm-tab" data-prov="groq">Groq</button>
+      <button type="button" class="mm-tab" data-prov="claude">Claude</button>
+      <button type="button" class="mm-tab" data-prov="openrouter">OpenRouter</button>
     </div>
-    <select id="mm-list" size="14" aria-label="Model catalog"></select>
+    <div class="mm-catalog" id="mm-list" role="listbox" aria-label="Model catalog"></div>
   </div>
 </div>
 
@@ -175,8 +177,8 @@
       <div class="intro-mark" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6L12 3z"/></svg>
       </div>
-      <h1 id="intro-greeting">Welcome to cs.AI (3.7.1)</h1>
-      <p class="intro-sub" id="intro-sub">Plan, search, build anything</p>
+      <h1 id="intro-greeting">Welcome to cs.AI</h1>
+      <p class="intro-sub" id="intro-sub">What do you want to know?</p>
       <p class="intro-lead" id="intro-lead" hidden></p>
       <div class="plate-tiles" id="plate-tiles" hidden></div>
       <div class="intro-actions" id="intro-actions">
@@ -212,7 +214,7 @@
         <button type="button" class="tool-btn" id="or-groq-filter" hidden title="Groq models">Groq</button>
         <select class="mode-select" id="or-model" hidden aria-label="Model"><option value="">Model…</option></select>
         <div class="plate-wrap" id="plate-wrap">
-          <button type="button" class="plate-btn" id="plate-btn" aria-haspopup="listbox" aria-expanded="false" title="Choose plate">Tamago</button>
+          <button type="button" class="chip plate-btn" id="plate-btn" aria-haspopup="listbox" aria-expanded="false" title="Choose model">Tamago</button>
           <div class="plate-menu" id="plate-menu" hidden role="listbox" aria-label="Plates"></div>
           <select class="mode-select" id="tier" hidden aria-label="Plate">
             <option value="rice">Rice</option>
@@ -236,7 +238,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">3.7.1</span>
+  <span class="cursor-footer-ver">3.7.3</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -673,7 +675,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (3.7.1)';
+    if (g) g.textContent = 'Welcome to cs.AI (3.7.3)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -1041,8 +1043,8 @@
     return EFFORT[tierSel.value] || EFFORT.tamago;
   }
   function showTier() {
-    var ver = Cloud && Cloud.getAppVersion ? Cloud.getAppVersion() : '3.7.1';
-    if (!ver || ver === '3.3.10' || ver === '1.0.0') ver = '3.7.1';
+    var ver = Cloud && Cloud.getAppVersion ? Cloud.getAppVersion() : '3.7.3';
+    if (!ver || ver === '3.3.10' || ver === '1.0.0') ver = '3.7.3';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
@@ -2174,9 +2176,6 @@
     var ok = document.getElementById('auth-ok');
     var email = document.getElementById('auth-email');
     var pass = document.getElementById('auth-password');
-    var codeEl = document.getElementById('auth-code');
-    var pendingLogin = '';
-    var pendingSignup = '';
     function open() {
       if (!modal) return;
       err.textContent = '';
@@ -2209,18 +2208,8 @@
     document.getElementById('auth-signin').addEventListener('click', function () {
       err.textContent = '';
       ok.textContent = '';
-      var digits = (codeEl && codeEl.value || '').trim();
-      var p = Cloud.signIn(email.value.trim(), pass.value);
-      if (digits.length === 6 && pendingLogin) {
-        p = Cloud.verifyLogin(email.value.trim(), pass.value, digits, pendingLogin);
-      }
-      Promise.resolve(p)
-        .then(function (r) {
-          if (r && r.needsCode) {
-            pendingLogin = r.loginToken;
-            ok.textContent = 'Check your email for a 6-digit code, then Sign in again.';
-            return;
-          }
+      Cloud.signIn(email.value.trim(), pass.value)
+        .then(function () {
           ok.textContent = 'Signed in. Loading your account…';
           updateAccountUI();
           return loadAccountChats(true);
@@ -2236,20 +2225,8 @@
     document.getElementById('auth-signup').addEventListener('click', function () {
       err.textContent = '';
       ok.textContent = '';
-      var digits = (codeEl && codeEl.value || '').trim();
-      var p;
-      if (digits.length === 6 && pendingSignup) {
-        p = Cloud.verifySignup(email.value.trim(), pass.value, digits, pendingSignup);
-      } else {
-        p = Cloud.signUp(email.value.trim(), pass.value);
-      }
-      Promise.resolve(p)
+      Cloud.signUp(email.value.trim(), pass.value)
         .then(function (r) {
-          if (r && r.needsCode) {
-            pendingSignup = r.signupToken;
-            ok.textContent = r.message || 'Check your email for a 6-digit code, then Create account again.';
-            return;
-          }
           if (r && r.needsConfirm) {
             ok.textContent = r.message || 'Account created. Sign in.';
             return;
