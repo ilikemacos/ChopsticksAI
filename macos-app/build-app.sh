@@ -2,9 +2,9 @@
 set -Eeuo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-WORK="$(cd "$ROOT/../.." && pwd)"
-AI="$WORK/chopsticks-ai"
-SITE="$WORK/chopstickshq-site/chopsticks-ai"
+REPO="$(cd "$ROOT/.." && pwd)"
+AI="$REPO/engine"
+SITE="${CHOPSTICKS_AI_SITE:-$REPO/../chopstickshq-site/chopsticks-ai}"
 BUNDLE="chopsticksAI.app"
 EXEC="chopsticksAI"
 VERSION="${1:-v3.6.10}"
@@ -74,7 +74,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$ROOT/Info.plist" "$APP/Contents/Info.plist"
 cp "$ROOT/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 
-SHARED="$WORK/macos-shared/AppAutoUpdate.swift"
+SHARED="$REPO/shared/AppAutoUpdate.swift"
 BIN="$APP/Contents/MacOS/$EXEC"
 
 SDK_ARGS=()
@@ -88,6 +88,7 @@ SWIFT_CMD+=(
   -framework AppKit
   -framework WebKit
   -framework Security
+  -framework IOKit
   -o "$BIN"
   "$AI/ChopsticksAIKB.swift"
   "$AI/ChopsticksAIEngine.swift"
@@ -96,6 +97,7 @@ SWIFT_CMD+=(
   "$ROOT/AppStore.swift"
   "$ROOT/KeychainStore.swift"
   "$ROOT/CloudAuth.swift"
+  "$ROOT/Energy.swift"
   "$ROOT/NetworkStatus.swift"
   "$ROOT/Onboarding.swift"
   "$ROOT/WhatsNew.swift"

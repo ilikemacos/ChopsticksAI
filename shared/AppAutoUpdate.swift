@@ -172,10 +172,11 @@ The update replaces the app you are running. If you installed cs.AI in /Applicat
             return .failure("Download failed: \(dlError.localizedDescription)")
         }
 
-        if let want = expectedSha?.lowercased(), want.count == 64 {
-            guard let got = Self.sha256Hex(zipFile)?.lowercased(), got == want else {
-                return .failure("Checksum mismatch — refusing to install. Try again from chopstickshq.com.")
-            }
+        guard let want = expectedSha?.lowercased(), want.count == 64 else {
+            return .failure("Update manifest is missing a SHA-256 checksum — refusing to install.")
+        }
+        guard let got = Self.sha256Hex(zipFile)?.lowercased(), got == want else {
+            return .failure("Checksum mismatch — refusing to install. Try again from chopstickshq.com.")
         }
 
         let unzip = Process()

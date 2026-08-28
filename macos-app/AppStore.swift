@@ -183,11 +183,9 @@ final class AppStore: ObservableObject {
         if CSAIEdition.current.isOffline {
             offlineChatMode = true
             UserDefaults.standard.set(true, forKey: offlineChatModeKey)
-        } else {
+        else {
             offlineChatMode = false
-            privacyMode = false
             UserDefaults.standard.set(false, forKey: offlineChatModeKey)
-            UserDefaults.standard.set(false, forKey: privacyModeKey)
         }
     }
 

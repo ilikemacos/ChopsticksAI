@@ -5,7 +5,7 @@
 <script>
 (function(){try{document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();
 </script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://chopstickshq.com https://*.supabase.co; frame-src https://chopstickshq.com; object-src 'none'; base-uri 'self'">
 <title>cs.AI · Chopsticks HQ</title>
 <meta name="description" content="cs.AI in the browser — live models or on-device knowledge base. Plates, search, account sync. No API key on your side.">
 <meta name="keywords" content="cs.AI web, chopsticksAI, Chopsticks HQ, online AI, offline knowledge base">
@@ -107,6 +107,9 @@
     <input id="auth-email" type="email" autocomplete="username" placeholder="you@example.com">
     <label for="auth-password">Password</label>
     <input id="auth-password" type="password" autocomplete="current-password" placeholder="••••••••" minlength="6">
+    <label for="auth-code">Email code</label>
+    <input id="auth-code" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code" maxlength="6">
+    <p class="auth-hint">Sign in or create account, then enter the code we email you.</p>
     </div>
     <div id="auth-member" hidden>
       <p id="auth-member-email">Signed in</p>
@@ -160,7 +163,7 @@
     <input class="browser-url" id="browser-url" type="text" spellcheck="false" value="https://chopstickshq.com/" aria-label="URL">
     <button type="button" id="browser-go" title="Go">Go</button>
   </div>
-  <iframe class="browser-frame" id="browser-frame" title="Chromium browser" src="https://chopstickshq.com/" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
+  <iframe class="browser-frame" id="browser-frame" title="In-app browser" src="https://chopstickshq.com/" sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
 </aside>
 <div class="main-col">
 <div class="stage" id="stage">
@@ -1051,19 +1054,26 @@
     if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
     return String(Math.round(n));
   }
+  function unlockStorage() {
+    try { return sessionStorage; } catch (e) { return null; }
+  }
   function unlockStorageKey() {
     var uid = Cloud && Cloud.getSession() && Cloud.getSession().user && Cloud.getSession().user.id;
     return uid ? ('chq.aiUnlockKeys.' + uid) : 'chq.aiUnlockKeys.guest';
   }
   function unlockKeys() {
     try {
-      var raw = localStorage.getItem(unlockStorageKey());
+      var store = unlockStorage();
+      var raw = store ? store.getItem(unlockStorageKey()) : null;
       var arr = raw ? JSON.parse(raw) : [];
       return Array.isArray(arr) ? arr.filter(function (k) { return /^oi-pl2-/i.test(String(k || '')); }) : [];
     } catch (e) { return []; }
   }
   function saveUnlockKeys(keys) {
-    try { localStorage.setItem(unlockStorageKey(), JSON.stringify(keys)); } catch (e) {}
+    try {
+      var store = unlockStorage();
+      if (store) store.setItem(unlockStorageKey(), JSON.stringify(keys));
+    } catch (e) {}
   }
   function redeemUnlockKey(raw) {
     var k = String(raw || '').trim();
@@ -2135,6 +2145,9 @@
     var ok = document.getElementById('auth-ok');
     var email = document.getElementById('auth-email');
     var pass = document.getElementById('auth-password');
+    var codeEl = document.getElementById('auth-code');
+    var pendingLogin = '';
+    var pendingSignup = '';
     function open() {
       if (!modal) return;
       err.textContent = '';
@@ -2167,30 +2180,54 @@
     document.getElementById('auth-signin').addEventListener('click', function () {
       err.textContent = '';
       ok.textContent = '';
-      Cloud.signIn(email.value.trim(), pass.value)
-        .then(function () {
+      var digits = (codeEl && codeEl.value || '').trim();
+      var p = Cloud.signIn(email.value.trim(), pass.value);
+      if (digits.length === 6 && pendingLogin) {
+        p = Cloud.verifyLogin(email.value.trim(), pass.value, digits, pendingLogin);
+      }
+      Promise.resolve(p)
+        .then(function (r) {
+          if (r && r.needsCode) {
+            pendingLogin = r.loginToken;
+            ok.textContent = 'Check your email for a 6-digit code, then Sign in again.';
+            return;
+          }
           ok.textContent = 'Signed in. Loading your account…';
           updateAccountUI();
           return loadAccountChats(true);
         })
         .then(function () {
-          ok.textContent = 'Signed in.';
-          setTimeout(close, 700);
+          if (ok.textContent.indexOf('Loading') >= 0) {
+            ok.textContent = 'Signed in.';
+            setTimeout(close, 700);
+          }
         })
         .catch(function (e) { err.textContent = e.message || 'Sign in failed'; });
     });
     document.getElementById('auth-signup').addEventListener('click', function () {
       err.textContent = '';
       ok.textContent = '';
-      Cloud.signUp(email.value.trim(), pass.value)
+      var digits = (codeEl && codeEl.value || '').trim();
+      var p;
+      if (digits.length === 6 && pendingSignup) {
+        p = Cloud.verifySignup(email.value.trim(), pass.value, digits, pendingSignup);
+      } else {
+        p = Cloud.signUp(email.value.trim(), pass.value);
+      }
+      Promise.resolve(p)
         .then(function (r) {
+          if (r && r.needsCode) {
+            pendingSignup = r.signupToken;
+            ok.textContent = r.message || 'Check your email for a 6-digit code, then Create account again.';
+            return;
+          }
           if (r && r.needsConfirm) {
             ok.textContent = r.message || 'Account created. Sign in.';
-          } else {
-            ok.textContent = 'Account created. Loading…';
-            updateAccountUI();
-            return loadAccountChats(true);
+            return;
           }
+          ok.textContent = 'Account created. Loading…';
+          updateAccountUI();
+          return loadAccountChats(true);
         })
         .then(function () {
           if (ok.textContent.indexOf('Loading') >= 0) {
@@ -2198,6 +2235,8 @@
             setTimeout(close, 700);
           }
         })
+        .catch(function (e) { err.textContent = e.message || 'Sign up failed'; });
+    });
         .catch(function (e) { err.textContent = e.message || 'Sign up failed'; });
     });
     document.getElementById('auth-signout').addEventListener('click', function () {

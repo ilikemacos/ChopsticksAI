@@ -26,21 +26,20 @@ ZIP="$(json_get "$TMP/version.json" zip)"
 WANT_SHA="$(json_get "$TMP/version.json" sha256)"
 
 [[ -n "$VER" && -n "$ZIP" ]] || { echo "Malformed macos-offline-version.json"; exit 1; }
+[[ ${#WANT_SHA} -eq 64 ]] || { echo "macos-offline-version.json is missing a valid sha256 — refusing to install."; exit 1; }
 echo "Latest is $VER"
 
 echo "Downloading ${ZIP}..."
 curl --progress-bar -fL "${BASE}/${ZIP}" -o "$TMP/app.zip"
 
-if [[ -n "$WANT_SHA" ]]; then
-  GOT_SHA="$(shasum -a 256 "$TMP/app.zip" | awk '{print $1}')"
-  if [[ "$GOT_SHA" != "$WANT_SHA" ]]; then
-    echo "Checksum mismatch - refusing to install."
-    echo "  expected $WANT_SHA"
-    echo "  got      $GOT_SHA"
-    exit 1
-  fi
-  echo "Checksum verified."
+GOT_SHA="$(shasum -a 256 "$TMP/app.zip" | awk '{print $1}')"
+if [[ "$GOT_SHA" != "$WANT_SHA" ]]; then
+  echo "Checksum mismatch - refusing to install."
+  echo "  expected $WANT_SHA"
+  echo "  got      $GOT_SHA"
+  exit 1
 fi
+echo "Checksum verified."
 
 unzip -qo "$TMP/app.zip" -d "$TMP/out"
 [[ -d "${TMP}/out/${APP}" ]] || { echo "Archive did not contain $APP"; exit 1; }

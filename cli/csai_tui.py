@@ -101,6 +101,8 @@ class CsAITui:
         self.spinner_i = 0
         self.login_step: str | None = None
         self.login_email = ""
+        self.login_password = ""
+        self.login_token = ""
         self.quit = False
         self.usage_hint = ""
 
@@ -217,6 +219,8 @@ class CsAITui:
         if cmd == "login":
             self.login_step = "email"
             self.login_email = ""
+            self.login_password = ""
+            self.login_token = ""
             self.input_buf = ""
             self.status = "Login — email"
             return True
@@ -323,10 +327,29 @@ class CsAITui:
             return
 
         if self.login_step == "password":
-            self.login_step = None
-            self.status = "Signing in…"
+            self.login_password = line
+            self.status = "Checking password…"
             try:
-                self.client.sign_in(self.login_email, line)
+                body = self.client.sign_in(self.login_email, line)
+            except RuntimeError as exc:
+                self.login_step = None
+                self.push_system(f"Login failed: {exc}")
+                self.status = "Ready"
+                return
+            if isinstance(body, dict) and body.get("needsCode"):
+                self.login_token = str(body.get("loginToken") or "")
+                self.login_step = "code"
+                self.status = "Login — 6-digit email code"
+                return
+            self.login_step = None
+            self.push_system(f"Signed in as {self.client.email}")
+            self.status = "Ready"
+            return
+
+        if self.login_step == "code":
+            self.login_step = None
+            try:
+                self.client.verify_login(self.login_email, self.login_password, line, self.login_token)
                 self.push_system(f"Signed in as {self.client.email}")
             except RuntimeError as exc:
                 self.push_system(f"Login failed: {exc}")

@@ -5,6 +5,7 @@ const {
   handleSignupVerify,
   handleAuthSignUp,
   handleAuthSignIn,
+  handleLoginVerify,
   handleAuthRefresh,
 } = require("./signup-verify.js");
 const { runChopCodeEnsemble, CHOPCODE_AGENTS } = require("./chopcode-ensemble.js");
@@ -232,6 +233,16 @@ const AUTH_REQUIRED_TIERS = new Set([
   "wagyu", "wagyua1", "wagyua2", "wagyua3", "wagyua4", "wagyua5", "chopcode",
 ]);
 
+function timingSafeString(a, b) {
+  const left = Buffer.from(String(a || ""));
+  const right = Buffer.from(String(b || ""));
+  if (left.length !== right.length) {
+    crypto.timingSafeEqual(left, left);
+    return false;
+  }
+  return crypto.timingSafeEqual(left, right);
+}
+
 function hmacUnlockSig(body, tag) {
   const secret = env("FATHOM_PRO_HMAC_SECRET");
   if (!secret) return "";
@@ -255,12 +266,14 @@ function verifyFathomProUnlock(raw) {
   const m = key.match(/^oi-pl2-([0-9a-f]{12})-([0-9a-f]{12})-([0-9a-f]{16})$/);
   if (!m) return false;
   const expect = hmacUnlockSig(m[1] + m[2], "web");
-  return expect.length > 0 && expect === m[3];
+  if (!expect) return false;
+  return timingSafeString(expect, m[3]);
 }
 
 function hashClientBucket(clientId) {
-  const salt = env("CHOPSTICKS_AI_BUCKET_SALT") || "chopsticks-ai-bucket-v1";
-  const id = String(clientId || "anon").slice(0, 128);
+  const salt = env("CHOPSTICKS_AI_BUCKET_SALT");
+  if (!salt) return "ip-unknown";
+  const id = String(clientId || "unknown").slice(0, 128);
   return "ip-" + crypto.createHmac("sha256", salt).update(id).digest("hex").slice(0, 16);
 }
 
@@ -396,10 +409,8 @@ function accountEmailFromUser(user) {
 
 function clientWho(event) {
   const headers = (event && event.headers) || {};
-  return headers["x-nf-client-connection-ip"] ||
-    headers["cf-connecting-ip"] ||
-    (headers["x-forwarded-for"] || "").split(",")[0].trim() ||
-    "anon";
+  const ip = String(headers["x-nf-client-connection-ip"] || headers["cf-connecting-ip"] || "").trim();
+  return ip || "unknown";
 }
 
 const FOUNDER_EMAIL = "mzx@lam.ws";
@@ -828,15 +839,16 @@ async function fetchOpenRouterModels(apiKey) {
 }
 
 async function handleListModels(event) {
+  const account = await requireAccount(event);
+  if (!account) return json(401, { error: "sign in required", mode: "listModels" });
   let payload = {};
   try {
     payload = JSON.parse(event.body || "{}");
   } catch (e) { }
   const userOr = normalizeUserOpenRouterKey(payload.openRouterKey);
-  const hqOr = env("OPENROUTER_API_KEY");
   const groqKey = resolveGroqKey(payload);
   const anthropicKey = resolveAnthropicKey(payload);
-  const orKey = userOr || hqOr;
+  const orKey = userOr;
   let openRouterModels = [];
   let groqModels = GROQ_MODEL_CATALOG.map((m) => ({ ...m, provider: "groq" }));
   let claudeModels = CLAUDE_MODEL_CATALOG.slice();
@@ -2165,12 +2177,16 @@ async function handleMintUnlockKey(event, payload) {
   }
   const scavenger = payload.source === "scavenger";
   const vaultPw = env("FATHOM_VAULT_PASSWORD");
+  const vaultHash = env("FATHOM_VAULT_PASSWORD_HASH");
   const supplied = String(payload.vaultPassword || payload.password || "").trim();
   if (scavenger) {
+    if (env("CHOPSTICKS_AI_SCAVENGER") !== "1") {
+      return json(403, { error: "forbidden" });
+    }
     if (scavengerRateLimited(who)) {
       return json(429, { error: "scavenger cooldown", retryInMs: SCAVENGER_COOLDOWN_MS });
     }
-  } else if (!vaultPw || supplied !== vaultPw) {
+  } else if (!vaultOk(supplied, vaultPw, vaultHash)) {
     return json(403, { error: "forbidden" });
   }
   const key = mintFathomProUnlockKey();
@@ -2178,9 +2194,37 @@ async function handleMintUnlockKey(event, payload) {
   return json(200, { mode: "mint", key, prefix: "oi-pl2" });
 }
 
+function vaultOk(supplied, vaultPw, vaultHash) {
+  if (vaultHash) {
+    const got = crypto.createHash("sha256").update(String(supplied)).digest("hex");
+    return timingSafeString(got, vaultHash);
+  }
+  if (!vaultPw) return false;
+  return timingSafeString(supplied, vaultPw);
+}
+
+const ALLOWED_ORIGIN = "https://chopstickshq.com";
+let __corsOrigin = "";
+
+function requestOrigin(event) {
+  const headers = (event && event.headers) || {};
+  return String(headers.origin || headers.Origin || "").trim();
+}
+
+function corsHeaders() {
+  const h = { "Content-Type": "application/json", "Cache-Control": "no-store" };
+  if (!__corsOrigin || __corsOrigin === ALLOWED_ORIGIN) {
+    h["Access-Control-Allow-Origin"] = ALLOWED_ORIGIN;
+    h["Access-Control-Allow-Headers"] = "Content-Type, Authorization";
+    h["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS";
+    h.Vary = "Origin";
+  }
+  return h;
+}
+
 const json = (status, body) => ({
   statusCode: status,
-  headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+  headers: corsHeaders(),
   body: JSON.stringify(body),
 });
 
@@ -2786,56 +2830,7 @@ function accountFromPlan(plan) {
 }
 
 async function healthHandler(event) {
-  const configured = Boolean(env("OPENROUTER_API_KEY"));
-  const now = Date.now();
-  const who = clientWho(event);
-  let unlockKeys = [];
-  try {
-    const q = (event && event.queryStringParameters) || {};
-    if (q.unlockKeys) {
-      unlockKeys = String(q.unlockKeys).split(",").map((s) => s.trim()).filter(Boolean);
-    }
-  } catch (e) { /* ignore */ }
-  const accessToken = extractAccessToken(event);
-  const account = await resolveAccount(accessToken);
-  const plan = resolvePlan(unlockKeys, account, who);
-  let cooldown = null;
-  let budgetModeNow = "memory";
-  let used = 0;
-  let peekState = {};
-  try {
-    const state = await budgetPeek(now, {
-      bucketId: plan.bucketId,
-      limit: plan.limit,
-      cooldownMs: plan.cooldownMs,
-    });
-    peekState = state;
-    budgetModeNow = state.mode || budgetMode;
-    used = state.used || 0;
-    if (state.blocked) {
-      cooldown = { blocked: true, retryInMs: state.retryInMs || 0 };
-    }
-  } catch (e) {
-    /* health should still return */
-  }
-  const ok = configured && !(cooldown && cooldown.blocked);
-  return json(ok ? 200 : 503, {
-    ok,
-    service: "chopsticks-ai",
-    configured,
-    cooldown,
-    budget: { used, limit: plan.limit },
-    usage: usagePayload(plan, {
-      used,
-      blocked: Boolean(cooldown && cooldown.blocked),
-      retryInMs: cooldown && cooldown.retryInMs,
-      resetInMs: peekState.resetInMs,
-      mode: budgetModeNow,
-    }),
-    budgetMode: budgetModeNow,
-    search: SEARCH_ENABLED,
-    time: new Date(now).toISOString(),
-  });
+  return json(200, { ok: true, service: "chopsticks-ai" });
 }
 
 async function requireAccount(event) {
@@ -2921,7 +2916,7 @@ async function handleChatPatch(event, payload) {
   const patch = { updated_at: new Date().toISOString() };
   if (payload.title) patch.title = String(payload.title).slice(0, 120);
   if (payload.tier) patch.tier = String(payload.tier).slice(0, 32);
-  await sb(`chats?id=eq.${encodeURIComponent(chatId)}`, {
+  await sb(`chats?id=eq.${encodeURIComponent(chatId)}&user_id=eq.${encodeURIComponent(account.id)}`, {
     method: "PATCH",
     headers: { Prefer: "return=minimal" },
     body: JSON.stringify(patch),
@@ -2939,7 +2934,7 @@ async function handleChatSave(event, payload) {
   const patch = { updated_at: new Date().toISOString() };
   if (payload.title) patch.title = String(payload.title).slice(0, 120);
   if (payload.tier) patch.tier = String(payload.tier).slice(0, 32);
-  await sb(`chats?id=eq.${encodeURIComponent(chatId)}`, {
+  await sb(`chats?id=eq.${encodeURIComponent(chatId)}&user_id=eq.${encodeURIComponent(account.id)}`, {
     method: "PATCH",
     headers: { Prefer: "return=minimal" },
     body: JSON.stringify(patch),
@@ -2980,17 +2975,23 @@ async function handleChatDelete(event, payload) {
   const chatId = String(payload.chatId || payload.id || "").trim();
   if (!chatId) return json(400, { error: "Missing chatId" });
   if (!(await chatOwnedBy(account, chatId))) return json(404, { error: "Chat not found" });
-  await sb(`chats?id=eq.${encodeURIComponent(chatId)}`, { method: "DELETE" }, { service: true });
+  await sb(`chats?id=eq.${encodeURIComponent(chatId)}&user_id=eq.${encodeURIComponent(account.id)}`, { method: "DELETE" }, { service: true });
   return json(200, { mode: "chatDelete", ok: true });
 }
 
 async function handler(event) {
-  if (event.httpMethod === "OPTIONS") return { statusCode: 204, body: "" };
+  __corsOrigin = requestOrigin(event);
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 204, headers: corsHeaders(), body: "" };
+  }
   if (event.httpMethod === "GET") {
     return healthHandler(event);
   }
   if (event.httpMethod !== "POST") {
     return json(405, { error: "GET or POST only" });
+  }
+  if (__corsOrigin && __corsOrigin !== ALLOWED_ORIGIN) {
+    return json(403, { error: "origin not allowed" });
   }
 
   const key = env("OPENROUTER_API_KEY");
@@ -3024,6 +3025,11 @@ async function handler(event) {
   const groqKey = resolveGroqKey(payload, account, tier);
 
   if (payload.action === "bootstrapFounder") {
+    const secret = env("CHOPSTICKS_AI_BOOTSTRAP_SECRET");
+    const hdr = String((event.headers && (event.headers["x-cs-bootstrap"] || event.headers["X-Cs-Bootstrap"])) || "");
+    if (!secret || !timingSafeString(hdr, secret)) {
+      return json(404, { error: "not found" });
+    }
     const result = await ensureFounderAuthUser();
     return json(result.ok ? 200 : 503, { ok: result.ok, mode: "bootstrapFounder" });
   }
@@ -3043,6 +3049,9 @@ async function handler(event) {
   }
   if (payload.action === "authSignIn") {
     return handleAuthSignIn(event, payload, rateLimited);
+  }
+  if (payload.action === "loginVerify") {
+    return handleLoginVerify(event, payload, rateLimited);
   }
   if (payload.action === "authRefresh") {
     return handleAuthRefresh(event, payload);
@@ -3087,11 +3096,20 @@ async function handler(event) {
 
   if (payload.action === "vaultCheck") {
     const vaultPw = env("FATHOM_VAULT_PASSWORD");
+    const vaultHash = env("FATHOM_VAULT_PASSWORD_HASH");
     const supplied = String(payload.vaultPassword || payload.password || "").trim();
-    if (!vaultPw || supplied !== vaultPw) {
+    if (!vaultOk(supplied, vaultPw, vaultHash)) {
       return json(403, { error: "forbidden" });
     }
     return json(200, { ok: true });
+  }
+
+  if (!account) {
+    return json(401, {
+      error: "sign in required",
+      mode: "auth_required",
+      tier: tier.label,
+    });
   }
 
   if (AUTH_REQUIRED_TIERS.has(tierId) && !account) {

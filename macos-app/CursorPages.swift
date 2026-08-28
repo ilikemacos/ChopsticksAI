@@ -406,6 +406,7 @@ struct AccountView: View {
     var onSignedIn: (() -> Void)?
     @State private var email = ""
     @State private var password = ""
+    @State private var code = ""
     @State private var error = ""
 
     var body: some View {
@@ -443,6 +444,11 @@ struct AccountView: View {
                                 .padding(10)
                                 .background(RoundedRectangle(cornerRadius: 8).fill(Cursor.hover))
                             SecureField("Password (min 6)", text: $password)
+                                .textFieldStyle(.plain)
+                                .foregroundStyle(Cursor.text)
+                                .padding(10)
+                                .background(RoundedRectangle(cornerRadius: 8).fill(Cursor.hover))
+                            TextField("6-digit email code (after first step)", text: $code)
                                 .textFieldStyle(.plain)
                                 .foregroundStyle(Cursor.text)
                                 .padding(10)
@@ -488,8 +494,15 @@ struct AccountView: View {
     private func signIn() async {
         error = ""
         do {
-            try await auth.signIn(email: email.trimmingCharacters(in: .whitespacesAndNewlines), password: password)
-            onSignedIn?()
+            let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
+            let digits = code.trimmingCharacters(in: .whitespacesAndNewlines)
+            if digits.count == 6 {
+                let token = UserDefaults.standard.string(forKey: "chopsticksAI.pendingLoginToken") ?? ""
+                try await auth.signIn(email: trimmed, password: password, code: digits, loginToken: token)
+            } else {
+                try await auth.signIn(email: trimmed, password: password)
+            }
+            if auth.isSignedIn { onSignedIn?() }
         } catch {
             self.error = error.localizedDescription
         }
@@ -498,7 +511,14 @@ struct AccountView: View {
     private func signUp() async {
         error = ""
         do {
-            try await auth.signUp(email: email.trimmingCharacters(in: .whitespacesAndNewlines), password: password)
+            let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
+            let digits = code.trimmingCharacters(in: .whitespacesAndNewlines)
+            if digits.count == 6 {
+                let token = UserDefaults.standard.string(forKey: "chopsticksAI.pendingSignupToken") ?? ""
+                try await auth.signUp(email: trimmed, password: password, code: digits, signupToken: token)
+            } else {
+                try await auth.signUp(email: trimmed, password: password)
+            }
             if auth.isSignedIn { onSignedIn?() }
         } catch {
             self.error = error.localizedDescription
@@ -1306,7 +1326,7 @@ struct SettingsView: View {
                     SettingsCard(title: "Network") {
                         SettingsToggleRow(
                             title: "Web search",
-                            subtitle: "Chromium engine (Google, DuckDuckGo). Turn off to skip lookups and save time.",
+                            subtitle: "In-app WebKit browser (not Chromium). Turn off to skip lookups and save time.",
                             isOn: Binding(get: { store.webSearchEnabled }, set: { store.setWebSearchEnabled($0) })
                         )
                         Divider().overlay(Cursor.hairline)
@@ -1340,11 +1360,17 @@ struct SettingsView: View {
 
                 case .privacy:
                     SettingsCard(title: "Privacy Mode") {
-                        SettingsToggleRow(
-                            title: "Privacy Mode",
-                            subtitle: "Skip cloud API calls and chat sync; answers come from the local product KB only.",
-                            isOn: Binding(get: { store.privacyMode }, set: { store.setPrivacyMode($0) })
-                        )
+                        if CSAIEdition.current.isOffline {
+                            SettingsToggleRow(
+                                title: "Privacy Mode",
+                                subtitle: "Skip cloud API calls and chat sync; answers come from the local product KB only.",
+                                isOn: Binding(get: { store.privacyMode }, set: { store.setPrivacyMode($0) })
+                            )
+                        } else {
+                            Text("Privacy Mode is Offline-only. Online always uses live models (signed in).")
+                                .font(.system(size: 12.5))
+                                .foregroundStyle(Cursor.muted)
+                        }
                         Divider().overlay(Cursor.hairline)
                         Link("Privacy policy", destination: URL(string: "https://chopstickshq.com/chopsticks-ai/privacy.html")!)
                             .font(.system(size: 13))

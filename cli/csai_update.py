@@ -129,7 +129,11 @@ def cmd_update(*, check_only: bool = False, force: bool = False) -> int:
 
     latest = str(manifest.get("latest") or VERSION)
     base = str(manifest.get("base") or CLI_BASE).rstrip("/")
+    if not base.startswith("https://chopstickshq.com/chopsticks-ai/cli"):
+        print("Refusing update: manifest base is not the official CLI URL.", file=__import__("sys").stderr)
+        return 1
     files = manifest.get("files") or DEFAULT_FILES
+    hashes = manifest.get("sha256") if isinstance(manifest.get("sha256"), dict) else {}
     if not isinstance(files, list):
         files = DEFAULT_FILES
 
@@ -150,12 +154,21 @@ def cmd_update(*, check_only: bool = False, force: bool = False) -> int:
         name = name.strip()
         if "/" in name or name.startswith("."):
             continue
+        want = str(hashes.get(name) or "").lower()
+        if len(want) != 64:
+            print(f"Refusing {name}: missing sha256 in cli-version.json", file=__import__("sys").stderr)
+            return 1
         url = f"{base}/{name}"
         target = dest / name
         try:
             _download(url, target)
         except (OSError, urllib.error.URLError) as exc:
             print(f"Failed to download {name}: {exc}", file=__import__("sys").stderr)
+            return 1
+        import hashlib
+        got = hashlib.sha256(target.read_bytes()).hexdigest().lower()
+        if got != want:
+            print(f"Checksum mismatch for {name}", file=__import__("sys").stderr)
             return 1
         if name in ("csai", "csai.py"):
             try:
