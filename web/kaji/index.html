@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kaji — Think different. Ask Kaji.</title>
+<meta name="description" content="Kaji is Chopsticks HQ’s Grok-style assistant. Pro only. The web is the computer — no VM. Think different. Ask Kaji.">
+<link rel="canonical" href="https://chopstickshq.com/chopsticks-ai/web/kaji/">
+<link rel="icon" href="/favicon.ico">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://chopstickshq.com https://*.supabase.co; frame-src https:; object-src 'none'">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/chopsticks-ai/web/grok-ui.css?v=20260828kaji">
+</head>
+<body class="grok-app has-intro">
+<div class="grok-shell">
+  <aside class="grok-rail" aria-label="Kaji">
+    <a class="grok-rail-home" href="/chopsticks-ai/web/kaji/" title="Kaji">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3l2.2 6.4L21 12l-6.8 2.6L12 21l-2.2-6.4L3 12l6.8-2.6L12 3z"/></svg>
+    </a>
+    <button type="button" class="grok-rail-btn" id="rail-new" title="New chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+    <a class="grok-rail-btn" href="/chopsticks-ai/web/" title="cs.AI Agents">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 10h8M8 14h5"/></svg>
+    </a>
+    <a class="grok-rail-btn" href="/chopsticks-ai/web/upgrades/" title="Pro">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 3l2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4L12 3z"/></svg>
+    </a>
+    <span class="grok-rail-spacer"></span>
+    <button type="button" class="grok-rail-btn" id="account-btn" title="Account"><span id="account-label">◉</span></button>
+  </aside>
+
+  <div class="grok-main">
+    <div class="app-shell">
+      <aside class="browser-rail" id="browser-rail" hidden>
+        <div class="browser-bar">
+          <span class="browser-kicker">Web computer</span>
+          <button type="button" id="browser-back" title="Back">←</button>
+          <button type="button" id="browser-fwd" title="Forward">→</button>
+          <input class="browser-url" id="browser-url" type="text" value="https://chopstickshq.com/" spellcheck="false">
+          <button type="button" id="browser-go">Go</button>
+        </div>
+        <iframe class="browser-frame" id="browser-frame" title="Kaji web computer" src="https://chopstickshq.com/" sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
+      </aside>
+      <div class="grok-chat-col">
+        <div class="stage" id="stage">
+          <div class="inner" id="log">
+            <div class="intro grok-home" id="intro">
+              <div class="grok-logo" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6L12 2z"/></svg>
+              </div>
+              <h1>Think different. Ask Kaji.</h1>
+              <p class="grok-intro-sub">Pro Grok-style assistant. Trained on Chopsticks HQ. The <strong>web</strong> is the computer — no VM.</p>
+              <div class="grok-pills">
+                <button type="button" class="grok-pill grok-pill-pro" data-suggest="What is Chopsticks HQ?">What’s Chopsticks HQ?</button>
+                <button type="button" class="grok-pill" data-suggest="Open chopstickshq.com and tell me what’s new">Use the web computer</button>
+                <button type="button" class="grok-pill" data-suggest="Roast the idea of shipping a fake Chromium browser">Be Grok about it</button>
+                <button type="button" class="grok-pill" data-suggest="Explain rNitro like I’m five">Explain rNitro</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grok-composer" id="composer">
+          <div class="grok-composer-box">
+            <textarea id="input" rows="1" placeholder="Ask Kaji" aria-label="Message Kaji"></textarea>
+            <div class="grok-composer-tools">
+              <div class="grok-composer-tools-left">
+                <span class="grok-tool-btn" id="kaji-badge">Kaji · Pro</span>
+              </div>
+              <div class="grok-composer-tools-right">
+                <button type="button" class="grok-send" id="send" disabled title="Send">
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.4 20.6 21 12 3.4 3.4l.1 7.1L15 12l-11.5 1.5z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <footer class="grok-footer">
+          <a href="/chopsticks-ai/web/upgrades/">Pro</a>
+          · <a href="/chopsticks-ai/web/">Agents</a>
+          · cs.AI can be wrong
+        </footer>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="kaji-gate" id="kaji-gate">
+  <div class="kaji-gate-card">
+    <h2>Think different. Ask Kaji.</h2>
+    <p>Kaji is Pro — five Fathom Pro keys (or founder). Sign in, redeem on Upgrades, then come back. No Linux VM. The web is the computer.</p>
+    <p>
+      <button type="button" class="grok-auth-btn grok-auth-btn-fill" id="gate-signin">Sign in</button>
+      <a class="grok-auth-btn" href="/chopsticks-ai/web/upgrades/">Get Pro</a>
+    </p>
+  </div>
+</div>
+
+<div class="auth-modal" id="auth-modal">
+  <div class="auth-card">
+    <h2>Sign in for Kaji</h2>
+    <p>Email, password, then the 6-digit code we send you.</p>
+    <label for="auth-email">Email</label>
+    <input id="auth-email" type="email" autocomplete="username">
+    <label for="auth-password">Password</label>
+    <input id="auth-password" type="password" autocomplete="current-password">
+    <label for="auth-code">Email code</label>
+    <input id="auth-code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+    <div class="auth-err" id="auth-err"></div>
+    <div class="auth-ok" id="auth-ok"></div>
+    <div class="auth-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+      <button type="button" class="grok-auth-btn grok-auth-btn-fill" id="auth-signin">Sign in</button>
+      <button type="button" class="grok-auth-btn" id="auth-signup">Create account</button>
+      <button type="button" class="grok-auth-btn" id="auth-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/chopsticks-ai-cloud.js"></script>
+<script>
+(function () {
+  var Cloud = window.ChopsticksAICloud;
+  var API = '/api/chopsticks-ai';
+  var history = [];
+  var busy = false;
+  var allowed = false;
+  var pendingLogin = '';
+  var pendingSignup = '';
+  var log = document.getElementById('log');
+  var intro = document.getElementById('intro');
+  var input = document.getElementById('input');
+  var send = document.getElementById('send');
+  var stage = document.getElementById('stage');
+  var gate = document.getElementById('kaji-gate');
+  var frame = document.getElementById('browser-frame');
+  var urlEl = document.getElementById('browser-url');
+  var rail = document.getElementById('browser-rail');
+
+  function openUrl(u) {
+    var href = String(u || '').trim();
+    if (!/^https:\/\//i.test(href)) return;
+    if (rail) rail.hidden = false;
+    if (urlEl) urlEl.value = href;
+    if (frame) frame.src = href;
+  }
+
+  function addTurn(role, html) {
+    if (intro && intro.parentNode) intro.parentNode.removeChild(intro);
+    document.body.classList.remove('has-intro');
+    var el = document.createElement('div');
+    el.className = 'turn ' + role;
+    el.innerHTML = '<div class="bubble"></div>';
+    el.lastChild.innerHTML = html;
+    log.appendChild(el);
+    stage.scrollTop = stage.scrollHeight;
+    return el;
+  }
+  function esc(s) {
+    return String(s || '').replace(/[&<>]/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c];
+    });
+  }
+  function md(s) {
+    return esc(s).replace(/\n/g, '<br>');
+  }
+  function syncSend() {
+    send.disabled = busy || !String(input.value || '').trim() || !allowed;
+  }
+  function setAllowed(on) {
+    allowed = !!on;
+    gate.classList.toggle('open', !allowed);
+    syncSend();
+  }
+  function pollUsage() {
+    if (!Cloud || !Cloud.isSignedIn || !Cloud.isSignedIn()) {
+      setAllowed(false);
+      return;
+    }
+    var headers = { 'content-type': 'application/json' };
+    var s = Cloud.getSession && Cloud.getSession();
+    if (s && s.access_token) headers.authorization = 'Bearer ' + s.access_token;
+    fetch(API, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({ action: 'usage' })
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      setAllowed(!!(d && d.usage && d.usage.kaji && d.usage.kaji.allowed));
+    }).catch(function () { setAllowed(false); });
+  }
+  function submit(text) {
+    text = String(text || input.value || '').trim();
+    if (!text || busy) return;
+    if (!allowed) { gate.classList.add('open'); return; }
+    input.value = '';
+    addTurn('user', md(text));
+    history.push({ role: 'user', content: text });
+    busy = true;
+    syncSend();
+    var thinking = addTurn('bot', 'Thinking…');
+    var headers = { 'content-type': 'application/json' };
+    var s = Cloud.getSession && Cloud.getSession();
+    if (s && s.access_token) headers.authorization = 'Bearer ' + s.access_token;
+    fetch(API, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        messages: history.slice(-12),
+        mode: 'agent',
+        tier: 'kaji',
+        enableTools: true,
+        disableSearch: false
+      })
+    }).then(function (r) { return r.json().then(function (d) { return { r: r, d: d }; }); })
+      .then(function (x) {
+        var d = x.d || {};
+        if (x.r.status === 403 || d.mode === 'kaji_pro') {
+          setAllowed(false);
+          thinking.lastChild.textContent = d.error || 'Kaji is Pro.';
+          return;
+        }
+        var reply = d.reply || d.error || 'No reply.';
+        history.push({ role: 'assistant', content: reply });
+        thinking.lastChild.innerHTML = md(reply);
+        var pages = d.browser || [];
+        if (pages[0] && pages[0].url) openUrl(pages[0].url);
+      })
+      .catch(function () {
+        thinking.lastChild.textContent = 'Could not reach Kaji.';
+      })
+      .then(function () {
+        busy = false;
+        syncSend();
+        stage.scrollTop = stage.scrollHeight;
+      });
+  }
+
+  send.addEventListener('click', function () { submit(); });
+  input.addEventListener('input', function () {
+    input.style.height = 'auto';
+    input.style.height = Math.min(140, input.scrollHeight) + 'px';
+    syncSend();
+  });
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); }
+  });
+  document.getElementById('rail-new').onclick = function () {
+    history = [];
+    log.innerHTML = '';
+    if (intro) log.appendChild(intro);
+    document.body.classList.add('has-intro');
+    rail.hidden = true;
+  };
+  document.querySelectorAll('[data-suggest]').forEach(function (btn) {
+    btn.addEventListener('click', function () { submit(btn.getAttribute('data-suggest')); });
+  });
+  document.getElementById('browser-go').onclick = function () { openUrl(urlEl.value); };
+  urlEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') openUrl(urlEl.value);
+  });
+  document.getElementById('browser-back').onclick = function () {
+    try { frame.contentWindow.history.back(); } catch (e) {}
+  };
+  document.getElementById('browser-fwd').onclick = function () {
+    try { frame.contentWindow.history.forward(); } catch (e) {}
+  };
+
+  var modal = document.getElementById('auth-modal');
+  var err = document.getElementById('auth-err');
+  var ok = document.getElementById('auth-ok');
+  var email = document.getElementById('auth-email');
+  var pass = document.getElementById('auth-password');
+  var codeEl = document.getElementById('auth-code');
+  function openAuth() { modal.classList.add('is-open'); }
+  window.openCsAuth = openAuth;
+  document.getElementById('account-btn').onclick = openAuth;
+  document.getElementById('gate-signin').onclick = openAuth;
+  document.getElementById('auth-close').onclick = function () { modal.classList.remove('is-open'); };
+  document.getElementById('auth-signin').onclick = function () {
+    err.textContent = '';
+    var digits = (codeEl.value || '').trim();
+    var p = Cloud.signIn(email.value.trim(), pass.value);
+    if (digits.length === 6 && pendingLogin) p = Cloud.verifyLogin(email.value.trim(), pass.value, digits, pendingLogin);
+    Promise.resolve(p).then(function (r) {
+      if (r && r.needsCode) { pendingLogin = r.loginToken; ok.textContent = 'Enter the email code, then Sign in.'; return; }
+      ok.textContent = 'Signed in.';
+      modal.classList.remove('is-open');
+      pollUsage();
+    }).catch(function (e) { err.textContent = e.message || 'Sign in failed'; });
+  };
+  document.getElementById('auth-signup').onclick = function () {
+    err.textContent = '';
+    var digits = (codeEl.value || '').trim();
+    var p = (digits.length === 6 && pendingSignup)
+      ? Cloud.verifySignup(email.value.trim(), pass.value, digits, pendingSignup)
+      : Cloud.signUp(email.value.trim(), pass.value);
+    Promise.resolve(p).then(function (r) {
+      if (r && r.needsCode) { pendingSignup = r.signupToken; ok.textContent = r.message || 'Check email, then Create account.'; return; }
+      ok.textContent = 'Account ready.';
+      pollUsage();
+    }).catch(function (e) { err.textContent = e.message || 'Sign up failed'; });
+  };
+
+  if (Cloud && Cloud.onChange) Cloud.onChange(pollUsage);
+  if (Cloud && Cloud.init) Cloud.init().then(pollUsage); else pollUsage();
+})();
+</script>
+</body>
+</html>

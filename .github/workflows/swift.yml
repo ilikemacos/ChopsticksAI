@@ -19,4 +19,4 @@ jobs:
           test -f macos-app/build-app.sh
           test -f engine/ChopsticksAIEngine.swift
           test -f server/chopsticks-ai.js
-          echo "Layout ok. Build on macOS with: ./macos-app/build-app.sh v3.6.10 online"
+          echo "Layout ok. Build on macOS with: ./macos-app/build-app.sh v3.7.0 online"

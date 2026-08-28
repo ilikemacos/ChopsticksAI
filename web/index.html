@@ -172,7 +172,7 @@
       <div class="intro-mark" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6L12 3z"/></svg>
       </div>
-      <h1 id="intro-greeting">Welcome to cs.AI (3.6.10)</h1>
+      <h1 id="intro-greeting">Welcome to cs.AI (3.7.0)</h1>
       <p class="intro-sub" id="intro-sub">Plan, search, build anything</p>
       <p class="intro-lead" id="intro-lead" hidden></p>
       <div class="plate-tiles" id="plate-tiles" hidden></div>
@@ -232,7 +232,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">3.6.10</span>
+  <span class="cursor-footer-ver">3.7.0</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -668,7 +668,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (3.6.10)';
+    if (g) g.textContent = 'Welcome to cs.AI (3.7.0)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -1015,8 +1015,8 @@
     return EFFORT[tierSel.value] || EFFORT.tamago;
   }
   function showTier() {
-    var ver = Cloud && Cloud.getAppVersion ? Cloud.getAppVersion() : '3.6.10';
-    if (!ver || ver === '3.3.10' || ver === '1.0.0') ver = '3.6.10';
+    var ver = Cloud && Cloud.getAppVersion ? Cloud.getAppVersion() : '3.7.0';
+    if (!ver || ver === '3.3.10' || ver === '1.0.0') ver = '3.7.0';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;

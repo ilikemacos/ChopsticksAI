@@ -80,6 +80,7 @@ struct UsageSnapshot: Equatable {
     ]
     var budgetMode: String = "—"
     var error: String?
+    var kajiAllowed: Bool = false
 
     var progress: Double {
         guard limit > 0 else { return 0 }
@@ -169,6 +170,7 @@ final class AppStore: ObservableObject {
     @Published var keyDraft = ""
     @Published var usage = UsageSnapshot()
     @Published var usageBusy = false
+    @Published var pendingBrowserURL = ""
 
     private init() {
         customModes = Self.load(modesKey) ?? [
@@ -183,7 +185,7 @@ final class AppStore: ObservableObject {
         if CSAIEdition.current.isOffline {
             offlineChatMode = true
             UserDefaults.standard.set(true, forKey: offlineChatModeKey)
-        else {
+        } else {
             offlineChatMode = false
             UserDefaults.standard.set(false, forKey: offlineChatModeKey)
         }
@@ -223,6 +225,7 @@ final class AppStore: ObservableObject {
         case "a3", "wagyu-a3", "wagyu3": return "wagyua3"
         case "a4", "wagyu-a4", "wagyu4": return "wagyua4"
         case "a5", "wagyu-a5", "wagyu5": return "wagyua5"
+        case "kaji", "grok", "grokbot", "grok-bot": return "kaji"
         default: return raw
         }
     }
@@ -557,6 +560,9 @@ final class AppStore: ObservableObject {
             }
         }
         snap.budgetMode = mode ?? (u["budgetMode"] as? String) ?? snap.budgetMode
+        if let kaji = u["kaji"] as? [String: Any] {
+            snap.kajiAllowed = (kaji["allowed"] as? Bool) == true
+        }
         usage = snap
     }
 
