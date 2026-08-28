@@ -112,7 +112,7 @@ struct KajiAppView: View {
             Text("Think different. Ask Kaji.")
                 .font(.system(size: 26, weight: .semibold))
                 .foregroundStyle(Cursor.text)
-            Text("Grok-style assistant. Trained on Chopsticks HQ. The web is the computer.")
+            Text("Alpha. Prone to wrong answers. Trained on Chopsticks HQ. The web is the computer.")
                 .font(.system(size: 13.5))
                 .foregroundStyle(Cursor.muted)
                 .multilineTextAlignment(.center)
@@ -148,7 +148,7 @@ struct KajiAppView: View {
                 VStack(spacing: 12) {
                     Text("Think different. Ask Kaji.")
                         .font(.system(size: 22, weight: .bold))
-                    Text("Kaji is a Pro app — five Fathom Pro keys or founder. Sign in, redeem in Usage, then come back.")
+                    Text("Kaji is alpha — it is prone to wrong answers. Pro app: five Fathom Pro keys or founder. Sign in, redeem in Usage, then come back.")
                         .font(.system(size: 13.5))
                         .foregroundStyle(Cursor.muted)
                         .multilineTextAlignment(.center)
@@ -187,35 +187,41 @@ struct KajiAppView: View {
     }
 
     private var composer: some View {
-        HStack(alignment: .bottom, spacing: 10) {
-            TextField("Ask Kaji", text: $model.draft, axis: .vertical)
-                .textFieldStyle(.plain)
-                .font(.system(size: 16))
-                .lineLimit(1...8)
-                .focused($focused)
-                .disabled(!kajiUnlocked)
-                .onKeyPress { press in
-                    guard press.key == .return, !press.modifiers.contains(.shift) else { return .ignored }
+        VStack(spacing: 0) {
+            HStack(alignment: .bottom, spacing: 10) {
+                TextField("Ask Kaji", text: $model.draft, axis: .vertical)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 16))
+                    .lineLimit(1...8)
+                    .focused($focused)
+                    .disabled(!kajiUnlocked)
+                    .onKeyPress { press in
+                        guard press.key == .return, !press.modifiers.contains(.shift) else { return .ignored }
+                        Task { await model.send(model.draft) }
+                        return .handled
+                    }
+                Button {
                     Task { await model.send(model.draft) }
-                    return .handled
+                } label: {
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(Color.black)
+                        .frame(width: 32, height: 32)
+                        .background(Circle().fill(model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.busy || !kajiUnlocked ? Cursor.muted : Color.white))
                 }
-            Button {
-                Task { await model.send(model.draft) }
-            } label: {
-                Image(systemName: "arrow.up")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color.black)
-                    .frame(width: 32, height: 32)
-                    .background(Circle().fill(model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.busy || !kajiUnlocked ? Cursor.muted : Color.white))
+                .buttonStyle(.plain)
+                .disabled(model.busy || model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !kajiUnlocked)
             }
-            .buttonStyle(.plain)
-            .disabled(model.busy || model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !kajiUnlocked)
+            .padding(14)
+            .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Cursor.composer))
+            .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(Cursor.border))
+            .padding(.horizontal, 20)
+            .padding(.bottom, 6)
+            Text("Kaji is alpha and prone to wrong answers.")
+                .font(.system(size: 11))
+                .foregroundStyle(Cursor.muted)
+                .padding(.bottom, 10)
         }
-        .padding(14)
-        .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Cursor.composer))
-        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(Cursor.border))
-        .padding(.horizontal, 20)
-        .padding(.bottom, 16)
         .background(Color.black)
     }
 }
