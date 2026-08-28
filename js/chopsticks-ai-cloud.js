@@ -206,7 +206,7 @@
       return Boolean(session && session.modelPicker);
     },
     getAppVersion: function () {
-      return (session && session.appVersion) || '3.6.10';
+      return (session && session.appVersion) || '3.7.0';
     },
 
     init: async function () {

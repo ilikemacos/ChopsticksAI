@@ -24,6 +24,7 @@ enum Cursor {
 
 enum AppNav: String, CaseIterable, Identifiable {
     case agents
+    case kaji
     case search
     case cloudAgents
     case automations
@@ -39,6 +40,7 @@ enum AppNav: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .agents: return "Agents"
+        case .kaji: return "Kaji"
         case .search: return "Browser"
         case .cloudAgents: return "Cloud Agents (preview)"
         case .automations: return "Automations (preview)"
@@ -54,6 +56,7 @@ enum AppNav: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .agents: return "bubble.left.and.bubble.right"
+        case .kaji: return "sparkle"
         case .search: return "globe"
         case .cloudAgents: return "cloud"
         case .automations: return "arrow.triangle.2.circlepath"
