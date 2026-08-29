@@ -293,6 +293,17 @@ function hybridRetrieve(query, scoredRows, limit) {
 
 function routeModels({ intel, tier, groqKey, customModel, pickedModel, longRun }) {
   if (customModel && pickedModel) return [pickedModel];
+  if (tier.kaji) {
+    const pool = (longRun || intel.decompose ? (tier.longModels || tier.models) : tier.models) || [];
+    const seen = new Set();
+    const out = [];
+    for (const m of pool) {
+      if (!m || seen.has(m)) continue;
+      seen.add(m);
+      out.push(m);
+    }
+    return out;
+  }
   const coding = intel.category === "CODING" || intel.category === "DEBUGGING" || tier.chopCode;
   const useLong = longRun || intel.decompose || (intel.complexity >= 0.55);
   let pool = useLong ? (tier.longModels || tier.models) : tier.models;

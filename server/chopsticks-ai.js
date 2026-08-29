@@ -191,22 +191,25 @@ TIERS.kaji = {
   label: "Kaji",
   kaji: true,
     models: [
-      "groq/llama-3.3-70b-versatile",
-      "groq/openai/gpt-oss-120b",
-      "nvidia/nemotron-3-super-120b-a12b:free",
+      "z-ai/glm-5.2:free",
+      "cohere/north-mini-code:free",
+      "nvidia/nemotron-3-ultra:free",
+      "poolside/laguna-s-2.1:free",
     ],
     longModels: [
-      "groq/openai/gpt-oss-120b",
-      "nvidia/nemotron-3-super-120b-a12b:free",
+      "nvidia/nemotron-3-ultra:free",
+      "z-ai/glm-5.2:free",
+      "poolside/laguna-s-2.1:free",
+      "cohere/north-mini-code:free",
     ],
   refine: true,
-  refineModels: ["groq/llama-3.3-70b-versatile", "nvidia/nemotron-3-nano-30b-a3b:free"],
+  refineModels: ["z-ai/glm-5.2:free", "cohere/north-mini-code:free"],
   context: 128000,
-  maxReply: 3500,
+  maxReply: 4096,
   grounding: 16,
   searchMax: 6,
   timeoutMs: 24000,
-  temperature: 0.42,
+  temperature: 0.35,
 };
 const TIER_ALIASES = {
   rice: "rice",
@@ -683,6 +686,7 @@ function normalizeOpenRouterModelId(raw) {
   if (isClaudeModelId(id)) return id;
   if (/^groq\/.+/i.test(id)) return id;
   if (!/^[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._:+\/-]*$/i.test(id)) return "";
+  if (id === "nvidia/nemotron-3-ultra:free") return "nvidia/nemotron-3-ultra-550b-a55b:free";
   return id;
 }
 
@@ -1013,8 +1017,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 
-const APP_VERSION = "3.7.5a";
-const PREVIEW_APP_VERSION = "3.7.5a";
+const APP_VERSION = "3.7.5b";
+const PREVIEW_APP_VERSION = "3.7.5b";
 
 function appVersionFor(account) {
   return canPickOpenRouterModel(account) ? PREVIEW_APP_VERSION : APP_VERSION;
@@ -1509,7 +1513,7 @@ const SEARCH_ENABLED = (process.env.CHOPSTICKS_AI_SEARCH || "on") !== "off";
 const SEARCH_TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_SEARCH_TIMEOUT_MS || 2200);
 const SEARCH_MIN_LEN = 3;
 const MAX_SOURCES = 12;
-const UA = "cs.AI-3/3.7.5a (+https://chopstickshq.com/chopsticks-ai/)";
+const UA = "cs.AI-3/3.7.5b (+https://chopstickshq.com/chopsticks-ai/)";
 
 function clockNow() {
   const d = new Date();
@@ -2083,7 +2087,7 @@ function selfFacts(tier, appVersion) {
     t.stickerCoder
       ? "- StickerCoder+ mode: prioritise complete, runnable code, write_file tool use, and sharp engineering answers."
       : t.kaji
-        ? "- Kaji mode (alpha): Grok-style assistant. Catchphrase: Think different. Ask Kaji. Full Chopsticks HQ catalog plus live web. The in-app browser is your computer — no Linux VM. You are alpha: you are prone to wrong answers. Prefer “I don’t know” over a confident guess."
+        ? "- Kaji mode (alpha, agentic): GLM 5.2, North Mini Code, Nemotron 3 Ultra, and Laguna S 2.1 (OpenRouter :free). Tools: write_file, open_page, and on Mac list_dir / read_file / write_mac_file in Home, Desktop, Documents, Downloads. The in-app browser is the web computer — no Linux VM. Prefer “I don’t know” over a confident guess."
       : t.chopCode
         ? "- ChopCode mode: ten coding specialists run in parallel (each educated on today's date and live research), then Lead merges their drafts into one answer. Prioritise complete, runnable code and clear file fences."
         : null,
@@ -2143,12 +2147,13 @@ function systemPrompt(grounding, mode, web, tier, language, appVersion) {
       ].join("")
     : tier.kaji
     ? [
-        "You are Kaji — Chopsticks HQ’s Grok-style assistant. Catchphrase: Think different. Ask Kaji.\n\n",
-        "Kaji is ALPHA. You are prone to wrong answers. Do not bluff. If the reference material or live research does not support a fact, say you are not sure. ",
-        "Be maximally helpful and a little irreverent, but never at the cost of accuracy. Answer anything. ",
-        "You were trained on the full Chopsticks HQ product catalog (MacBar, Fathom, ARENA, rNitro, cs.AI) plus live web research. ",
-        "You do not have a Linux VM. The in-app web browser is your computer: use the open_page tool to load https URLs there, then reason about what you opened. ",
-        "When you need a machine, browse. Never claim you can SSH, spawn a container, or run a desktop VM.\n\n",
+        "You are Kaji — Chopsticks HQ’s agentic assistant. Catchphrase: Think different. Ask Kaji.\n\n",
+        "Kaji is ALPHA. Do not bluff. Prefer tools over guessing.\n",
+        "You are an agent: plan, use tools, observe results, then answer. ",
+        "On the macOS app you can list, read, and write files under the user’s Home, Desktop, Documents, and Downloads (list_dir, read_file, write_mac_file). Stay in those folders. Never touch Keychain, .ssh, or other users.\n",
+        "You were trained on the full Chopsticks HQ catalog plus live web research. ",
+        "The in-app browser is your web computer: use open_page for https URLs. Use write_file for downloadable files in chat. ",
+        "Never claim you have a Linux VM, SSH, or a desktop container.\n\n",
       ].join("")
     : tier.chopCode
     ? [
@@ -2366,7 +2371,7 @@ const KAJI_TOOLS = AGENT_TOOLS.concat([
     function: {
       name: "open_page",
       description:
-        "Open an https URL in Kaji’s web computer (the in-app browser). This is your only machine — no VM. Use for docs, news, product pages, and anything you would otherwise ‘run’ in a browser.",
+        "Open an https URL in Kaji’s web computer (the in-app browser). This is your web machine — no VM. Use for docs, news, product pages, and anything you would otherwise ‘run’ in a browser.",
       parameters: {
         type: "object",
         properties: {
@@ -2377,7 +2382,70 @@ const KAJI_TOOLS = AGENT_TOOLS.concat([
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "list_dir",
+      description:
+        "List files in a folder on the user’s Mac. Allowed: ~, ~/Desktop, ~/Documents, ~/Downloads. Use before reading or writing.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: { type: "string", description: "Folder path, e.g. ~/Desktop or ~/Documents/project" },
+        },
+        required: ["path"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "read_file",
+      description:
+        "Read a text file on the user’s Mac (Home, Desktop, Documents, Downloads). Max ~80 KB.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: { type: "string", description: "File path, e.g. ~/Desktop/notes.md" },
+        },
+        required: ["path"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "write_mac_file",
+      description:
+        "Write or overwrite a file on the user’s Mac under Home, Desktop, Documents, or Downloads. Use for real disk edits. Prefer write_file when the user only needs a download in chat.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: { type: "string", description: "Destination path, e.g. ~/Desktop/hello.py" },
+          content: { type: "string", description: "Full UTF-8 file contents" },
+        },
+        required: ["path", "content"],
+      },
+    },
+  },
 ]);
+
+const KAJI_LOCAL_TOOL_NAMES = new Set(["list_dir", "read_file", "write_mac_file"]);
+
+function isMacKajiClient(payload) {
+  const c = String((payload && payload.client) || "").toLowerCase();
+  return c === "macos" || c === "mac" || c === "app";
+}
+
+function serializeToolCalls(calls) {
+  return (calls || []).map((tc) => ({
+    id: String((tc && tc.id) || ""),
+    name: String((tc && tc.function && tc.function.name) || ""),
+    arguments: String((tc && tc.function && tc.function.arguments) || "{}"),
+    type: "function",
+    function: tc && tc.function,
+  }));
+}
 
 function sanitizeOpenUrl(raw) {
   try {
@@ -2588,6 +2656,12 @@ async function continueWithTools({
           pages.push({ url, title: String(args.title || url).slice(0, 120) });
           result = { ok: true, url, machine: "web-browser" };
         }
+      } else if (KAJI_LOCAL_TOOL_NAMES.has(name)) {
+        result = {
+          ok: false,
+          pending: true,
+          error: "Mac file tools run on the cs.AI Mac app.",
+        };
       }
       msgs.push({
         role: "tool",
@@ -3459,7 +3533,8 @@ async function handler(event) {
     chopCode: Boolean(tier.chopCode),
   });
   const budget = computeBudget(intel, tier);
-  const searchOn = !intel.trivial && (
+  const kajiResume = payload.kajiResume && typeof payload.kajiResume === "object" ? payload.kajiResume : null;
+  const searchOn = !kajiResume && !intel.trivial && (
     tier.kaji
     || intel.webRequired
     || (wantsSearch(searchQuery) && (!clientSearchOff || hadPrefix))
@@ -3528,6 +3603,30 @@ async function handler(event) {
     ),
   };
   const messages = fitContext(system, modelTurns, contextFor(tier, plan));
+  if (kajiResume && Array.isArray(kajiResume.toolCalls) && Array.isArray(kajiResume.results)) {
+    messages.push({
+      role: "assistant",
+      content: kajiResume.text || null,
+      tool_calls: (kajiResume.toolCalls || []).map((tc) => {
+        if (tc && tc.function) return tc;
+        return {
+          id: String((tc && tc.id) || ""),
+          type: "function",
+          function: {
+            name: String((tc && tc.name) || ""),
+            arguments: String((tc && tc.arguments) || "{}"),
+          },
+        };
+      }),
+    });
+    for (const tr of kajiResume.results) {
+      messages.push({
+        role: "tool",
+        tool_call_id: String((tr && (tr.id || tr.tool_call_id)) || ""),
+        content: typeof (tr && tr.content) === "string" ? tr.content : JSON.stringify((tr && tr.content) || {}),
+      });
+    }
+  }
 
   const RESCUE_RESERVE_MS = 7000;
   const PAIR_RESERVE_MS = 0;
@@ -3551,8 +3650,8 @@ async function handler(event) {
 
     const ask = String(lastUser.content || "");
     const wantsFiles = /\b(write|create|generate|make|build|scaffold|implement|export|download)\b[\s\S]{0,80}\b(file|files|script|code|program|function|class|module|component|app|html|markdown|md|zip|archive|pdf|csv|json)\b|\.\w{1,8}\b|```|write_file/i.test(ask);
-    const useTools = payload.enableTools !== false
-      && (tier.kaji || payload.tools === true || wantsFiles);
+    const useTools = tier.kaji
+      || (payload.enableTools !== false && (payload.tools === true || wantsFiles));
     const activeTools = tier.kaji ? KAJI_TOOLS : AGENT_TOOLS;
 
     const longRun = replyTokens > LONG_REPLY_TOKENS;
@@ -3568,17 +3667,19 @@ async function handler(event) {
         mode: "model_forbidden",
       });
     }
-    const chain = routeModels({
+    const chain = (kajiResume && kajiResume.model && isHqOpenRouterAllowed(kajiResume.model)
+      ? [kajiResume.model]
+      : routeModels({
       intel,
       tier,
       groqKey,
       customModel,
       pickedModel,
       longRun,
-    })
+    }))
       .filter((m) => !isGroqModelId(m) || groqKey)
       .filter((m) => customModel || isHqOpenRouterAllowed(m))
-      .slice(0, customModel ? 1 : (intel.trivial ? 1 : (tier.chopCode ? 4 : 3)));
+      .slice(0, customModel || kajiResume ? 1 : (intel.trivial ? 1 : (tier.chopCode || tier.kaji ? 4 : 3)));
 
     const slimFast = fitContext(
       {
@@ -3597,7 +3698,7 @@ async function handler(event) {
       "openai/gpt-oss-20b:free",
     ];
     const fastPromise = (async () => {
-      if (budget.skipFastRace) return null;
+      if (budget.skipFastRace || tier.kaji) return null;
       for (const m of fastModels) {
         if (deadline - Date.now() < 1400) return null;
         const g = withTimeout(Math.min(4200, deadline - Date.now() - 200));
@@ -3698,6 +3799,20 @@ async function handler(event) {
       }
       if (r.ok && (r.text || (r.toolCalls && r.toolCalls.length))) {
         if (r.toolCalls && r.toolCalls.length) {
+          const localCalls = r.toolCalls.filter((tc) =>
+            KAJI_LOCAL_TOOL_NAMES.has(String((tc && tc.function && tc.function.name) || ""))
+          );
+          if (localCalls.length && isMacKajiClient(payload)) {
+            draft = {
+              ok: true,
+              text: r.text || "",
+              tokens: r.tokens || null,
+              pendingLocal: true,
+              toolCalls: r.toolCalls,
+            };
+            draftModel = candidate;
+            break;
+          }
           const left = Math.min(deadline - Date.now() - 400, modelDeadline - Date.now() + 2000);
           if (left > 2000) {
             const g3 = withTimeout(left);
@@ -3866,6 +3981,21 @@ async function handler(event) {
     let reply = draft.text || "";
     let refinedBy = null;
 
+    if (draft.pendingLocal && isMacKajiClient(payload)) {
+      return json(200, {
+        reply: draft.text || "",
+        mode: "kaji_local_tools",
+        localTools: serializeToolCalls(draft.toolCalls),
+        appVersion: appVer,
+        model: draftModel,
+        tier: tier.label,
+        searched: searchOn,
+        sources: webBundle.sources || [],
+        files: [],
+        browser: producedPages,
+      });
+    }
+
     producedFiles = mergeFiles(producedFiles, extractFencedFiles(reply));
     reply = liftLooseCodeIntoFences(reply);
     producedFiles = mergeFiles(producedFiles, extractFencedFiles(reply));
@@ -3873,7 +4003,7 @@ async function handler(event) {
       reply = ensureFileFences(reply, producedFiles);
     }
 
-    const refineOn = REFINE_ENABLED && !isWidget && !agentsTrace
+    const refineOn = REFINE_ENABLED && !isWidget && !agentsTrace && !draft.pendingLocal
       && (budget.critics > 0 || (tier.refine !== false && intel.complexity >= 0.45));
     const refineQueue = (Array.isArray(tier.refineModels) && tier.refineModels.length
       ? tier.refineModels

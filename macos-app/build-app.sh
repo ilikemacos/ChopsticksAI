@@ -7,7 +7,7 @@ AI="$REPO/engine"
 SITE="${CHOPSTICKS_AI_SITE:-$REPO/../chopstickshq-site/chopsticks-ai}"
 BUNDLE="chopsticksAI.app"
 EXEC="chopsticksAI"
-VERSION="${1:-v3.7.5a}"
+VERSION="${1:-v3.7.5b}"
 EDITION="${2:-online}"
 BUILD="$ROOT/build"
 if [[ "$EDITION" == "offline" ]]; then
@@ -106,6 +106,7 @@ SWIFT_CMD+=(
   "$ROOT/MoreModelsStore.swift"
   "$ROOT/MoreModelsView.swift"
   "$ROOT/KajiApp.swift"
+  "$ROOT/KajiMacFiles.swift"
   "$ROOT/ChopsticksAIApp.swift"
 )
 "${SWIFT_CMD[@]}"
@@ -115,7 +116,7 @@ chmod +x "$BIN"
 
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VERSION#v}" "$APP/Contents/Info.plist" 2>/dev/null || true
 BUNDLE_VER="${VERSION#v}"
-BUNDLE_BUILD="$(python3 -c 'import re,sys; n=[int(x) for x in re.findall(r"\d+", sys.argv[1])[:3]]+[0,0,0]; extra=1 if sys.argv[1].lower().rstrip().endswith("a") else 0; print(n[0]*1000+n[1]*100+n[2]+extra)' "$BUNDLE_VER")"
+BUNDLE_BUILD="$(python3 -c 'import re,sys; s=sys.argv[1].lower(); n=[int(x) for x in re.findall(r"\d+", s)[:3]]+[0,0,0]; extra=2 if s.rstrip().endswith("b") else (1 if s.rstrip().endswith("a") else 0); print(n[0]*1000+n[1]*100+n[2]+extra)' "$BUNDLE_VER")"
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUNDLE_BUILD" "$APP/Contents/Info.plist" 2>/dev/null || true
 /usr/libexec/PlistBuddy -c "Set :CSAIEdition $EDITION" "$APP/Contents/Info.plist" 2>/dev/null || \
   /usr/libexec/PlistBuddy -c "Add :CSAIEdition string $EDITION" "$APP/Contents/Info.plist"

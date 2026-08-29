@@ -691,6 +691,9 @@ final class ChatModel: ObservableObject {
         var agents: [AgentTrace] = []
         var conversation: [AgentConversationTurn] = []
         var offline: Bool = false
+        var localTools: [[String: Any]]? = nil
+        var resumeModel: String? = nil
+        var mode: String? = nil
     }
 
     private func searchRequest(for text: String) -> (query: String, force: Bool) {
@@ -783,6 +786,18 @@ final class ChatModel: ObservableObject {
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
             let mode = obj?["mode"] as? String
+            if mode == "kaji_local_tools", let tools = obj?["localTools"] as? [[String: Any]], !tools.isEmpty {
+                return ReplyResult(
+                    text: reply,
+                    usage: obj.map { parseUsage($0) } ?? UsageStats(),
+                    sources: parseSources(obj ?? [:]),
+                    files: [],
+                    offline: false,
+                    localTools: tools,
+                    resumeModel: obj?["model"] as? String,
+                    mode: mode
+                )
+            }
             if http?.statusCode == 403 {
                 let err = (obj?["error"] as? String) ?? ""
                 if mode == "kaji_pro" || err.lowercased().contains("kaji") {
@@ -898,6 +913,7 @@ final class ChatModel: ObservableObject {
             "maxTokens": tierMaxTokens(store.tier),
             "unlockKeys": store.unlockKeys,
             "enableTools": store.enableTools,
+            "client": "macos",
         ]
         if !forceSearch && !store.webSearchEnabled {
             payload["disableSearch"] = true
@@ -910,6 +926,30 @@ final class ChatModel: ObservableObject {
         }
         payload["language"] = store.language
         MoreModelsStore.shared.applyKeysToPayload(&payload)
+
+        if store.tier == "kaji" {
+            payload["enableTools"] = true
+            var working = payload
+            var lastPartial = ""
+            for _ in 0..<4 {
+                guard let result = await requestReply(payload: working, userText: userText) else { break }
+                if result.mode == "kaji_local_tools", let tools = result.localTools, !tools.isEmpty {
+                    lastPartial = result.text
+                    let executed = KajiMacFiles.run(tools)
+                    working["kajiResume"] = [
+                        "model": result.resumeModel ?? "",
+                        "text": result.text,
+                        "toolCalls": tools,
+                        "results": executed,
+                    ]
+                    continue
+                }
+                return result
+            }
+            if !lastPartial.isEmpty {
+                return ReplyResult(text: lastPartial, usage: UsageStats(), sources: [], offline: false)
+            }
+        }
 
         if let result = await requestReply(payload: payload, userText: userText) {
             return result
