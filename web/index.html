@@ -5,7 +5,7 @@
 <script>
 (function(){try{document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();
 </script>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://chopstickshq.com https://*.supabase.co; frame-src https://chopstickshq.com; object-src 'none'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://chopstickshq.com https://*.supabase.co; frame-src https:; object-src 'none'; base-uri 'self'">
 <title>cs.AI · Chopsticks HQ</title>
 <meta name="description" content="cs.AI in the browser — live models or on-device knowledge base. Plates, search, account sync. No API key on your side.">
 <meta name="keywords" content="cs.AI web, chopsticksAI, Chopsticks HQ, online AI, offline knowledge base">
@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/chopsticks-ai/web/cursor-ui.css?v=20260828grok">
+<link rel="stylesheet" href="/chopsticks-ai/web/cursor-ui.css?v=20260828plan">
 <style>
   .attach-chip.busy { color: var(--cursor-muted); }
   .search-toggle.off { color: var(--cursor-muted); }
@@ -41,7 +41,7 @@
     <a class="rail-btn rail-chopcode" href="/chopsticks-ai/web/?edition=online&plate=chopcode" title="ChopCode" aria-label="ChopCode">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M8 7h8M8 12h5M7 17h10"/><path d="M5 5v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H6a1 1 0 0 0-1 1z"/></svg>
     </a>
-    <a class="rail-btn" href="/chopsticks-ai/web/kaji/" title="Kaji" aria-label="Kaji">
+    <a class="rail-btn" id="rail-kaji" href="/chopsticks-ai/web/kaji/" title="Kaji" aria-label="Kaji">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M12 3l2.2 6.4L21 12l-6.8 2.6L12 21l-2.2-6.4L3 12l6.8-2.6L12 3z"/></svg>
     </a>
     <button type="button" class="rail-btn" id="rail-more-models" title="More models" aria-label="More models">
@@ -109,8 +109,12 @@
     <label for="auth-email">Email</label>
     <input id="auth-email" type="email" autocomplete="username" placeholder="you@example.com">
     <label for="auth-password">Password</label>
-    <input id="auth-password" type="password" autocomplete="current-password" placeholder="••••••••" minlength="6">
-<p class="auth-hint">Email and password. No verification code.</p>
+    <div class="auth-pass-row">
+      <input id="auth-password" type="password" autocomplete="current-password" placeholder="••••••••" minlength="6">
+      <button type="button" class="auth-pass-toggle" id="auth-pass-toggle">Show</button>
+    </div>
+    <p class="auth-hint">Email and password. No verification code.</p>
+    <p class="auth-hint">Forgot password? Email <a href="mailto:chopstickshq@lam.ws?subject=Forgot%20cs.AI%20password">chopstickshq@lam.ws</a> — we don’t send reset links yet.</p>
     </div>
     <div id="auth-member" hidden>
       <p id="auth-member-email">Signed in</p>
@@ -167,8 +171,17 @@
     <button type="button" id="browser-home" title="Home (Chopsticks HQ)">⌂</button>
     <input class="browser-url" id="browser-url" type="text" spellcheck="false" value="https://chopstickshq.com/" aria-label="URL">
     <button type="button" id="browser-go" title="Go">Go</button>
+    <a class="browser-open-tab" id="browser-open-tab" href="https://chopstickshq.com/" target="_blank" rel="noopener">Open tab</a>
   </div>
-  <iframe class="browser-frame" id="browser-frame" title="In-app browser" src="https://chopstickshq.com/" sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
+  <div class="browser-stage">
+    <iframe class="browser-frame" id="browser-frame" title="In-app browser" src="https://chopstickshq.com/" sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
+    <div class="frame-fallback" id="frame-fallback" hidden>
+      <p class="frame-fallback-kicker">Web computer</p>
+      <p id="frame-fallback-status">This site blocked embedding. Opened in a new tab instead of a blank frame.</p>
+      <p class="frame-fallback-snippet" id="frame-fallback-snippet" hidden></p>
+      <a class="nbtn primary" id="frame-fallback-open" href="https://chopstickshq.com/" target="_blank" rel="noopener">Open in a new tab</a>
+    </div>
+  </div>
 </aside>
 <div class="main-col">
 <div class="stage" id="stage">
@@ -238,7 +251,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">3.7.3</span>
+  <span class="cursor-footer-ver">3.7.5</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -252,7 +265,7 @@
 <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js" defer></script>
 <script src="/js/theme.js"></script>
 <script src="/js/chopsticks-ai-kb.js" defer></script>
-<script src="/js/chopsticks-ai-cloud.js"></script>
+<script src="/js/chopsticks-ai-cloud.js?v=20260828-375"></script>
 <script>
 (function () {
   'use strict';
@@ -301,6 +314,18 @@
   var cloudSyncing = false;
   var cloudSyncQueued = false;
   var Cloud = window.ChopsticksAICloud;
+  var ACTIVE_CHAT_KEY = 'chq.activeCloudChatId';
+  function rememberChatId(id) {
+    cloudChatId = id || null;
+    try {
+      if (cloudChatId) localStorage.setItem(ACTIVE_CHAT_KEY, cloudChatId);
+      else localStorage.removeItem(ACTIVE_CHAT_KEY);
+    } catch (e) {}
+    var kajiLink = document.getElementById('rail-kaji');
+    if (kajiLink) {
+      kajiLink.href = '/chopsticks-ai/web/kaji/' + (cloudChatId ? ('?chat=' + encodeURIComponent(cloudChatId)) : '');
+    }
+  }
 
   function syncIntroState() {
     document.body.classList.toggle('has-intro', !!(intro && intro.parentNode));
@@ -335,11 +360,11 @@
   }
   function clearSession() {
     try { localStorage.removeItem(STORE); } catch (e) {}
-    cloudChatId = null;
+    rememberChatId(null);
   }
   function switchAccountSession() {
     history = [];
-    cloudChatId = null;
+    rememberChatId(null);
     log.innerHTML = '';
     if (intro) log.appendChild(intro);
     clearSession();
@@ -392,7 +417,7 @@
       }
       if (!cloudChatId) {
         var created = await Cloud.createChat({ title: title, client: 'web', tier: tierSel.value });
-        cloudChatId = created && created.id;
+        rememberChatId(created && created.id);
       }
       if (!cloudChatId) return;
       await Cloud.saveMessages(cloudChatId, history.slice(-80), {
@@ -471,7 +496,7 @@
         conversation: m.conversation || null
       };
     });
-    cloudChatId = id;
+    rememberChatId(id);
     log.innerHTML = '';
     if (!history.length) {
       log.appendChild(intro);
@@ -675,7 +700,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (3.7.3)';
+    if (g) g.textContent = 'Welcome to cs.AI (3.7.5)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -905,16 +930,21 @@
     if (savedLang && langSel.querySelector('option[value="' + savedLang + '"]')) langSel.value = savedLang;
   } catch (e) {}
   var PLATES = [
-    { id: 'rice', name: 'Rice', role: 'Smallest and fastest — the staple', ctx: '16k context' },
-    { id: 'tamago', name: 'Tamago', role: 'Balanced default workhorse', ctx: '48k context' },
-    { id: 'hibachi', name: 'Hibachi', role: 'Flagship standard', ctx: '96k context' },
-    { id: 'wagyua1', name: 'Wagyu A1', role: 'Entry Wagyu grade', ctx: '80k · Sign in' },
-    { id: 'wagyua2', name: 'Wagyu A2', role: 'Better marbling, more room', ctx: '96k · Sign in' },
-    { id: 'wagyua3', name: 'Wagyu A3', role: 'Mid grade — refine on', ctx: '112k · Sign in' },
-    { id: 'wagyua4', name: 'Wagyu A4', role: 'High grade', ctx: '128k · Sign in' },
-    { id: 'wagyua5', name: 'Wagyu A5', role: 'Highest grade', ctx: '160k · Sign in' },
-    { id: 'chopcode', name: 'ChopCode', role: '10 specialists + Lead · live research', ctx: '128k ctx · 1m tokens · 5 keys / founder' },
-    { id: 'kaji', name: 'Kaji', role: 'Think different. Ask Kaji. · alpha · prone to wrong answers', ctx: 'Pro · Grok-style' }
+    { id: 'rice', name: 'Rice', tag: 'Fast', group: 'Everyday' },
+    { id: 'tamago', name: 'Tamago', tag: 'Default', group: 'Everyday' },
+    { id: 'hibachi', name: 'Hibachi', tag: 'Flagship', group: 'Everyday' },
+    { id: 'wagyua1', name: 'Wagyu A1', tag: 'A1', group: 'Wagyu' },
+    { id: 'wagyua2', name: 'Wagyu A2', tag: 'A2', group: 'Wagyu' },
+    { id: 'wagyua3', name: 'Wagyu A3', tag: 'A3', group: 'Wagyu' },
+    { id: 'wagyua4', name: 'Wagyu A4', tag: 'A4', group: 'Wagyu' },
+    { id: 'wagyua5', name: 'Wagyu A5', tag: 'A5', group: 'Wagyu' },
+    { id: 'chopcode', name: 'ChopCode', tag: 'Code', group: 'Apps' },
+    { id: 'kaji', name: 'Kaji', tag: 'Alpha', group: 'Apps' }
+  ];
+  var PLATE_GROUPS = [
+    { label: 'Everyday', ids: ['rice', 'tamago', 'hibachi'] },
+    { label: 'Wagyu', ids: ['wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
+    { label: 'Apps', ids: ['chopcode', 'kaji'] }
   ];
   var plateBtn = document.getElementById('plate-btn');
   var plateMenu = document.getElementById('plate-menu');
@@ -959,7 +989,7 @@
       return false;
     }
     if (id === 'kaji') {
-      location.href = '/chopsticks-ai/web/kaji/';
+      location.href = '/chopsticks-ai/web/kaji/' + (cloudChatId ? ('?chat=' + encodeURIComponent(cloudChatId)) : '');
       return true;
     }
     if (id === 'chopcode' && chopcodeLocked()) {
@@ -997,11 +1027,19 @@
     if (row.id === 'kaji') return Cloud && Cloud.isSignedIn && Cloud.isSignedIn() ? 'Pro' : 'Sign in';
     return '';
   }
+  function plateRowHtml(row, onId) {
+    var locked = plateLocked(row);
+    var on = row.id === onId ? ' is-on' : '';
+    var tag = locked ? plateLockLabel(row) : (row.tag || '');
+    return '<button type="button" class="plate-item' + on + (locked ? ' is-locked' : '') + ' plate-' + row.id + '" data-plate="' + row.id + '" role="option">' +
+      '<span class="plate-item-name">' + row.name + '</span>' +
+      '<span class="plate-item-tag">' + tag + '</span>' +
+      '</button>';
+  }
   function renderPlateUI() {
     var p = currentPlate();
     if (plateBtn) {
-      var btnLock = plateLocked(p);
-      plateBtn.textContent = p.name + (btnLock ? ' 🔒' : '');
+      plateBtn.textContent = p.name;
       plateBtn.setAttribute('data-plate', p.id);
       plateBtn.className = 'chip plate-btn plate-' + p.id;
     }
@@ -1011,21 +1049,18 @@
       status.className = 'plate-status plate-' + p.id;
     }
     if (plateMenu) {
-      plateMenu.innerHTML = PLATES.map(function (row) {
-        var locked = plateLocked(row);
-        var on = row.id === p.id ? ' is-on' : '';
-        var lock = locked ? '<span class="plate-lock">' + plateLockLabel(row) + '</span>' : '';
-        return '<button type="button" class="plate-item' + on + (locked ? ' is-locked' : '') + ' plate-' + row.id + '" data-plate="' + row.id + '" role="option">' +
-          '<span class="plate-item-name">' + row.name + lock + '</span>' +
-          '<span class="plate-item-role">' + row.role + '</span>' +
-          '<span class="plate-item-ctx">' + row.ctx + '</span>' +
-          '</button>';
+      plateMenu.innerHTML = PLATE_GROUPS.map(function (g) {
+        var rows = PLATES.filter(function (row) { return g.ids.indexOf(row.id) >= 0; });
+        return '<div class="plate-group">' + g.label + '</div>' +
+          rows.map(function (row) { return plateRowHtml(row, p.id); }).join('');
       }).join('') +
         (isWagyu(p.id) && !wagyuLocked()
           ? '<div class="plate-menu-foot">Wagyu A1–A5 · A5 is the highest grade. Same allowance, more context on higher grades.</div>'
           : p.id === 'chopcode'
             ? '<div class="plate-menu-foot">Attach files in the composer. Same chat as the other plates.</div>'
-            : '');
+            : p.id === 'kaji'
+              ? '<div class="plate-menu-foot">Kaji is a dedicated room. Same signed-in chats as Agents.</div>'
+              : '');
     }
     var tiles = document.getElementById('plate-tiles');
     if (tiles) {
@@ -1043,8 +1078,7 @@
     return EFFORT[tierSel.value] || EFFORT.tamago;
   }
   function showTier() {
-    var ver = Cloud && Cloud.getAppVersion ? Cloud.getAppVersion() : '3.7.3';
-    if (!ver || ver === '3.3.10' || ver === '1.0.0') ver = '3.7.3';
+    var ver = '3.7.5';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
@@ -1996,6 +2030,19 @@
           agents: d.agents || null,
           conversation: d.conversation || null
         });
+        (function openBrowserFromReply() {
+          var pages = d.browser || [];
+          var url = pages[0] && pages[0].url;
+          if (!url && d.sources) {
+            var hit = d.sources.filter(function (x) { return x && /^https:\/\//i.test(x.url); })[0];
+            url = hit && hit.url;
+          }
+          if (url && window.openInWebComputer) {
+            var rail = document.getElementById('browser-rail');
+            if (rail) rail.hidden = false;
+            window.openInWebComputer(url, String(d.reply || '').slice(0, 280));
+          }
+        })();
         showUsage(d);
         showTier();
         return new Promise(function (resolve) {
@@ -2074,17 +2121,20 @@
     var q = String(mmFilter && mmFilter.value || '').toLowerCase();
     var cur = '';
     try { cur = localStorage.getItem(OR_MODEL_KEY) || ''; } catch (e) {}
-    mmList.innerHTML = '';
+    var html = '';
     mmCache.forEach(function (m) {
       if (mmProv !== 'all' && m.provider !== mmProv) return;
       var hay = (m.id + ' ' + (m.name || '') + ' ' + (m.provider || '')).toLowerCase();
       if (q && hay.indexOf(q) < 0) return;
-      var opt = document.createElement('option');
-      opt.value = m.id;
-      opt.textContent = '[' + (m.provider || 'or') + '] ' + (m.name && m.name !== m.id ? m.name + ' · ' : '') + m.id;
-      if (m.id === cur) opt.selected = true;
-      mmList.appendChild(opt);
+      var on = m.id === cur ? ' is-on' : '';
+      var name = (m.name && m.name !== m.id) ? m.name : m.id;
+      html += '<button type="button" class="mm-row' + on + '" role="option" data-model="' + String(m.id).replace(/"/g, '&quot;') + '">' +
+        '<span class="mm-row-prov">' + (m.provider || 'or') + '</span>' +
+        '<span class="mm-row-name">' + String(name).replace(/</g, '&lt;') + '</span>' +
+        '<span class="mm-row-id">' + String(m.id).replace(/</g, '&lt;') + '</span>' +
+        '</button>';
     });
+    mmList.innerHTML = html || '<div class="mm-empty">No models match.</div>';
   }
   async function mmLoad() {
     mmSaveKeysFromForm();
@@ -2126,8 +2176,12 @@
     mmRender();
   });
   if (mmFilter) mmFilter.addEventListener('input', mmRender);
-  if (mmList) mmList.addEventListener('change', function () {
-    try { localStorage.setItem(OR_MODEL_KEY, mmList.value || ''); } catch (e) {}
+  if (mmList) mmList.addEventListener('click', function (e) {
+    var row = e.target.closest('[data-model]');
+    if (!row) return;
+    try { localStorage.setItem(OR_MODEL_KEY, row.getAttribute('data-model') || ''); } catch (e) {}
+    if (orModelSel) orModelSel.value = row.getAttribute('data-model') || '';
+    mmRender();
   });
   document.querySelectorAll('.mm-tab').forEach(function (btn) {
     btn.addEventListener('click', function () {
@@ -2185,6 +2239,14 @@
       email && email.focus();
     }
     window.openCsAuth = open;
+    var passToggle = document.getElementById('auth-pass-toggle');
+    if (passToggle && pass) {
+      passToggle.addEventListener('click', function () {
+        var show = pass.type === 'password';
+        pass.type = show ? 'text' : 'password';
+        passToggle.textContent = show ? 'Hide' : 'Show';
+      });
+    }
     function close() {
       if (modal) modal.classList.remove('is-open');
     }
@@ -2243,8 +2305,6 @@
         })
         .catch(function (e) { err.textContent = e.message || 'Sign up failed'; });
     });
-        .catch(function (e) { err.textContent = e.message || 'Sign up failed'; });
-    });
     document.getElementById('auth-signout').addEventListener('click', function () {
       Cloud.signOut().then(function () {
         switchAccountSession();
@@ -2265,7 +2325,7 @@
       return false;
     }
     history = saved.history;
-    cloudChatId = saved.cloudChatId || null;
+    rememberChatId(saved.cloudChatId || null);
     if (usageEl && saved.usage) {
       usageEl.textContent = String(saved.usage).replace(/\s*·?\s*Your OpenRouter key/gi, '').trim();
     }
@@ -2315,10 +2375,13 @@
     Cloud.init().then(function () {
       lastCloudUserId = Cloud.getSession() && Cloud.getSession().user ? Cloud.getSession().user.id : null;
       updateAccountUI();
+      var chatQ = null;
+      try { chatQ = new URLSearchParams(location.search).get('chat'); } catch (e) {}
       if (Cloud.isSignedIn()) {
         var had = restoreLocalSession();
         refreshChatList();
-        if (!had) loadAccountChats(true);
+        if (chatQ) openCloudChat(chatQ).catch(function (err) { console.warn(err); });
+        else if (!had) loadAccountChats(true);
       } else restoreGuestSession();
     }).catch(function () { restoreGuestSession(); });
   } else {
@@ -2373,7 +2436,42 @@
     }
     try { setOpen(localStorage.getItem(BKEY) === '1'); } catch (e) { setOpen(false); }
     if (drawerBrowser) drawerBrowser.addEventListener('click', function () { setOpen(rail.hidden); });
-    function navigate(raw) {
+    var overlay = document.getElementById('frame-fallback');
+    var fallbackOpen = document.getElementById('frame-fallback-open');
+    var fallbackStatus = document.getElementById('frame-fallback-status');
+    var fallbackSnippet = document.getElementById('frame-fallback-snippet');
+    var openTab = document.getElementById('browser-open-tab');
+    var inspectTimer = null;
+    var lastNav = 'https://chopstickshq.com/';
+    function setFallback(blocked, url, snippet) {
+      if (overlay) overlay.hidden = !blocked;
+      if (fallbackStatus) {
+        fallbackStatus.textContent = blocked
+          ? 'This site blocked embedding. Opened in web computer as a new tab instead of a blank frame.'
+          : 'Opened in web computer.';
+      }
+      if (fallbackSnippet) {
+        fallbackSnippet.hidden = !snippet;
+        fallbackSnippet.textContent = snippet || '';
+      }
+      if (fallbackOpen) fallbackOpen.href = url || '#';
+      if (openTab) openTab.href = url || '#';
+    }
+    function inspectFrame() {
+      var blocked = false;
+      try {
+        var href = frame.contentWindow.location.href;
+        if (!href || href === 'about:blank') blocked = true;
+      } catch (e) {
+        blocked = false;
+      }
+      if (blocked && lastNav && lastNav !== inspectFrame._opened) {
+        inspectFrame._opened = lastNav;
+        window.open(lastNav, '_blank', 'noopener');
+      }
+      setFallback(blocked, lastNav, overlay && overlay.getAttribute('data-snippet'));
+    }
+    function navigate(raw, snippet) {
       var t = String(raw || '').trim();
       if (!t) return;
       var url = t;
@@ -2381,9 +2479,17 @@
         if (t.indexOf('.') >= 0 && t.indexOf(' ') < 0) url = 'https://' + t;
         else url = 'https://www.google.com/search?q=' + encodeURIComponent(t);
       }
+      lastNav = url;
+      if (overlay) overlay.setAttribute('data-snippet', snippet || '');
+      setFallback(false, url, snippet);
       frame.src = url;
       urlInput.value = url;
+      if (openTab) openTab.href = url;
+      clearTimeout(inspectTimer);
+      inspectTimer = setTimeout(inspectFrame, 1400);
     }
+    window.openInWebComputer = navigate;
+    frame.addEventListener('load', inspectFrame);
     document.getElementById('browser-go').addEventListener('click', function () { navigate(urlInput.value); });
     urlInput.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') { e.preventDefault(); navigate(urlInput.value); }
