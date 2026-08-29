@@ -4,7 +4,7 @@ import WebKit
 
 private let chromiumUA =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
-    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 cs.AI/3.7.3"
+    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 cs.AI/3.7.5"
 
 private let browserHome = URL(string: "https://chopstickshq.com/")!
 
@@ -12,6 +12,7 @@ final class ChromiumWebState: ObservableObject {
     @Published var canGoBack = false
     @Published var canGoForward = false
     @Published var isLoading = false
+    @Published var loadFailed = false
     @Published var addressText = browserHome.absoluteString
     weak var webView: WKWebView?
 
@@ -79,10 +80,12 @@ struct ChromiumWebView: NSViewRepresentable {
 
         func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
             state.isLoading = true
+            state.loadFailed = false
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             state.isLoading = false
+            state.loadFailed = false
             state.canGoBack = webView.canGoBack
             state.canGoForward = webView.canGoForward
             if let url = webView.url?.absoluteString {
@@ -92,10 +95,12 @@ struct ChromiumWebView: NSViewRepresentable {
 
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
             state.isLoading = false
+            state.loadFailed = true
         }
 
         func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
             state.isLoading = false
+            state.loadFailed = true
         }
 
         private func allowInWebView(_ url: URL) -> Bool {
@@ -149,8 +154,30 @@ struct ChromiumBrowserView: View {
     var body: some View {
         VStack(spacing: 0) {
             browserToolbar
-            ChromiumWebView(state: web)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ZStack {
+                ChromiumWebView(state: web)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                if web.loadFailed {
+                    VStack(spacing: 10) {
+                        Text("Web computer")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Cursor.muted)
+                        Text("This page didn’t load in the in-app browser.")
+                            .font(.system(size: 13))
+                            .foregroundStyle(Cursor.text)
+                        Button("Open in a new tab") {
+                            if let url = URL(string: web.addressText) {
+                                NSWorkspace.shared.open(url)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(Cursor.chromium)
+                    }
+                    .padding(24)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Cursor.bg.opacity(0.92))
+                }
+            }
         }
         .background(Cursor.bg)
         .onChange(of: store.pendingBrowserURL) { _, href in
@@ -199,6 +226,20 @@ struct ChromiumBrowserView: View {
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
                         .background(Capsule().fill(Cursor.chromium))
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    if let url = URL(string: web.addressText) {
+                        NSWorkspace.shared.open(url)
+                    }
+                } label: {
+                    Text("Open tab")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Cursor.text)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Capsule().fill(Cursor.hover))
                 }
                 .buttonStyle(.plain)
             }

@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/chopsticks-ai/web/grok-ui.css?v=20260828kaji">
+<link rel="stylesheet" href="/chopsticks-ai/web/grok-ui.css?v=20260828plan">
 </head>
 <body class="grok-app has-intro">
 <div class="grok-shell">
@@ -22,7 +22,10 @@
     <button type="button" class="grok-rail-btn" id="rail-new" title="New chat">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 5v14M5 12h14"/></svg>
     </button>
-    <a class="grok-rail-btn" href="/chopsticks-ai/web/" title="cs.AI Agents">
+    <button type="button" class="grok-rail-btn" id="rail-chats" title="Chats">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M8 7h8M8 12h8M8 17h5"/></svg>
+    </button>
+    <a class="grok-rail-btn" id="rail-agents" href="/chopsticks-ai/web/" title="cs.AI Agents">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 10h8M8 14h5"/></svg>
     </a>
     <a class="grok-rail-btn" href="/chopsticks-ai/web/upgrades/" title="Pro">
@@ -41,8 +44,17 @@
           <button type="button" id="browser-fwd" title="Forward">→</button>
           <input class="browser-url" id="browser-url" type="text" value="https://chopstickshq.com/" spellcheck="false">
           <button type="button" id="browser-go">Go</button>
+          <a class="browser-open-tab" id="browser-open-tab" href="https://chopstickshq.com/" target="_blank" rel="noopener">Open tab</a>
         </div>
-        <iframe class="browser-frame" id="browser-frame" title="Kaji web computer" src="https://chopstickshq.com/" sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
+        <div class="browser-stage">
+          <iframe class="browser-frame" id="browser-frame" title="Kaji web computer" src="https://chopstickshq.com/" sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
+          <div class="frame-fallback" id="frame-fallback" hidden>
+            <p class="frame-fallback-kicker">Web computer</p>
+            <p id="frame-fallback-status">This site blocked embedding. Open a new tab instead of a blank frame.</p>
+            <p class="frame-fallback-snippet" id="frame-fallback-snippet" hidden></p>
+            <a class="grok-auth-btn grok-auth-btn-fill" id="frame-fallback-open" href="https://chopstickshq.com/" target="_blank" rel="noopener">Open in a new tab</a>
+          </div>
+        </div>
       </aside>
       <div class="grok-chat-col">
         <div class="stage" id="stage">
@@ -87,6 +99,16 @@
   </div>
 </div>
 
+<div class="grok-scrim" id="kaji-scrim"></div>
+<aside class="grok-drawer" id="kaji-drawer" aria-label="Chats">
+  <div class="grok-drawer-head">
+    Chats
+    <button type="button" class="grok-drawer-close" id="drawer-close" aria-label="Close">×</button>
+  </div>
+  <div class="grok-drawer-section">Same signed-in list as Agents</div>
+  <div class="chat-list-panel" id="chat-list-panel"></div>
+</aside>
+
 <div class="kaji-gate" id="kaji-gate">
   <div class="kaji-gate-card">
     <h2>Think different. Ask Kaji.</h2>
@@ -105,7 +127,11 @@
     <label for="auth-email">Email</label>
     <input id="auth-email" type="email" autocomplete="username">
     <label for="auth-password">Password</label>
-    <input id="auth-password" type="password" autocomplete="current-password">
+    <div class="auth-pass-row">
+      <input id="auth-password" type="password" autocomplete="current-password">
+      <button type="button" class="auth-pass-toggle" id="auth-pass-toggle">Show</button>
+    </div>
+    <p class="auth-hint">Forgot password? Email <a href="mailto:chopstickshq@lam.ws?subject=Forgot%20cs.AI%20password">chopstickshq@lam.ws</a>.</p>
 <div class="auth-err" id="auth-err"></div>
     <div class="auth-ok" id="auth-ok"></div>
     <div class="auth-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
@@ -124,6 +150,7 @@
   var history = [];
   var busy = false;
   var allowed = false;
+  var cloudChatId = null;
   var log = document.getElementById('log');
   var intro = document.getElementById('intro');
   var input = document.getElementById('input');
@@ -133,14 +160,69 @@
   var frame = document.getElementById('browser-frame');
   var urlEl = document.getElementById('browser-url');
   var rail = document.getElementById('browser-rail');
+  var overlay = document.getElementById('frame-fallback');
+  var fallbackOpen = document.getElementById('frame-fallback-open');
+  var fallbackStatus = document.getElementById('frame-fallback-status');
+  var fallbackSnippet = document.getElementById('frame-fallback-snippet');
+  var openTab = document.getElementById('browser-open-tab');
+  var drawer = document.getElementById('kaji-drawer');
+  var scrim = document.getElementById('kaji-scrim');
+  var chatPanel = document.getElementById('chat-list-panel');
+  var ACTIVE_CHAT_KEY = 'chq.activeCloudChatId';
+  var inspectTimer = null;
+  var lastNav = 'https://chopstickshq.com/';
 
-  function openUrl(u) {
+  function rememberChatId(id) {
+    cloudChatId = id || null;
+    try {
+      if (cloudChatId) localStorage.setItem(ACTIVE_CHAT_KEY, cloudChatId);
+      else localStorage.removeItem(ACTIVE_CHAT_KEY);
+    } catch (e) {}
+    var agents = document.getElementById('rail-agents');
+    if (agents) agents.href = '/chopsticks-ai/web/' + (cloudChatId ? ('?chat=' + encodeURIComponent(cloudChatId)) : '');
+  }
+  function setFallback(blocked, url, snippet) {
+    if (overlay) overlay.hidden = !blocked;
+    if (fallbackStatus) {
+      fallbackStatus.textContent = blocked
+        ? 'This site blocked embedding. Opened in a new tab instead of a blank frame.'
+        : 'Opened in web computer.';
+    }
+    if (fallbackSnippet) {
+      fallbackSnippet.hidden = !snippet;
+      fallbackSnippet.textContent = snippet || '';
+    }
+    if (fallbackOpen) fallbackOpen.href = url || '#';
+    if (openTab) openTab.href = url || '#';
+  }
+  function inspectFrame() {
+    var blocked = false;
+    try {
+      var href = frame.contentWindow.location.href;
+      if (!href || href === 'about:blank') blocked = true;
+    } catch (e) {
+      blocked = false;
+    }
+    if (blocked && lastNav && lastNav !== inspectFrame._opened) {
+      inspectFrame._opened = lastNav;
+      window.open(lastNav, '_blank', 'noopener');
+    }
+    setFallback(blocked, lastNav, overlay && overlay.getAttribute('data-snippet'));
+  }
+  function openUrl(u, snippet) {
     var href = String(u || '').trim();
     if (!/^https:\/\//i.test(href)) return;
+    lastNav = href;
     if (rail) rail.hidden = false;
     if (urlEl) urlEl.value = href;
+    if (overlay) overlay.setAttribute('data-snippet', snippet || '');
+    setFallback(false, href, snippet);
     if (frame) frame.src = href;
+    if (openTab) openTab.href = href;
+    clearTimeout(inspectTimer);
+    inspectTimer = setTimeout(inspectFrame, 1400);
   }
+  if (frame) frame.addEventListener('load', inspectFrame);
 
   function addTurn(role, html) {
     if (intro && intro.parentNode) intro.parentNode.removeChild(intro);
@@ -220,7 +302,20 @@
         history.push({ role: 'assistant', content: reply });
         thinking.lastChild.innerHTML = md(reply);
         var pages = d.browser || [];
-        if (pages[0] && pages[0].url) openUrl(pages[0].url);
+        if (pages[0] && pages[0].url) openUrl(pages[0].url, reply);
+        if (Cloud && Cloud.isSignedIn && Cloud.isSignedIn()) {
+          (async function () {
+            try {
+              var title = text.slice(0, 60);
+              if (!cloudChatId) {
+                var created = await Cloud.createChat({ title: title, client: 'web', tier: 'kaji' });
+                rememberChatId(created && created.id);
+              }
+              if (cloudChatId) await Cloud.saveMessages(cloudChatId, history.slice(-80), { title: title, tier: 'kaji' });
+              refreshChats();
+            } catch (e) {}
+          })();
+        }
       })
       .catch(function () {
         thinking.lastChild.textContent = 'Could not reach Kaji.';
@@ -243,11 +338,65 @@
   });
   document.getElementById('rail-new').onclick = function () {
     history = [];
+    rememberChatId(null);
     log.innerHTML = '';
     if (intro) log.appendChild(intro);
     document.body.classList.add('has-intro');
     rail.hidden = true;
+    refreshChats();
   };
+  function setDrawer(open) {
+    if (drawer) drawer.classList.toggle('open', !!open);
+    if (scrim) scrim.classList.toggle('open', !!open);
+  }
+  async function refreshChats() {
+    if (!chatPanel) return;
+    if (!Cloud || !Cloud.isSignedIn || !Cloud.isSignedIn()) {
+      chatPanel.innerHTML = '<div class="chat-list-empty">Sign in to sync chats with Agents.</div>';
+      return;
+    }
+    try {
+      var chats = await Cloud.listChats();
+      var cur = cloudChatId || '';
+      if (!chats.length) {
+        chatPanel.innerHTML = '<div class="chat-list-empty">No saved chats yet.</div>';
+        return;
+      }
+      chatPanel.innerHTML = chats.map(function (c) {
+        var title = (c.title || 'Untitled').slice(0, 48).replace(/</g, '&lt;');
+        var active = c.id === cur ? ' active' : '';
+        return '<button type="button" class="chat-item' + active + '" data-id="' + c.id + '">' + title + '</button>';
+      }).join('');
+    } catch (e) {
+      chatPanel.innerHTML = '<div class="chat-list-empty">Could not load chats.</div>';
+    }
+  }
+  async function openCloudChat(id) {
+    if (!Cloud || !id) return;
+    var msgs = await Cloud.loadMessages(id);
+    history = msgs.map(function (m) { return { role: m.role, content: m.content }; });
+    rememberChatId(id);
+    log.innerHTML = '';
+    if (!history.length && intro) {
+      log.appendChild(intro);
+      document.body.classList.add('has-intro');
+    } else {
+      document.body.classList.remove('has-intro');
+      history.forEach(function (m) {
+        addTurn(m.role === 'user' ? 'user' : 'bot', md(m.content));
+      });
+    }
+    refreshChats();
+    setDrawer(false);
+  }
+  document.getElementById('rail-chats').onclick = function () { setDrawer(!drawer.classList.contains('open')); refreshChats(); };
+  document.getElementById('drawer-close').onclick = function () { setDrawer(false); };
+  if (scrim) scrim.onclick = function () { setDrawer(false); };
+  if (chatPanel) chatPanel.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-id]');
+    if (!btn) return;
+    openCloudChat(btn.getAttribute('data-id')).catch(function () {});
+  });
   document.querySelectorAll('[data-suggest]').forEach(function (btn) {
     btn.addEventListener('click', function () { submit(btn.getAttribute('data-suggest')); });
   });
@@ -272,6 +421,14 @@
   document.getElementById('account-btn').onclick = openAuth;
   document.getElementById('gate-signin').onclick = openAuth;
   document.getElementById('auth-close').onclick = function () { modal.classList.remove('is-open'); };
+  var passToggle = document.getElementById('auth-pass-toggle');
+  if (passToggle && pass) {
+    passToggle.onclick = function () {
+      var show = pass.type === 'password';
+      pass.type = show ? 'text' : 'password';
+      passToggle.textContent = show ? 'Hide' : 'Show';
+    };
+  }
   document.getElementById('auth-signin').onclick = function () {
     err.textContent = '';
     Cloud.signIn(email.value.trim(), pass.value).then(function () {
@@ -288,8 +445,19 @@
     }).catch(function (e) { err.textContent = e.message || 'Sign up failed'; });
   };
 
-  if (Cloud && Cloud.onChange) Cloud.onChange(pollUsage);
-  if (Cloud && Cloud.init) Cloud.init().then(pollUsage); else pollUsage();
+  if (Cloud && Cloud.onChange) Cloud.onChange(function () { pollUsage(); refreshChats(); });
+  if (Cloud && Cloud.init) {
+    Cloud.init().then(function () {
+      pollUsage();
+      var q = null;
+      try { q = new URLSearchParams(location.search).get('chat'); } catch (e) {}
+      var stored = null;
+      try { stored = localStorage.getItem(ACTIVE_CHAT_KEY); } catch (e) {}
+      var id = q || stored;
+      if (id && Cloud.isSignedIn && Cloud.isSignedIn()) openCloudChat(id).catch(function () {});
+      else refreshChats();
+    });
+  } else pollUsage();
 })();
 </script>
 </body>

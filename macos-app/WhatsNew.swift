@@ -44,10 +44,9 @@ enum WhatsNew {
             let payload = try JSONDecoder().decode(Payload.self, from: data)
             guard let entries = payload.entries, !entries.isEmpty else { return }
 
-            let cv = normalize(current)
+            let want = normalize(payload.latest ?? current)
             let match = entries.first { e in
-                let ev = normalize(e.version)
-                return ev == cv || cv.hasPrefix(ev) || ev.hasPrefix(cv) || cv.contains(ev) || ev.contains(cv)
+                normalize(e.version) == want
             } ?? entries.first
             guard let entry = match else { return }
 

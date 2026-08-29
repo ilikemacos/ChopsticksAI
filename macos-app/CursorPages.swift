@@ -406,6 +406,7 @@ struct AccountView: View {
     var onSignedIn: (() -> Void)?
     @State private var email = ""
     @State private var password = ""
+    @State private var showPassword = false
     @State private var error = ""
 
     var body: some View {
@@ -442,11 +443,25 @@ struct AccountView: View {
                                 .foregroundStyle(Cursor.text)
                                 .padding(10)
                                 .background(RoundedRectangle(cornerRadius: 8).fill(Cursor.hover))
-                            SecureField("Password (min 6)", text: $password)
-                                .textFieldStyle(.plain)
-                                .foregroundStyle(Cursor.text)
-                                .padding(10)
-                                .background(RoundedRectangle(cornerRadius: 8).fill(Cursor.hover))
+                            if showPassword {
+                                TextField("Password (min 6)", text: $password)
+                                    .textFieldStyle(.plain)
+                                    .foregroundStyle(Cursor.text)
+                                    .padding(10)
+                                    .background(RoundedRectangle(cornerRadius: 8).fill(Cursor.hover))
+                            } else {
+                                SecureField("Password (min 6)", text: $password)
+                                    .textFieldStyle(.plain)
+                                    .foregroundStyle(Cursor.text)
+                                    .padding(10)
+                                    .background(RoundedRectangle(cornerRadius: 8).fill(Cursor.hover))
+                            }
+                            Toggle("Show password", isOn: $showPassword)
+                                .toggleStyle(.checkbox)
+                                .foregroundStyle(Cursor.muted)
+                            Link("Forgot password? Email chopstickshq@lam.ws", destination: URL(string: "mailto:chopstickshq@lam.ws?subject=Forgot%20cs.AI%20password")!)
+                                .font(.system(size: 12))
+                                .foregroundStyle(Cursor.blue)
                             if !error.isEmpty {
                                 Text(error)
                                     .font(.system(size: 12))
@@ -1190,31 +1205,24 @@ struct SettingsView: View {
                     }
 
                 case .models:
-                    SettingsCard(title: "Plate", subtitle: "Rice → Tamago → Hibachi → Wagyu. ChopCode and Kaji are Pro. Kaji is alpha and prone to wrong answers.") {
-                        ForEach([
-                            ("rice", "Rice"), ("tamago", "Tamago"), ("hibachi", "Hibachi"),
-                            ("wagyua1", "Wagyu A1"), ("wagyua2", "Wagyu A2"), ("wagyua3", "Wagyu A3"),
-                            ("wagyua4", "Wagyu A4"), ("wagyua5", "Wagyu A5"),
-                            ("chopcode", "ChopCode"),
-                            ("kaji", "Kaji"),
-                            ("stickercoderplus", "StickerCoder+"),
-                        ], id: \.0) { id, label in
-                            Button {
-                                store.setTier(id)
-                            } label: {
-                                HStack {
-                                    Text(label)
-                                        .foregroundStyle(Cursor.text)
-                                    Spacer()
-                                    if store.tier == id {
-                                        Image(systemName: "checkmark")
-                                            .foregroundStyle(Cursor.blue)
-                                    }
-                                }
-                                .padding(.vertical, 6)
-                            }
-                            .buttonStyle(.plain)
-                            if id != "stickercoderplus" { Divider().overlay(Cursor.hairline) }
+                    SettingsCard(title: "Plate", subtitle: "Everyday, Wagyu, then Apps. ChopCode and Kaji are Pro. Kaji is alpha and prone to wrong answers.") {
+                        Group {
+                            Text("Everyday").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
+                            plateSetting("rice", "Rice")
+                            plateSetting("tamago", "Tamago")
+                            plateSetting("hibachi", "Hibachi")
+                            Divider().overlay(Cursor.hairline)
+                            Text("Wagyu").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
+                            plateSetting("wagyua1", "Wagyu A1")
+                            plateSetting("wagyua2", "Wagyu A2")
+                            plateSetting("wagyua3", "Wagyu A3")
+                            plateSetting("wagyua4", "Wagyu A4")
+                            plateSetting("wagyua5", "Wagyu A5")
+                            Divider().overlay(Cursor.hairline)
+                            Text("Apps").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
+                            plateSetting("chopcode", "ChopCode")
+                            plateSetting("kaji", "Kaji")
+                            plateSetting("stickercoderplus", "StickerCoder+")
                         }
                     }
                     SettingsCard(title: "More models") {
@@ -1417,6 +1425,25 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(Cursor.bg)
+    }
+
+    @ViewBuilder
+    private func plateSetting(_ id: String, _ label: String) -> some View {
+        Button {
+            store.setTier(id)
+        } label: {
+            HStack {
+                Text(label)
+                    .foregroundStyle(Cursor.text)
+                Spacer()
+                if store.tier == id {
+                    Image(systemName: "checkmark")
+                        .foregroundStyle(Cursor.blue)
+                }
+            }
+            .padding(.vertical, 6)
+        }
+        .buttonStyle(.plain)
     }
 }
 

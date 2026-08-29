@@ -9,7 +9,7 @@ private let kajiStarters = [
 
 struct KajiAppView: View {
     @ObservedObject var store: AppStore
-    @StateObject private var model = ChatModel()
+    @ObservedObject var model: ChatModel
     @ObservedObject private var auth = AuthStore.shared
     @FocusState private var focused: Bool
     @State private var previousTier = "tamago"

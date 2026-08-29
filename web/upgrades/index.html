@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/chopsticks-ai/web/cursor-ui.css?v=20260827a">
+<link rel="stylesheet" href="/chopsticks-ai/web/cursor-ui.css?v=20260828plan">
 </head>
 <body class="cursor-app upgrades-page">
 <div class="cursor-shell">
@@ -62,8 +62,12 @@
           <label for="auth-email">Email</label>
           <input id="auth-email" type="email" autocomplete="username" placeholder="you@company.com">
           <label for="auth-password">Password</label>
-          <input id="auth-password" type="password" autocomplete="current-password" placeholder="••••••••" minlength="6">
-          <p class="auth-err" id="auth-err"></p>
+          <div class="auth-pass-row">
+            <input id="auth-password" type="password" autocomplete="current-password" placeholder="••••••••" minlength="6">
+            <button type="button" class="auth-pass-toggle" id="auth-pass-toggle">Show</button>
+          </div>
+          <p class="auth-hint">Forgot password? Email <a href="mailto:chopstickshq@lam.ws?subject=Forgot%20cs.AI%20password">chopstickshq@lam.ws</a>.</p>
+<p class="auth-err" id="auth-err"></p>
           <p class="auth-ok" id="auth-ok"></p>
           <div class="upgrades-auth-actions">
             <button type="button" class="nbtn primary" id="auth-signin">Sign in</button>
@@ -96,7 +100,7 @@
               <p class="price">Fathom keys</p>
               <ul>
                 <li>2 keys → 800k · 2h 30m</li>
-                <li>5 keys → 900k · 2h · ChopCode</li>
+                <li>5 keys → 900k · 2h · ChopCode + Kaji</li>
                 <li>10 keys → 1m · 1h</li>
               </ul>
             </article>
@@ -141,19 +145,26 @@
     if (el) el.href = chatHref;
   });
 
+  function unlockStorage() {
+    try { return sessionStorage; } catch (e) { return null; }
+  }
   function unlockStorageKey() {
     var uid = Cloud && Cloud.getSession() && Cloud.getSession().user && Cloud.getSession().user.id;
     return uid ? ('chq.aiUnlockKeys.' + uid) : 'chq.aiUnlockKeys.guest';
   }
   function unlockKeys() {
     try {
-      var raw = localStorage.getItem(unlockStorageKey());
+      var store = unlockStorage();
+      var raw = store ? store.getItem(unlockStorageKey()) : null;
       var arr = raw ? JSON.parse(raw) : [];
       return Array.isArray(arr) ? arr.filter(function (k) { return /^oi-pl2-/i.test(String(k || '')); }) : [];
     } catch (e) { return []; }
   }
   function saveUnlockKeys(keys) {
-    try { localStorage.setItem(unlockStorageKey(), JSON.stringify(keys)); } catch (e) {}
+    try {
+      var store = unlockStorage();
+      if (store) store.setItem(unlockStorageKey(), JSON.stringify(keys));
+    } catch (e) {}
   }
   function fmt(n) {
     if (!isFinite(n)) return '?';
@@ -228,6 +239,14 @@
   var ok = document.getElementById('auth-ok');
   var email = document.getElementById('auth-email');
   var pass = document.getElementById('auth-password');
+  var passToggle = document.getElementById('auth-pass-toggle');
+  if (passToggle && pass) {
+    passToggle.onclick = function () {
+      var show = pass.type === 'password';
+      pass.type = show ? 'text' : 'password';
+      passToggle.textContent = show ? 'Hide' : 'Show';
+    };
+  }
   document.getElementById('auth-signin').onclick = function () {
     err.textContent = '';
     ok.textContent = '';

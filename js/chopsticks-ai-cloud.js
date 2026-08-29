@@ -188,6 +188,18 @@
     };
   }
 
+  function verNewer(a, b) {
+    function parts(v) {
+      return String(v || '').replace(/^v/i, '').split(/[.-]/).map(function (x) { return parseInt(x, 10) || 0; });
+    }
+    var A = parts(a), B = parts(b);
+    for (var i = 0; i < Math.max(A.length, B.length); i++) {
+      var x = A[i] || 0, y = B[i] || 0;
+      if (x !== y) return x > y;
+    }
+    return false;
+  }
+
   var Cloud = {
     onChange: function (fn) {
       listeners.push(fn);
@@ -206,7 +218,10 @@
       return Boolean(session && session.modelPicker);
     },
     getAppVersion: function () {
-      return (session && session.appVersion) || '3.7.3';
+      var baked = '3.7.5';
+      var remote = (session && session.appVersion) || '';
+      if (!remote) return baked;
+      return verNewer(remote, baked) ? remote : baked;
     },
 
     init: async function () {
