@@ -30,6 +30,8 @@ sed -i \
 
 echo "==> Sync API + changelog"
 cp "$SITE/api/_lib/chopsticks-ai.js" "$MIRROR/server/chopsticks-ai.js"
+cp "$SITE/api/_lib/chopsticks-intelligence.js" "$MIRROR/server/chopsticks-intelligence.js" 2>/dev/null || true
+cp "$SITE/api/_lib/signup-verify.js" "$MIRROR/server/signup-verify.js"
 cp "$SITE/api/_lib/signup-verify.js" "$MIRROR/server/signup-verify.js"
 cp "$SITE/api/_lib/usage-email.js" "$MIRROR/server/usage-email.js"
 cp "$SITE/api/_lib/chopsticks-ai-kb.json" "$MIRROR/server/chopsticks-ai-kb.json"

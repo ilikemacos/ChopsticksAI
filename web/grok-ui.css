@@ -1071,7 +1071,32 @@ button { cursor: pointer; background: none; border: none; }
   font: 12px var(--mono);
 }
 .grok-main .browser-url:focus { outline: none; border-color: var(--grok-border-focus); }
+.grok-main .browser-open-tab {
+  flex: none; height: 30px; padding: 0 8px; display: inline-flex; align-items: center;
+  border: 1px solid var(--grok-divider); border-radius: 8px;
+  color: var(--grok-muted); font: 600 11px var(--sans); text-decoration: none; white-space: nowrap;
+}
+.grok-main .browser-open-tab:hover { background: var(--grok-surface-3); color: var(--grok-text); }
+.grok-main .browser-stage { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .grok-main .browser-frame { flex: 1; border: 0; width: 100%; background: #fff; }
+.grok-main .frame-fallback {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; padding: 24px; text-align: center;
+  background: rgba(0,0,0,0.88); color: var(--grok-text);
+}
+.grok-main .frame-fallback[hidden] { display: none !important; }
+.grok-main .frame-fallback-kicker {
+  font: 700 10px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--grok-muted);
+}
+.grok-main .frame-fallback-snippet { max-width: 36em; font-size: 13px; color: var(--grok-muted); line-height: 1.45; }
+.auth-pass-row { display: flex; gap: 8px; }
+.auth-pass-row input { flex: 1; min-width: 0; }
+.auth-pass-toggle {
+  flex: none; padding: 0 10px; border-radius: 8px; border: 1px solid var(--grok-divider);
+  background: transparent; color: var(--grok-muted); font: 600 12px var(--sans);
+}
+.auth-pass-toggle:hover { color: var(--grok-text); }
 
 .auth-modal {
   position: fixed;

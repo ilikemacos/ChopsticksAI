@@ -232,6 +232,11 @@ final class AppStore: ObservableObject {
 
     func setTier(_ id: String) {
         let next = Self.normalizeTier(id)
+        if next == "kaji" {
+            nav = .kaji
+        } else if nav == .kaji {
+            nav = .agents
+        }
         tier = next
         UserDefaults.standard.set(next, forKey: tierKey)
     }

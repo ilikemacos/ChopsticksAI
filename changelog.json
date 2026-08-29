@@ -1,7 +1,32 @@
 {
   "product": "cs.AI",
-  "latest": "3.7.3",
+  "latest": "3.7.5",
   "entries": [
+    {
+      "version": "3.7.5",
+      "date": "2026-08-28",
+      "title": "Intelligence stack — route, evidence, verify",
+      "changes": [
+        "Request analyzer and compute budget: trivial asks stay cheap; hard questions get more search and a critic",
+        "Hybrid HQ retrieval (keyword + BM25 + entities) and ranked web evidence with source-quality scores",
+        "Conflict detection for disagreeing numbers; follow-up research when the first search is thin",
+        "OpenRouter stays on :free models; Groq can use any Groq model",
+        "Adversarial critic pass on harder plates instead of a light polish"
+      ]
+    },
+    {
+      "version": "3.7.4",
+      "date": "2026-08-28",
+      "title": "Grok plate picker, shared chats, honest web computer",
+      "changes": [
+        "Grouped plate picker (Everyday / Wagyu / Apps) and More models as a catalog",
+        "Kaji and Agents share the same signed-in cloud chats",
+        "Web computer shows when a site blocks embedding and opens a new tab",
+        "Show/hide password and forgot-password via chopstickshq@lam.ws",
+        "Stronger everyday plates (Grok-4 Fast first), full reply token budget, longer model attempts",
+        "Quality rules for format, math, and complete code; refine pass on Hibachi and Wagyu"
+      ]
+    },
     {
       "version": "3.7.3",
       "date": "2026-08-28",

@@ -1724,7 +1724,7 @@ struct RootShell: View {
         case .agents:
             AgentChatView(model: chat, store: store, updater: updater)
         case .kaji:
-            KajiAppView(store: store)
+            KajiAppView(store: store, model: chat)
         case .search:
             ChromiumBrowserView()
         case .cloudAgents:
@@ -2066,14 +2066,25 @@ struct AgentChatView: View {
                     .fixedSize()
 
                     Menu {
-                        ForEach(effortTiers, id: \.id) { t in
-                            Button {
-                                store.setTier(t.id)
-                            } label: {
-                                if t.id == store.tier {
-                                    Label(t.label, systemImage: "checkmark")
-                                } else {
-                                    Text(t.label)
+                        Section("Everyday") {
+                            ForEach(effortTiers.filter { ["rice", "tamago", "hibachi"].contains($0.id) }, id: \.id) { t in
+                                plateMenuRow(t)
+                            }
+                        }
+                        Section("Wagyu") {
+                            ForEach(effortTiers.filter { $0.id.hasPrefix("wagyu") }, id: \.id) { t in
+                                plateMenuRow(t)
+                            }
+                        }
+                        Section("Apps") {
+                            ForEach(effortTiers.filter { ["chopcode", "kaji"].contains($0.id) }, id: \.id) { t in
+                                plateMenuRow(t)
+                            }
+                        }
+                        if effortTiers.contains(where: { $0.id == "stickercoderplus" }) {
+                            Section("More") {
+                                ForEach(effortTiers.filter { $0.id == "stickercoderplus" }, id: \.id) { t in
+                                    plateMenuRow(t)
                                 }
                             }
                         }
@@ -2134,6 +2145,18 @@ struct AgentChatView: View {
         }
         .padding(.top, 6)
         .background(Cursor.bg)
+    }
+
+    private func plateMenuRow(_ t: (id: String, label: String)) -> some View {
+        Button {
+            store.setTier(t.id)
+        } label: {
+            if t.id == store.tier {
+                Label(t.label, systemImage: "checkmark")
+            } else {
+                Text(t.label)
+            }
+        }
     }
 
     private func chip(icon: String, title: String) -> some View {

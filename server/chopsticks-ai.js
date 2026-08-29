@@ -9,17 +9,30 @@ const {
   handleAuthRefresh,
 } = require("./signup-verify.js");
 const { runChopCodeEnsemble, CHOPCODE_AGENTS } = require("./chopcode-ensemble.js");
+const {
+  analyzeRequest,
+  computeBudget,
+  followUpQueries,
+  rankEvidence,
+  detectConflicts,
+  formatEvidence,
+  hybridRetrieve,
+  routeModels,
+  CRITIC_SYSTEM,
+  DECOMPOSE_HINT,
+} = require("./chopsticks-intelligence.js");
 
 const TIERS = {
   rice: {
     label: "Rice",
     models: [
+      "groq/llama-3.1-8b-instant",
       "nvidia/nemotron-3-nano-30b-a3b:free",
       "nvidia/llama-3.3-nemotron-super-49b-v1:free",
     ],
     longModels: [
+      "groq/llama-3.1-8b-instant",
       "nvidia/nemotron-3-nano-30b-a3b:free",
-      "nvidia/llama-3.3-nemotron-super-49b-v1:free",
     ],
     context: 16000,
     refine: false,
@@ -27,67 +40,70 @@ const TIERS = {
     grounding: 3,
     searchMax: 3,
     timeoutMs: 14000,
-    temperature: 0.25,
+    temperature: 0.15,
   },
   tamago: {
     label: "Tamago",
     models: [
+      "groq/llama-3.3-70b-versatile",
       "nvidia/nemotron-3-super-120b-a12b:free",
-      "nvidia/llama-3.3-nemotron-super-49b-v1:free",
-      "nvidia/nemotron-3-nano-30b-a3b:free",
+      "z-ai/glm-5.2:free",
     ],
     longModels: [
+      "groq/openai/gpt-oss-120b",
       "nvidia/nemotron-3-super-120b-a12b:free",
-      "nvidia/llama-3.3-nemotron-super-49b-v1:free",
     ],
     context: 48000,
     refine: false,
     maxReply: 1800,
     grounding: 5,
     searchMax: 6,
-    timeoutMs: 18000,
-    temperature: 0.3,
+    timeoutMs: 20000,
+    temperature: 0.2,
   },
   hibachi: {
     label: "Hibachi",
     models: [
+      "groq/openai/gpt-oss-120b",
       "nvidia/nemotron-3-ultra-550b-a55b:free",
-      "nvidia/nemotron-3-super-120b-a12b:free",
+      "google/gemma-4-31b-it:free",
     ],
     longModels: [
       "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "groq/openai/gpt-oss-120b",
     ],
     context: 96000,
-    refine: false,
+    refine: true,
+    refineModels: ["groq/llama-3.3-70b-versatile"],
     maxReply: 3500,
     grounding: 8,
     searchMax: 8,
-    timeoutMs: 22000,
-    temperature: 0.32,
+    timeoutMs: 24000,
+    temperature: 0.22,
   },
   wagyu: {
     label: "Wagyu A5",
     wagyuGrade: 5,
     models: [
       "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "groq/openai/gpt-oss-120b",
       "google/gemma-4-26b-a4b-it:free",
-      "openai/gpt-oss-120b:free",
     ],
     longModels: [
       "nvidia/nemotron-3-ultra-550b-a55b:free",
-      "openai/gpt-oss-120b:free",
+      "groq/openai/gpt-oss-120b",
     ],
     refine: true,
     refineModels: [
+      "groq/llama-3.3-70b-versatile",
       "google/gemma-4-26b-a4b-it:free",
-      "openai/gpt-oss-120b:free",
     ],
     context: 160000,
     maxReply: 8000,
     grounding: 16,
     searchMax: 16,
-    timeoutMs: 24000,
-    temperature: 0.35,
+    timeoutMs: 28000,
+    temperature: 0.25,
   },
 };
 const WAGYU_SHARED = {
@@ -144,28 +160,23 @@ TIERS.chopcode = {
     label: "ChopCode",
     chopCode: true,
     models: [
-      "groq/llama-3.3-70b-versatile:free",
+      "qwen/qwen3-coder:free",
+      "groq/llama-3.3-70b-versatile",
       "z-ai/glm-5.2:free",
       "nvidia/nemotron-3-ultra:free",
       "cohere/north-mini-code:free",
       "openai/gpt-oss-20b:free",
-      "qwen/qwen3-coder:free",
       "poolside/laguna-s-2.1:free",
       "nvidia/nemotron-3-super-120b-a12b:free",
-      "google/gemma-4-26b-a4b-it:free",
       "google/gemma-4-31b-it:free",
+      "google/gemma-4-26b-a4b-it:free",
     ],
     longModels: [
-      "groq/llama-3.3-70b-versatile:free",
-      "z-ai/glm-5.2:free",
-      "nvidia/nemotron-3-ultra:free",
-      "cohere/north-mini-code:free",
-      "openai/gpt-oss-20b:free",
       "qwen/qwen3-coder:free",
-      "poolside/laguna-s-2.1:free",
-      "nvidia/nemotron-3-super-120b-a12b:free",
-      "google/gemma-4-26b-a4b-it:free",
-      "google/gemma-4-31b-it:free",
+      "z-ai/glm-5.2:free",
+      "groq/llama-3.3-70b-versatile",
+      "nvidia/nemotron-3-ultra:free",
+      "openai/gpt-oss-20b:free",
     ],
     context: 128000,
     refine: true,
@@ -173,31 +184,29 @@ TIERS.chopcode = {
     maxReply: 4096,
     grounding: 8,
     searchMax: 8,
-    timeoutMs: 22000,
-    temperature: 0.2,
+    timeoutMs: 24000,
+    temperature: 0.12,
 };
 TIERS.kaji = {
   label: "Kaji",
   kaji: true,
-  models: [
-    "x-ai/grok-4-fast",
-    "x-ai/grok-3-mini",
-    "nvidia/nemotron-3-nano-30b-a3b:free",
-    "nvidia/nemotron-3-super-120b-a12b:free",
-  ],
-  longModels: [
-    "x-ai/grok-4-fast",
-    "x-ai/grok-4",
-    "nvidia/nemotron-3-super-120b-a12b:free",
-  ],
+    models: [
+      "groq/llama-3.3-70b-versatile",
+      "groq/openai/gpt-oss-120b",
+      "nvidia/nemotron-3-super-120b-a12b:free",
+    ],
+    longModels: [
+      "groq/openai/gpt-oss-120b",
+      "nvidia/nemotron-3-super-120b-a12b:free",
+    ],
   refine: true,
-  refineModels: ["x-ai/grok-4-fast", "nvidia/nemotron-3-nano-30b-a3b:free"],
+  refineModels: ["groq/llama-3.3-70b-versatile", "nvidia/nemotron-3-nano-30b-a3b:free"],
   context: 128000,
   maxReply: 3500,
   grounding: 16,
   searchMax: 6,
-  timeoutMs: 22000,
-  temperature: 0.5,
+  timeoutMs: 24000,
+  temperature: 0.42,
 };
 const TIER_ALIASES = {
   rice: "rice",
@@ -693,6 +702,12 @@ function isGroqModelId(id) {
   return String(id || "").toLowerCase().startsWith("groq/");
 }
 
+/** HQ OpenRouter key: only :free. Groq/Claude use their own keys. */
+function isHqOpenRouterAllowed(id) {
+  if (isGroqModelId(id) || isClaudeModelId(id)) return true;
+  return String(id || "").toLowerCase().endsWith(":free");
+}
+
 function groqNativeModelId(id) {
   if (!isGroqModelId(id)) return "";
   return String(id).slice(5);
@@ -963,9 +978,10 @@ const REFINE_ENABLED = (process.env.CHOPSTICKS_AI_REFINE || "on") !== "off";
 const REFINE_SYSTEM = [
   "You are the reviewer in a two-model pipeline. Another assistant drafted the ",
   "reply below. Improve it and output ONLY the improved reply.\n\n",
-  "Fix any inaccuracy, tighten wording, remove padding and repetition, and make ",
-  "sure it directly answers what was asked. Keep the draft's facts: do not add ",
-  "version numbers, links, commands or claims that are not already there.\n\n",
+  "Fix inaccuracy, complete truncated answers, and make the response match the ",
+  "user's requested format (letter, number, JSON, or short phrase when asked). ",
+  "Tighten wording. Keep the draft's facts unless they are clearly wrong. ",
+  "For math, verify the arithmetic. For code, keep it complete and runnable.\n\n",
   "If the draft is already good, return it unchanged. Never mention the draft, ",
   "the review, or yourself as a reviewer - output only the final reply text.",
 ].join("");
@@ -997,8 +1013,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 
-const APP_VERSION = "3.7.3";
-const PREVIEW_APP_VERSION = "3.7.3";
+const APP_VERSION = "3.7.5";
+const PREVIEW_APP_VERSION = "3.7.5";
 
 function appVersionFor(account) {
   return canPickOpenRouterModel(account) ? PREVIEW_APP_VERSION : APP_VERSION;
@@ -1040,8 +1056,8 @@ function languageInstruction(code) {
   return `Respond in ${name}. Match the user's language when they switch.`;
 }
 
-const MAX_MESSAGES = 12;
-const MAX_CHARS_PER_MSG = 2000;
+const MAX_MESSAGES = 16;
+const MAX_CHARS_PER_MSG = 12000;
 const GROUNDING_INTENTS = 6;
 
 const TOKEN_BUDGET = FREE_USAGE.limit;
@@ -1352,10 +1368,9 @@ function scoreQuery(query) {
  *  which facts to hand the model. Weak matches (e.g. bare "minecraft") are
  *  excluded so general questions are not steered to HQ portfolio snippets. */
 function retrieve(query, limit = GROUNDING_INTENTS) {
-  return scoreQuery(query)
-    .filter((s) => s.score >= KB_CONFIDENCE_FLOOR)
-    .slice(0, limit)
-    .map((s) => s.intent);
+  const rows = scoreQuery(query).filter((s) => s.score >= KB_CONFIDENCE_FLOOR);
+  const hybrid = hybridRetrieve(query, rows, limit);
+  return hybrid.length ? hybrid : rows.slice(0, limit).map((s) => s.intent);
 }
 
 /** Kaji is trained on the whole HQ catalog: ranked hits first, then remaining intents. */
@@ -1494,7 +1509,7 @@ const SEARCH_ENABLED = (process.env.CHOPSTICKS_AI_SEARCH || "on") !== "off";
 const SEARCH_TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_SEARCH_TIMEOUT_MS || 2200);
 const SEARCH_MIN_LEN = 3;
 const MAX_SOURCES = 12;
-const UA = "cs.AI-3/3.7.3 (+https://chopstickshq.com/chopsticks-ai/)";
+const UA = "cs.AI-3/3.7.5 (+https://chopstickshq.com/chopsticks-ai/)";
 
 function clockNow() {
   const d = new Date();
@@ -2026,23 +2041,29 @@ async function webSearch(query, maxSources, timeoutMs) {
         found.push(...batch.value);
       }
     }
-    found = prioritizeChopsticksHQ(query, dedupeSources(found)).slice(0, cap);
-
-    if (!found.length) return { context: "", sources: [] };
-
-    const sources = found.map((f) => ({
+    found = prioritizeChopsticksHQ(query, dedupeSources(found));
+    const ranked = rankEvidence(query, found.map((f) => ({
       title: String(f.via ? f.via + ": " + (f.title || query) : (f.title || query)).slice(0, 140),
       url: normUrl(f.src),
       snippet: String(f.text || "").slice(0, 280),
-    }));
+      via: f.via,
+    }))).slice(0, cap);
 
+    if (!ranked.length) return { context: "", sources: [], ranked: [], conflicts: [] };
+
+    const conflicts = detectConflicts(ranked);
+    const sources = ranked.map((f) => ({
+      title: f.title,
+      url: f.url,
+      snippet: f.snippet,
+    }));
     const context = sources
       .map((f) => `- ${f.title}: ${f.snippet}${f.url ? ` (${f.url})` : ""}`)
       .join("\n");
 
-    return { context, sources };
+    return { context, sources, ranked, conflicts };
   } catch (e) {
-    return { context: "", sources: [] };
+    return { context: "", sources: [], ranked: [], conflicts: [] };
   } finally {
     clearTimeout(timer);
   }
@@ -2078,7 +2099,7 @@ function selfFacts(tier, appVersion) {
     "- cs.AI Enterprise is for large companies: custom usage, seats, invoice/PO, SSO reviewed on request. There is no public price. Direct orgs to https://chopstickshq.com/chopsticks-ai/enterprise/ and chopstickshq@lam.ws (subject: cs.AI Enterprise). Do not invent certifications or a checkout URL.",
     "- Email sign-in runs on chopstickshq.com — email and password only, no verification email.",
     "- You are available on every page of chopstickshq.com, in ChopsticksAI at /chopailab, and inside MacBar's Chat tab.",
-    "- You do not use vector embeddings — retrieval is keyword intent scoring plus Chromium web search, never a semantic vector index.",
+    "- Retrieval is hybrid keyword + BM25 + entity matching on HQ knowledge, plus ranked live web evidence. There is no vector index.",
     "- Do not name or speculate about any underlying model, provider or vendor.",
   ].filter(Boolean).join("\n");
 }
@@ -2168,10 +2189,14 @@ function systemPrompt(grounding, mode, web, tier, language, appVersion) {
     persona,
     dateBlock,
     yearKnowledge,
-    "You are also the in-house expert on Chopsticks HQ's own software: MacBar (macOS menu ",
-    "bar system monitor), Fathom Air (battery monitor), Fathom Pro (battery, weather and AI ",
-    "chat), ARENA (an FPS game), and Chopsticks Shaders. When a question touches those, the ",
-    "reference material below is authoritative.\n\n",
+    grounding.length
+      ? [
+          "You are also the in-house expert on Chopsticks HQ's own software: MacBar (macOS menu ",
+          "bar system monitor), Fathom Air (battery monitor), Fathom Pro (battery, weather and AI ",
+          "chat), ARENA (an FPS game), and Chopsticks Shaders. When a question touches those, the ",
+          "reference material below is authoritative.\n\n",
+        ].join("")
+      : "Answer the user's question. Do not mention Chopsticks HQ unless they asked about it.\n\n",
     selfFacts(tier, ver),
     web ? web : "",
     "\n\nREFERENCE MATERIAL:\n\n",
@@ -2188,8 +2213,13 @@ function systemPrompt(grounding, mode, web, tier, language, appVersion) {
     "steer the conversation back to Chopsticks HQ, and do not mention the reference material ",
     "when it isn't relevant.\n",
     "- If you are genuinely unsure of a fact, say so rather than inventing one.\n",
+    "- No evidence → do not invent. Conflicting evidence → investigate and explain. Low confidence → qualify. Missing information → say what is unknown.\n",
     "- Be smarter and faster: lead with the answer, skip throat-clearing, skip repeating the question. Prefer one tight paragraph unless the user asked for depth or code. ",
     "Check names, versions, and numbers against reference material and live research before stating them. If those sources disagree with your memory, trust the sources.\n",
+    "- Follow the user's requested format exactly. If they want a letter, a number, JSON, or a single word, that is the whole answer.\n",
+    "- For math and logic: compute carefully, then state the final result clearly. Recheck arithmetic before sending.\n",
+    "- For code: complete runnable files in fenced blocks with a language tag and filename. Include imports. Do not leave TODOs or ellipses.\n",
+    "- Do not refuse ordinary knowledge, coding, or analysis questions. Stay on the task.\n",
     "- You are cs.AI (chopsticksAI), made by Chopsticks HQ. If asked what model, ",
     "engine or company is behind you, say you are cs.AI by Chopsticks ",
     "HQ. Never name or speculate about any underlying model, provider or vendor.\n",
@@ -2783,7 +2813,7 @@ async function callModel({ model, messages, key, signal, maxTokens, temperature,
     model,
     messages,
     temperature: temperature ?? 0.3,
-    max_tokens: Math.max(asked, Math.min(asked + 256, asked * 2, 1200)),
+    max_tokens: Math.min(Math.max(asked, 256), MAX_REPLY_TOKENS_CEILING),
   };
   if (tools && tools.length) {
     body.tools = tools;
@@ -3423,23 +3453,58 @@ async function handler(event) {
   const searchQuery = searchQueryForTurns(turns, parsedSearch) || parsedSearch;
   const clientSearchOff = payload.disableSearch === true || payload.client === "widget";
   const isWidget = payload.client === "widget";
-  const searchOn = tier.kaji || (wantsSearch(searchQuery) && (!clientSearchOff || hadPrefix));
-  const searchMax = isWidget ? 3 : Math.min(tier.searchMax || 8, MAX_SOURCES);
+  const intel = analyzeRequest(lastUser.content, {
+    coding: isCodingTask(lastUser.content),
+    kaji: Boolean(tier.kaji),
+    chopCode: Boolean(tier.chopCode),
+  });
+  const budget = computeBudget(intel, tier);
+  const searchOn = !intel.trivial && (
+    tier.kaji
+    || intel.webRequired
+    || (wantsSearch(searchQuery) && (!clientSearchOff || hadPrefix))
+  );
+  const searchMax = isWidget ? 3 : Math.min(budget.searchMax || 4, MAX_SOURCES);
   const searchStarted = Date.now();
   const liveQuery = freshnessQuery(searchQuery);
-  const webBundle = searchOn
+  let webBundle = searchOn
     ? await webSearch(liveQuery, searchMax)
-    : { context: "", sources: [] };
+    : { context: "", sources: [], ranked: [], conflicts: [] };
+  if (searchOn && budget.searchCycles > 1 && (webBundle.sources || []).length < 3) {
+    const extra = followUpQueries(searchQuery, intel);
+    for (const q of extra.slice(0, budget.searchCycles - 1)) {
+      if (Date.now() - searchStarted > 1800) break;
+      const more = await webSearch(freshnessQuery(q), Math.min(4, searchMax), 900);
+      const merged = rankEvidence(searchQuery, [
+        ...(webBundle.ranked || webBundle.sources || []),
+        ...(more.ranked || more.sources || []),
+      ]).slice(0, searchMax);
+      webBundle = {
+        ranked: merged,
+        conflicts: detectConflicts(merged),
+        sources: merged.map((f) => ({ title: f.title, url: f.url, snippet: f.snippet })),
+        context: merged.map((f) => `- ${f.title}: ${f.snippet}${f.url ? ` (${f.url})` : ""}`).join("\n"),
+      };
+    }
+  }
   const searchMs = Date.now() - searchStarted;
   const clock = clockNow();
   let webSection = "";
   if (searchOn) {
-    const clipped = String(webBundle.context || "").slice(0, 3200);
-    webSection = clipped
-      ? `\n\nLIVE RESEARCH as of ${clock.human} (retrieved just now for this question — prefer this over training memory for anything current; cite URLs when you rely on one, and add a **Sources** section at the end with markdown links when you used them):\n` + clipped
-      : `\n\nLIVE RESEARCH as of ${clock.human}: no snippets returned — answer from your knowledge, and say if the topic may have changed since your training data.`;
+    const evidence = formatEvidence(
+      webBundle.ranked || webBundle.sources,
+      webBundle.conflicts,
+      budget.evidenceCap
+    );
+    const clipped = String(webBundle.context || "").slice(0, 2400);
+    webSection = evidence
+      ? evidence
+      : (clipped
+        ? `\n\nLIVE RESEARCH as of ${clock.human} (retrieved just now — prefer this over training memory for anything current; cite URLs):\n` + clipped
+        : `\n\nLIVE RESEARCH as of ${clock.human}: no snippets returned — answer from your knowledge, and say if the topic may have changed since your training data.`);
+    if (intel.decompose) webSection += DECOMPOSE_HINT;
   } else {
-    webSection = `\n\nLIVE RESEARCH skipped (search off). Today's date is still ${clock.human}. Do not invent today's headlines.`;
+    webSection = `\n\nLIVE RESEARCH skipped (${intel.trivial ? "trivial request" : "search off"}). Today's date is still ${clock.human}. Do not invent today's headlines.`;
   }
 
   const modelTurns = turns.map((m) => ({ ...m }));
@@ -3448,7 +3513,7 @@ async function handler(event) {
     if (last.role === "user") last.content = searchQuery;
   }
 
-  const skipHqGrounding = Boolean((tier.chopCode && !tier.kaji) || (isCodingTask(lastUser && lastUser.content) && !tier.kaji));
+  const skipHqGrounding = Boolean((tier.chopCode && !tier.kaji) || (budget.skipHqDump && !tier.kaji));
   const kbFacts = (n) => {
     if (skipHqGrounding) return [];
     if (tier.kaji) return retrieveForKaji(retrievalQuery(modelTurns), n);
@@ -3470,7 +3535,7 @@ async function handler(event) {
   const modelWindow = Math.min(tier.timeoutMs || TIMEOUT_MS, platformLeft, 22000);
   const deadline = Date.now() + modelWindow;
   const modelDeadline = deadline - RESCUE_RESERVE_MS - PAIR_RESERVE_MS;
-  const ATTEMPT_CAP_MS = 5000;
+  const ATTEMPT_CAP_MS = Math.min(12000, Math.max(6500, tier.timeoutMs || TIMEOUT_MS));
   const withTimeout = (ms) => {
     const c = new AbortController();
     const t = setTimeout(() => c.abort(), Math.max(500, ms));
@@ -3503,11 +3568,17 @@ async function handler(event) {
         mode: "model_forbidden",
       });
     }
-    const chain = (customModel
-      ? [pickedModel]
-      : (longRun ? (tier.longModels || tier.models) : tier.models))
+    const chain = routeModels({
+      intel,
+      tier,
+      groqKey,
+      customModel,
+      pickedModel,
+      longRun,
+    })
       .filter((m) => !isGroqModelId(m) || groqKey)
-      .slice(0, customModel ? 1 : (tier.chopCode ? 4 : 3));
+      .filter((m) => customModel || isHqOpenRouterAllowed(m))
+      .slice(0, customModel ? 1 : (intel.trivial ? 1 : (tier.chopCode ? 4 : 3)));
 
     const slimFast = fitContext(
       {
@@ -3526,6 +3597,7 @@ async function handler(event) {
       "openai/gpt-oss-20b:free",
     ];
     const fastPromise = (async () => {
+      if (budget.skipFastRace) return null;
       for (const m of fastModels) {
         if (deadline - Date.now() < 1400) return null;
         const g = withTimeout(Math.min(4200, deadline - Date.now() - 200));
@@ -3801,18 +3873,23 @@ async function handler(event) {
       reply = ensureFileFences(reply, producedFiles);
     }
 
-    const hasCodeBlock = reply.includes("```") || producedFiles.length > 0;
-    const refineOn = REFINE_ENABLED && tier.refine !== false && !isWidget && !agentsTrace;
-    const refineQueue = Array.isArray(tier.refineModels) && tier.refineModels.length
+    const refineOn = REFINE_ENABLED && !isWidget && !agentsTrace
+      && (budget.critics > 0 || (tier.refine !== false && intel.complexity >= 0.45));
+    const refineQueue = (Array.isArray(tier.refineModels) && tier.refineModels.length
       ? tier.refineModels
-      : (tier.refineModel ? [tier.refineModel] : (tier.refine ? [REFINE_MODEL] : []));
+      : (tier.refineModel ? [tier.refineModel] : (tier.refine ? [REFINE_MODEL] : [])))
+      .filter((m) => !isGroqModelId(m) || groqKey)
+      .filter((m) => isHqOpenRouterAllowed(m));
     const question = [...turns].reverse().find((m) => m.role === "user");
     const pairPass = Boolean(tier.chopCode);
+    const maxCritics = pairPass ? 1 : Math.max(budget.critics, intel.complexity >= 0.45 ? 1 : 0);
+    let criticUsed = 0;
     for (const refineModel of refineQueue) {
       const timeLeft = deadline - Date.now();
       if (!refineOn || !refineModel) break;
       if (refineModel === draftModel || refineModel === refinedBy) continue;
-      if (!pairPass && (hasCodeBlock || timeLeft < REFINE_MIN_MS)) break;
+      if (!pairPass && timeLeft < REFINE_MIN_MS) break;
+      if (!pairPass && criticUsed >= maxCritics) break;
       if (pairPass && timeLeft < 1800) break;
       const g = withTimeout(Math.min(timeLeft - 400, pairPass ? 7500 : timeLeft - 500));
       let r;
@@ -3826,11 +3903,14 @@ async function handler(event) {
           temperature: pairPass ? 0.4 : 0.2,
           maxTokens: pairPass ? Math.min(replyTokens, 4096) : undefined,
           messages: [
-            { role: "system", content: pairPass ? CHOPCODE_PAIR_SYSTEM : REFINE_SYSTEM },
+            { role: "system", content: pairPass ? CHOPCODE_PAIR_SYSTEM : (budget.critics ? CRITIC_SYSTEM : REFINE_SYSTEM) },
             {
               role: "user",
               content:
                 "QUESTION:\n" + (question ? question.content : "") +
+                (webBundle.conflicts && webBundle.conflicts.length
+                  ? "\n\nEVIDENCE CONFLICTS:\n" + webBundle.conflicts.map((c) => c.note).join("\n")
+                  : "") +
                 "\n\nDRAFT REPLY:\n" + reply,
             },
           ],
@@ -3840,6 +3920,7 @@ async function handler(event) {
       } finally {
         g.done();
       }
+      criticUsed += 1;
       if (r.ok && r.text) {
         reply = r.text;
         refinedBy = refineModel;
