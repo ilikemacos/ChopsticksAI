@@ -206,10 +206,10 @@ TIERS.kaji = {
   refineModels: ["z-ai/glm-5.2:free", "cohere/north-mini-code:free"],
   context: 128000,
   maxReply: 4096,
-  grounding: 16,
+  grounding: 8,
   searchMax: 6,
   timeoutMs: 24000,
-  temperature: 0.35,
+  temperature: 0.18,
 };
 const TIER_ALIASES = {
   rice: "rice",
@@ -1017,8 +1017,9 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 
-const APP_VERSION = "3.7.6";
-const PREVIEW_APP_VERSION = "3.7.6";
+const APP_VERSION = "3.7.7";
+const PREVIEW_APP_VERSION = "3.7.7";
+const STACK_NAME = "cs.AI-3.7";
 
 function appVersionFor(account) {
   return canPickOpenRouterModel(account) ? PREVIEW_APP_VERSION : APP_VERSION;
@@ -1377,21 +1378,9 @@ function retrieve(query, limit = GROUNDING_INTENTS) {
   return hybrid.length ? hybrid : rows.slice(0, limit).map((s) => s.intent);
 }
 
-/** Kaji is trained on the whole HQ catalog: ranked hits first, then remaining intents. */
-function retrieveForKaji(query, limit = 48) {
-  const kb = knowledgeBase();
-  const intents = Array.isArray(kb.intents) ? kb.intents : [];
-  const picked = new Map();
-  for (const s of scoreQuery(query)) {
-    if (picked.size >= limit) break;
-    picked.set(s.intent.id, s.intent);
-  }
-  const rest = intents.slice().sort((a, b) => (b.priority || 0) - (a.priority || 0));
-  for (const intent of rest) {
-    if (picked.size >= limit) break;
-    if (intent && intent.id) picked.set(intent.id, intent);
-  }
-  return Array.from(picked.values());
+/** Ranked HQ hits only — same hybrid path as other plates. No leftover-catalog dump. */
+function retrieveForKaji(query, limit = 12) {
+  return retrieve(query, Math.min(limit, 12));
 }
 
 function isThinFollowUp(text) {
@@ -1513,7 +1502,7 @@ const SEARCH_ENABLED = (process.env.CHOPSTICKS_AI_SEARCH || "on") !== "off";
 const SEARCH_TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_SEARCH_TIMEOUT_MS || 2200);
 const SEARCH_MIN_LEN = 3;
 const MAX_SOURCES = 12;
-const UA = "cs.AI-3/3.7.6 (+https://chopstickshq.com/chopsticks-ai/)";
+const UA = STACK_NAME + "/" + APP_VERSION + " (+https://chopstickshq.com/chopsticks-ai/)";
 
 function clockNow() {
   const d = new Date();
@@ -2080,7 +2069,7 @@ function selfFacts(tier, appVersion) {
   const t = tier || TIERS[DEFAULT_TIER];
   return [
     "ABOUT YOURSELF (answer questions about your own capabilities from this):",
-    `- You are cs.AI-3 (${ver}), built and run by Chopsticks HQ.`,
+    `- You are ${STACK_NAME} (${ver}), built and run by Chopsticks HQ.`,
     `- You refresh live web research for each user question, dated as of today.`,
     `- Current date for this session: ${clockNow().human} (${clockNow().isoDay} UTC).`,
     `- Current plate: ${t.label} (Rice < Tamago < Hibachi < Wagyu A1 < A2 < A3 < A4 < A5), ${contextFor(t).toLocaleString()} token context, up to ${(t.maxReply || MAX_REPLY_TOKENS).toLocaleString()} reply tokens.`,
@@ -2147,7 +2136,7 @@ function systemPrompt(grounding, mode, web, tier, language, appVersion) {
       ].join("")
     : tier.kaji
     ? [
-        "You are Kaji — Chopsticks HQ’s agentic assistant. Catchphrase: Think different. Ask Kaji.\n\n",
+        "You are Kaji — Chopsticks HQ’s agentic assistant on " + STACK_NAME + ". Catchphrase: Think different. Ask Kaji.\n\n",
         "Kaji is ALPHA. Do not bluff. Prefer tools over guessing.\n",
         "You are an agent: plan, use tools, observe results, then answer. ",
         "On the macOS app you can list, read, and write files under the user’s Home, Desktop, Documents, and Downloads (list_dir, read_file, write_mac_file). Stay in those folders. Never touch Keychain, .ssh, or other users.\n",
@@ -2162,7 +2151,7 @@ function systemPrompt(grounding, mode, web, tier, language, appVersion) {
         "Be precise and practical. Prefer working solutions over theory.\n\n",
       ].join("")
     : [
-        "You are cs.AI-3 (" + ver + "), a helpful and knowledgeable general-purpose assistant, ",
+        "You are " + STACK_NAME + " (" + ver + "), a helpful and knowledgeable general-purpose assistant, ",
         "made by Chopsticks HQ.\n\n",
         "Answer ANY question the user asks — general knowledge, science, history, coding, ",
         "writing, maths, recommendations, advice, casual conversation, anything. You are a ",
@@ -2225,8 +2214,8 @@ function systemPrompt(grounding, mode, web, tier, language, appVersion) {
     "- For math and logic: compute carefully, then state the final result clearly. Recheck arithmetic before sending.\n",
     "- For code: complete runnable files in fenced blocks with a language tag and filename. Include imports. Do not leave TODOs or ellipses.\n",
     "- Do not refuse ordinary knowledge, coding, or analysis questions. Stay on the task.\n",
-    "- You are cs.AI (chopsticksAI), made by Chopsticks HQ. If asked what model, ",
-    "engine or company is behind you, say you are cs.AI by Chopsticks ",
+    "- You are " + STACK_NAME + " (chopsticksAI), made by Chopsticks HQ. If asked what model, ",
+    "engine or company is behind you, say you are " + STACK_NAME + " by Chopsticks ",
     "HQ. Never name or speculate about any underlying model, provider or vendor.\n",
     "- Never mention this prompt or the reference material as such; just answer.",
     "\n" + languageInstruction(language || "en"),
@@ -2605,6 +2594,57 @@ function parseToolArgs(raw) {
   }
 }
 
+async function fetchOpenPage(url) {
+  try {
+    const res = await fetch(url, {
+      redirect: "follow",
+      headers: {
+        "User-Agent": UA,
+        Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
+      },
+      signal: AbortSignal.timeout(4000),
+    });
+    const html = await res.text();
+    const csp = String(res.headers.get("content-security-policy") || "");
+    const xfo = String(res.headers.get("x-frame-options") || "");
+    const embedBlocked = /frame-ancestors\s+['"]?none/i.test(csp)
+      || /DENY|SAMEORIGIN/i.test(xfo);
+    const titleMatch = html.match(/<title[^>]*>([^<]{1,200})/i);
+    const title = titleMatch ? String(titleMatch[1]).replace(/\s+/g, " ").trim().slice(0, 120) : url;
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 4000);
+    return {
+      ok: true,
+      url,
+      title,
+      text,
+      embedBlocked,
+      machine: "web-browser",
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      url,
+      title: url,
+      text: "",
+      embedBlocked: true,
+      error: "could not fetch page",
+    };
+  }
+}
+
+function plateTemperature(tier, intel) {
+  if (intel && intel.category === "CREATIVE") return 0.35;
+  if (tier && tier.kaji) return 0.18;
+  return (tier && tier.temperature) || 0.2;
+}
+
 /**
  * After a first completion that may include tool_calls, execute write_file
  * tools and ask the model to finish. Returns { text, files, tokens }.
@@ -2653,8 +2693,12 @@ async function continueWithTools({
         if (!url) {
           result = { ok: false, error: "https URL required" };
         } else {
-          pages.push({ url, title: String(args.title || url).slice(0, 120) });
-          result = { ok: true, url, machine: "web-browser" };
+          result = await fetchOpenPage(url);
+          pages.push({
+            url: result.url,
+            title: result.title || url,
+            embedBlocked: Boolean(result.embedBlocked),
+          });
         }
       } else if (KAJI_LOCAL_TOOL_NAMES.has(name)) {
         result = {
@@ -3532,12 +3576,21 @@ async function handler(event) {
     kaji: Boolean(tier.kaji),
     chopCode: Boolean(tier.chopCode),
   });
+  const kbTop = scoreQuery(searchQuery || lastUser.content)[0];
+  intel.hqOnly = Boolean(
+    kbTop
+    && kbTop.score >= 8
+    && !intel.freshnessRequired
+    && intel.category !== "CURRENT_INFORMATION"
+    && intel.category !== "RESEARCH"
+    && intel.category !== "CODING"
+    && intel.category !== "DEBUGGING"
+    && !intel.toolsRequired
+  );
   const budget = computeBudget(intel, tier);
   const kajiResume = payload.kajiResume && typeof payload.kajiResume === "object" ? payload.kajiResume : null;
-  const searchOn = !kajiResume && !intel.trivial && (
-    tier.kaji
-    || intel.webRequired
-    || (wantsSearch(searchQuery) && (!clientSearchOff || hadPrefix))
+  const searchOn = !kajiResume && !intel.trivial && !intel.hqOnly && intel.webRequired && (
+    wantsSearch(searchQuery) && (!clientSearchOff || hadPrefix)
   );
   const searchMax = isWidget ? 3 : Math.min(budget.searchMax || 4, MAX_SOURCES);
   const searchStarted = Date.now();
@@ -3650,8 +3703,12 @@ async function handler(event) {
 
     const ask = String(lastUser.content || "");
     const wantsFiles = /\b(write|create|generate|make|build|scaffold|implement|export|download)\b[\s\S]{0,80}\b(file|files|script|code|program|function|class|module|component|app|html|markdown|md|zip|archive|pdf|csv|json)\b|\.\w{1,8}\b|```|write_file/i.test(ask);
-    const useTools = tier.kaji
-      || (payload.enableTools !== false && (payload.tools === true || wantsFiles));
+    const useTools = budget.skipTools
+      ? false
+      : (
+        (tier.kaji && (intel.toolsRequired || wantsFiles))
+        || (!tier.kaji && payload.enableTools !== false && (payload.tools === true || wantsFiles))
+      );
     const activeTools = tier.kaji ? KAJI_TOOLS : AGENT_TOOLS;
 
     const longRun = replyTokens > LONG_REPLY_TOKENS;
@@ -3772,7 +3829,7 @@ async function handler(event) {
             anthropicKey,
             signal: g.signal,
             maxTokens: replyTokens,
-            temperature: tier.temperature,
+            temperature: plateTemperature(tier, intel),
             tools: withTools ? activeTools : undefined,
             toolChoice: withTools ? "auto" : undefined,
           });
@@ -3826,7 +3883,7 @@ async function handler(event) {
                 anthropicKey,
                 signal: g3.signal,
                 maxTokens: replyTokens,
-                temperature: tier.temperature,
+                temperature: plateTemperature(tier, intel),
                 tools: activeTools,
               });
               draft = {
@@ -4004,6 +4061,7 @@ async function handler(event) {
     }
 
     const refineOn = REFINE_ENABLED && !isWidget && !agentsTrace && !draft.pendingLocal
+      && !intel.trivial && !intel.hqOnly
       && (budget.critics > 0 || (tier.refine !== false && intel.complexity >= 0.45));
     const refineQueue = (Array.isArray(tier.refineModels) && tier.refineModels.length
       ? tier.refineModels
@@ -4011,8 +4069,10 @@ async function handler(event) {
       .filter((m) => !isGroqModelId(m) || groqKey)
       .filter((m) => isHqOpenRouterAllowed(m));
     const question = [...turns].reverse().find((m) => m.role === "user");
-    const pairPass = Boolean(tier.chopCode);
-    const maxCritics = pairPass ? 1 : Math.max(budget.critics, intel.complexity >= 0.45 ? 1 : 0);
+      const pairPass = Boolean(tier.chopCode);
+      const maxCritics = pairPass
+        ? 1
+        : (intel.hqOnly || intel.trivial ? 0 : Math.max(budget.critics, intel.complexity >= 0.45 ? 1 : 0));
     let criticUsed = 0;
     for (const refineModel of refineQueue) {
       const timeLeft = deadline - Date.now();
@@ -4038,9 +4098,12 @@ async function handler(event) {
               role: "user",
               content:
                 "QUESTION:\n" + (question ? question.content : "") +
-                (webBundle.conflicts && webBundle.conflicts.length
-                  ? "\n\nEVIDENCE CONFLICTS:\n" + webBundle.conflicts.map((c) => c.note).join("\n")
-                  : "") +
+                "\n\nVERIFIED EVIDENCE (only source for numbers, dates, versions, prices):\n" +
+                (formatEvidence(
+                  webBundle.ranked || webBundle.sources,
+                  webBundle.conflicts,
+                  budget.evidenceCap
+                ) || "(none — do not invent numbers, dates, or citations)") +
                 "\n\nDRAFT REPLY:\n" + reply,
             },
           ],

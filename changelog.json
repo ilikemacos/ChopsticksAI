@@ -1,7 +1,19 @@
 {
   "product": "cs.AI",
-  "latest": "3.7.6",
+  "latest": "3.7.7",
   "entries": [
+    {
+      "version": "3.7.7",
+      "date": "2026-08-29",
+      "title": "cs.AI-3.7 thinks with evidence",
+      "changes": [
+        "Stack name is cs.AI-3.7; this build is 3.7.7",
+        "Kaji no longer dumps the whole HQ catalog into the prompt",
+        "Greetings and HQ-only asks skip search, tools, and critic",
+        "open_page returns page title and text so the model can read what it opened",
+        "Critic checks numbers against ranked evidence; Kaji file work stays cold"
+      ]
+    },
     {
       "version": "3.7.6",
       "date": "2026-08-28",
