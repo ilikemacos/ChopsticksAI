@@ -1,8 +1,7 @@
 "use strict";
 
 /**
- * Maximum-intelligence stack for cs.AI Online.
- * Phase 1–3 of the architecture spec: route, retrieve, rank, verify.
+ * cs.AI-3.7 intelligence stack: route, retrieve, rank, verify.
  * No embeddings; BM25 + keyword + entity matching on the HQ KB.
  */
 
@@ -67,12 +66,14 @@ function analyzeRequest(text, opts) {
     if (category === "RESEARCH" || category === "COMPARISON") complexity += 0.2;
     if (/\b(design|architecture|best|trade-?off|workstation)\b/i.test(ask)) complexity += 0.15;
     if ((ask.match(/\?/g) || []).length > 1) complexity += 0.12;
-    if (kaji) complexity = Math.max(complexity, 0.35);
     complexity = Math.min(1, complexity);
   }
 
-  const webRequired = kaji || (!trivial && (webHint || len > 80));
-  const toolsRequired = coding || chopCode || kaji;
+  const namedUrl = /https:\/\//i.test(ask);
+  const kajiFileWork = kaji && /\b(list|read|write|desktop|documents|downloads|folder|open_page|open https|open this url)\b/i.test(ask);
+  const webRequired = namedUrl
+    || (!trivial && (webHint || (!kaji && len > 80)));
+  const toolsRequired = coding || chopCode || kajiFileWork || (kaji && namedUrl);
   const verificationRequired = complexity >= 0.5 || category === "MATHEMATICS" || category === "CODING" || category === "RESEARCH";
   const decompose = complexity >= 0.65 && !trivial;
 
@@ -90,6 +91,19 @@ function analyzeRequest(text, opts) {
 
 function computeBudget(intel, tier) {
   const c = intel.complexity;
+  if (intel.trivial || intel.hqOnly) {
+    return {
+      band: "minimal",
+      searchCycles: 0,
+      searchMax: 0,
+      critics: 0,
+      evidenceCap: 2,
+      skipFastRace: false,
+      useLongModels: false,
+      skipHqDump: false,
+      skipTools: true,
+    };
+  }
   let band = "minimal";
   if (c >= 0.8) band = "maximum";
   else if (c >= 0.5) band = "deep";
@@ -118,6 +132,7 @@ function computeBudget(intel, tier) {
     skipFastRace: c >= 0.55,
     useLongModels: c >= 0.55 || intel.category === "CODING" || intel.category === "DEBUGGING",
     skipHqDump: intel.category === "CODING" || intel.category === "DEBUGGING" || intel.category === "MATHEMATICS",
+    skipTools: false,
   };
 }
 
@@ -334,9 +349,9 @@ function routeModels({ intel, tier, groqKey, customModel, pickedModel, longRun }
 
 const CRITIC_SYSTEM = [
   "You are an adversarial critic. Assume the draft may be wrong.\n",
-  "Find factual errors, unsupported claims, missing edge cases, bad math, outdated info, and contradictions with the EVIDENCE block if present.\n",
+  "You are given VERIFIED EVIDENCE and optional SOURCE CONFLICTS. Use only that block for numbers, dates, versions, and prices.\n",
+  "If a number or date is not in the evidence, cut it or mark it unknown. Do not invent citations.\n",
   "Then output ONLY the corrected final reply the user should see. ",
-  "If evidence is insufficient, qualify or say what is unknown. ",
   "Never mention that you are a critic or that a draft existed.",
 ].join("");
 

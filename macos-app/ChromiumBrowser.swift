@@ -4,7 +4,7 @@ import WebKit
 
 private let chromiumUA =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
-    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 cs.AI/3.7.6"
+    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 cs.AI/3.7.7"
 
 private let browserHome = URL(string: "https://chopstickshq.com/")!
 
