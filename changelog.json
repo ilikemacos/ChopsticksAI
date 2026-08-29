@@ -1,7 +1,16 @@
 {
   "product": "cs.AI",
-  "latest": "3.7.5a",
+  "latest": "3.7.5b",
   "entries": [
+    {
+      "version": "3.7.5b",
+      "date": "2026-08-28",
+      "title": "Kaji is an agent",
+      "changes": [
+        "Kaji runs GLM 5.2, North Mini Code, Nemotron 3 Ultra, and Laguna S 2.1 (OpenRouter :free)",
+        "Agent tools: write_file, web computer, and on Mac list/read/write in Home, Desktop, Documents, Downloads"
+      ]
+    },
     {
       "version": "3.7.5a",
       "date": "2026-08-28",
