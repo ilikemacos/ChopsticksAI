@@ -4,7 +4,7 @@ import WebKit
 
 private let chromiumUA =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
-    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 cs.AI/3.7.5b"
+    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 cs.AI/3.7.6"
 
 private let browserHome = URL(string: "https://chopstickshq.com/")!
 
@@ -248,11 +248,11 @@ struct ChromiumBrowserView: View {
             .background(Cursor.panel)
 
             HStack {
-                Text("In-app browser (WebKit) · chopstickshq.com home")
+                Text("Browser · chopstickshq.com home")
                     .font(.system(size: 10.5, design: .monospaced))
                     .foregroundStyle(Cursor.muted)
                 Spacer()
-                Text("Same engine cs.AI uses for web search")
+                Text("Same view cs.AI uses to open pages")
                     .font(.system(size: 10.5))
                     .foregroundStyle(Cursor.muted)
             }

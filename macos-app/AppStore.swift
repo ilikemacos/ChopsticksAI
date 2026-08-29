@@ -171,6 +171,10 @@ final class AppStore: ObservableObject {
     @Published var usage = UsageSnapshot()
     @Published var usageBusy = false
     @Published var pendingBrowserURL = ""
+    @Published var kajiActivity: [String] = []
+    @Published var kajiOpenedURL = ""
+    @Published var kajiLastWritePath: String?
+    @Published var whatsNewBanner: String?
 
     private init() {
         customModes = Self.load(modesKey) ?? [
@@ -193,6 +197,49 @@ final class AppStore: ObservableObject {
 
     func bootstrapAccountState() {
         reloadForAccount(userId: AuthStore.shared.userId)
+    }
+
+    func dismissWhatsNewBanner() {
+        whatsNewBanner = nil
+        WhatsNew.markSeen()
+    }
+
+    func applyKajiToolResults(_ executed: [[String: Any]]) -> [String] {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        var chips: [String] = []
+        for item in executed {
+            let name = String(item["name"] as? String ?? "")
+            let raw = String(item["content"] as? String ?? "")
+            let json = (try? JSONSerialization.jsonObject(with: Data(raw.utf8))) as? [String: Any] ?? [:]
+            let ok = json["ok"] as? Bool ?? false
+            let path = String(json["path"] as? String ?? "")
+            let pretty: String = {
+                if path.hasPrefix(home) { return "~" + path.dropFirst(home.count) }
+                return path
+            }()
+            let short = URL(fileURLWithPath: path).lastPathComponent
+            var chip = ""
+            switch name {
+            case "list_dir" where ok:
+                chip = "Listed \(pretty.isEmpty ? "~" : pretty)"
+            case "read_file" where ok:
+                chip = "Read \(short)"
+            case "write_mac_file" where ok:
+                chip = "Wrote \(short)"
+                kajiLastWritePath = path
+            default:
+                break
+            }
+            if !chip.isEmpty {
+                noteKajiActivity(chip)
+                chips.append(chip)
+            }
+        }
+        return chips
+    }
+
+    func noteKajiActivity(_ line: String) {
+        kajiActivity = Array(([line] + kajiActivity).prefix(6))
     }
 
     func setCompact(_ on: Bool) {

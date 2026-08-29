@@ -1,14 +1,24 @@
 {
   "product": "cs.AI",
-  "latest": "3.7.5b",
+  "latest": "3.7.6",
   "entries": [
+    {
+      "version": "3.7.6",
+      "date": "2026-08-28",
+      "title": "Mac app you can trust",
+      "changes": [
+        "Shorter rail: Agents, Kaji, Browser, Labs, Usage, Account, Settings",
+        "Kaji keeps the chat list, file attach, write confirm, and tool lines in the transcript",
+        "Agents stay in chat when a page opens; What’s New is a banner, not a launch alert",
+        "Replace the app in Applications to pick this up"
+      ]
+    },
     {
       "version": "3.7.5b",
       "date": "2026-08-28",
       "title": "Kaji is an agent",
       "changes": [
-        "Kaji runs GLM 5.2, North Mini Code, Nemotron 3 Ultra, and Laguna S 2.1 (OpenRouter :free)",
-        "Agent tools: write_file, web computer, and on Mac list/read/write in Home, Desktop, Documents, Downloads"
+        "Kaji is an agent: web computer plus Mac files (Home, Desktop, Documents, Downloads). No Keychain — keys stay in app defaults. Replace the app in Applications to pick this up."
       ]
     },
     {
