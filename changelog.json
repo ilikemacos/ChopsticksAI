@@ -1,7 +1,15 @@
 {
   "product": "cs.AI",
-  "latest": "3.7.5",
+  "latest": "3.7.5a",
   "entries": [
+    {
+      "version": "3.7.5a",
+      "date": "2026-08-28",
+      "title": "No Keychain prompt",
+      "changes": [
+        "macOS app stores sign-in and More models keys in app defaults — it no longer asks for Keychain access"
+      ]
+    },
     {
       "version": "3.7.5",
       "date": "2026-08-28",
