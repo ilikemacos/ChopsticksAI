@@ -74,18 +74,17 @@ final class AuthStore: ObservableObject {
         else { return }
         session = s
         userId = s.user.id
-        if UserDefaults.standard.data(forKey: CloudPublic.sessionKey) != nil {
-            persist()
-        }
+        persist()
     }
 
     private func persist() {
         if let session, let data = try? JSONEncoder().encode(session) {
             KeychainStore.write(account: CloudPublic.sessionKey, data: data)
+            UserDefaults.standard.set(data, forKey: CloudPublic.sessionKey)
         } else {
             KeychainStore.delete(account: CloudPublic.sessionKey)
+            UserDefaults.standard.removeObject(forKey: CloudPublic.sessionKey)
         }
-        UserDefaults.standard.removeObject(forKey: CloudPublic.sessionKey)
     }
 
     func signUp(email: String, password: String, code: String? = nil, signupToken: String? = nil) async throws {

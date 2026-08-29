@@ -12,7 +12,7 @@ struct MoreModelsView: View {
             )
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    SettingsCard(title: "API keys", subtitle: "Stored in Keychain on this Mac. Sent only with your chat requests — not used as Chopsticks HQ’s key.") {
+                    SettingsCard(title: "API keys", subtitle: "Stored on this Mac. Sent only with your chat requests — not used as Chopsticks HQ’s key.") {
                         keyRow("OpenRouter", placeholder: "sk-or-v1-…", text: $store.openRouterKey)
                         Divider().overlay(Cursor.hairline)
                         keyRow("Groq", placeholder: "gsk_…", text: $store.groqKey)
