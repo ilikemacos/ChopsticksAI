@@ -87,7 +87,6 @@ SWIFT_CMD+=(
   -framework SwiftUI
   -framework AppKit
   -framework WebKit
-  -framework Security
   -framework IOKit
   -o "$BIN"
   "$AI/ChopsticksAIKB.swift"
