@@ -747,183 +747,45 @@ struct UsageView: View {
     }
 }
 
-struct MozillaSearchHit: Identifiable, Equatable {
-    let id = UUID()
-    let title: String
-    let url: String
-    let snippet: String
-    let via: String
-}
 
-struct MozillaSearchView: View {
-    @State private var query = ""
-    @State private var busy = false
-    @State private var status = "Same Chromium engine cs.AI uses before every answer."
-    @State private var results: [MozillaSearchHit] = []
-    @FocusState private var focused: Bool
-
-    private let apiURL = URL(string: "https://chopstickshq.com/api/chopsticks-ai")!
+struct LabsView: View {
+    @ObservedObject var store: AppStore
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(
-                title: "Search",
-                subtitle: "Chromium engine · Google · DuckDuckGo",
-                trailing: AnyView(
-                    GhostButton(title: busy ? "Searching…" : "Search", icon: "magnifyingglass") {
-                        Task { await runSearch() }
-                    }
-                )
-            )
-
+            PageHeader(title: "Labs", subtitle: "Preview rooms. They are not the product yet.")
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    searchCard
-                    resultsCard
+                VStack(alignment: .leading, spacing: 10) {
+                    labRow("Cloud Agents", "Remote runs (preview)") { store.nav = .cloudAgents }
+                    labRow("Automations", "Schedules and triggers (preview)") { store.nav = .automations }
+                    labRow("Repositories", "Local folders for the Agents chip") { store.nav = .repos }
+                    labRow("Marketplace", "Plugins (preview)") { store.nav = .marketplace }
+                    labRow("More models", "Groq, OpenRouter, Claude keys") { store.nav = .moreModels }
                 }
                 .padding(22)
-                .frame(maxWidth: 820, alignment: .leading)
+                .frame(maxWidth: 640, alignment: .leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .background(Cursor.bg)
         }
-        .background(Cursor.bg)
-        .onAppear { focused = true }
     }
 
-    private var searchCard: some View {
-        SettingsCard(title: "Chromium engine", subtitle: "No API key. Results from Google and DuckDuckGo; chopsticks queries prioritize chopstickshq.com.") {
-            HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(Cursor.mozilla)
-                TextField("Search the web…", text: $query)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 14))
+    private func labRow(_ title: String, _ subtitle: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(Cursor.text)
-                    .focused($focused)
-                    .onSubmit { Task { await runSearch() } }
-                Button {
-                    Task { await runSearch() }
-                } label: {
-                    Text(busy ? "…" : "Search")
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .foregroundStyle(Color.black.opacity(0.88))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 7)
-                        .background(Capsule().fill(Cursor.mozilla))
-                }
-                .buttonStyle(.plain)
-                .disabled(busy || query.trimmingCharacters(in: .whitespacesAndNewlines).count < 3)
+                Text(subtitle)
+                    .font(.system(size: 12.5))
+                    .foregroundStyle(Cursor.muted)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Cursor.composer))
-            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Cursor.border))
-
-            Text(status)
-                .font(.system(size: 11.5, design: .monospaced))
-                .foregroundStyle(Cursor.muted)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Cursor.panel))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Cursor.border))
         }
-    }
-
-    @ViewBuilder
-    private var resultsCard: some View {
-        if results.isEmpty {
-            EmptyView()
-        } else {
-            SettingsCard(title: "Results", subtitle: "\(results.count) hit\(results.count == 1 ? "" : "s")") {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(results) { hit in
-                        Button {
-                            if let url = URL(string: hit.url), !hit.url.isEmpty {
-                                NSWorkspace.shared.open(url)
-                            }
-                        } label: {
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                    Text(hit.title)
-                                        .font(.system(size: 13.5, weight: .semibold))
-                                        .foregroundStyle(Cursor.blue)
-                                        .multilineTextAlignment(.leading)
-                                    Text(hit.via)
-                                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                                        .foregroundStyle(Cursor.mozilla)
-                                }
-                                if !hit.url.isEmpty {
-                                    Text(hit.url)
-                                        .font(.system(size: 10.5, design: .monospaced))
-                                        .foregroundStyle(Cursor.muted)
-                                        .lineLimit(1)
-                                }
-                                if !hit.snippet.isEmpty {
-                                    Text(hit.snippet)
-                                        .font(.system(size: 12))
-                                        .foregroundStyle(Cursor.soft)
-                                        .multilineTextAlignment(.leading)
-                                }
-                            }
-                            .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .buttonStyle(.plain)
-                        if hit.id != results.last?.id {
-                            Divider().overlay(Cursor.hairline)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    @MainActor
-    private func runSearch() async {
-        let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard q.count >= 3 else {
-            status = "Enter at least 3 characters."
-            return
-        }
-        busy = true
-        status = "Searching Chromium engine…"
-        defer { busy = false }
-
-        var req = URLRequest(url: apiURL)
-        req.httpMethod = "POST"
-        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.timeoutInterval = 20
-        req.httpBody = try? JSONSerialization.data(withJSONObject: [
-            "action": "search",
-            "q": q,
-            "max": 8,
-        ])
-
-        do {
-            let (data, resp) = try await URLSession.shared.data(for: req)
-            guard let http = resp as? HTTPURLResponse, http.statusCode == 200,
-                  let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-            else {
-                status = "Search failed — try again shortly."
-                results = []
-                return
-            }
-            let raw = obj["sources"] as? [[String: Any]] ?? []
-            results = raw.map { row in
-                MozillaSearchHit(
-                    title: row["title"] as? String ?? q,
-                    url: row["url"] as? String ?? "",
-                    snippet: row["snippet"] as? String ?? "",
-                    via: row["via"] as? String ?? "Mozilla"
-                )
-            }
-            if results.isEmpty {
-                status = "No results for “\(q)”."
-            } else {
-                let engine = obj["engine"] as? String ?? "mozilla"
-                status = "\(results.count) result\(results.count == 1 ? "" : "s") · \(engine)"
-            }
-        } catch {
-            status = "Network error — check your connection."
-            results = []
-        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -953,7 +815,7 @@ struct MarketplaceView: View {
             PageHeader(title: "Marketplace", subtitle: "Plugins and extensions for agents.")
             ScrollView {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    pluginCard(name: "Chromium Browser", desc: "Built-in web browser + Google search — Browser rail.", installed: true)
+                    pluginCard(name: "Browser", desc: "Built-in WebKit view + search — Browser rail.", installed: true)
                     kajiCard
                     pluginCard(name: "Product KB", desc: "Offline Chopsticks HQ knowledge base.", installed: true)
                     pluginCard(name: "MCP Bridge", desc: "Connect Model Context Protocol servers.", installed: false)
@@ -1006,7 +868,7 @@ struct MarketplaceView: View {
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Cursor.chromium)
                 }
-                Text("Think different. Ask Kaji. Alpha Grok-style Pro app — prone to wrong answers. The web is the computer — no VM.")
+                Text("Kaji uses the browser and, on this Mac, your folders. Pro. Alpha — check what it writes.")
                     .font(.system(size: 12.5))
                     .foregroundStyle(Cursor.muted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -1199,7 +1061,7 @@ struct SettingsView: View {
                         Divider().overlay(Cursor.hairline)
                         SettingsToggleRow(
                             title: "Web search",
-                            subtitle: "Automatic Chromium lookup on each question. Off = faster model-only replies; `/search …` still forces lookup.",
+                            subtitle: "Automatic web lookup on each question. Off = faster model-only replies; `/search …` still forces lookup.",
                             isOn: Binding(get: { store.webSearchEnabled }, set: { store.setWebSearchEnabled($0) })
                         )
                     }
@@ -1352,7 +1214,7 @@ struct SettingsView: View {
                     SettingsCard(title: "Network") {
                         SettingsToggleRow(
                             title: "Web search",
-                            subtitle: "In-app WebKit browser (not Chromium). Turn off to skip lookups and save time.",
+                            subtitle: "In-app WebKit view (not Google Chrome).",
                             isOn: Binding(get: { store.webSearchEnabled }, set: { store.setWebSearchEnabled($0) })
                         )
                         Divider().overlay(Cursor.hairline)

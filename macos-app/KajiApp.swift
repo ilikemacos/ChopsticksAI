@@ -1,16 +1,17 @@
 import SwiftUI
 
 private let kajiStarters = [
+    "List ~/Desktop",
+    "Read ~/Documents and summarize what’s there",
+    "Open https://chopstickshq.com and tell me what’s new",
     "What’s Chopsticks HQ?",
-    "Open chopstickshq.com and tell me what’s new",
-    "Explain rNitro like I’m five",
-    "Be Grok about shipping without a VM",
 ]
 
 struct KajiAppView: View {
     @ObservedObject var store: AppStore
     @ObservedObject var model: ChatModel
     @ObservedObject private var auth = AuthStore.shared
+    @ObservedObject private var attachments = AttachmentStore.shared
     @FocusState private var focused: Bool
     @State private var previousTier = "tamago"
 
@@ -75,12 +76,10 @@ struct KajiAppView: View {
                 .font(.system(size: 13, weight: .semibold))
             Text("Kaji")
                 .font(.system(size: 13, weight: .semibold))
-            Text("·")
-                .foregroundStyle(Cursor.muted)
-            Text("Think different. Ask Kaji.")
-                .font(.system(size: 12))
-                .foregroundStyle(Cursor.muted)
-            Text("Agent · Mac files")
+            Text("Agent")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(Cursor.chromium)
+            Text("Mac files")
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(Cursor.muted)
             Spacer()
@@ -115,7 +114,7 @@ struct KajiAppView: View {
             Text("Think different. Ask Kaji.")
                 .font(.system(size: 26, weight: .semibold))
                 .foregroundStyle(Cursor.text)
-            Text("Alpha. Prone to wrong answers. Trained on Chopsticks HQ. The web is the computer.")
+            Text("Kaji uses the browser and your folders (Home, Desktop, Documents, Downloads).")
                 .font(.system(size: 13.5))
                 .foregroundStyle(Cursor.muted)
                 .multilineTextAlignment(.center)
@@ -151,7 +150,7 @@ struct KajiAppView: View {
                 VStack(spacing: 12) {
                     Text("Think different. Ask Kaji.")
                         .font(.system(size: 22, weight: .bold))
-                    Text("Kaji is alpha — it is prone to wrong answers. Pro app: five Fathom Pro keys or founder. Sign in, redeem in Usage, then come back.")
+                    Text("Kaji is Pro. Sign in, redeem five Fathom keys, then come back. It uses the browser and, on this Mac, your folders.")
                         .font(.system(size: 13.5))
                         .foregroundStyle(Cursor.muted)
                         .multilineTextAlignment(.center)
@@ -189,9 +188,64 @@ struct KajiAppView: View {
         }
     }
 
+    private var kajiSendEnabled: Bool {
+        let typed = !model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let files = !attachments.ready.isEmpty
+        return kajiUnlocked && !model.busy && !attachments.isUploading && (typed || files)
+    }
+
     private var composer: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 8) {
+            if !attachments.status.isEmpty {
+                Text(attachments.status)
+                    .font(.system(size: 10.5, design: .monospaced))
+                    .foregroundStyle(Cursor.chromium)
+            }
+            if !attachments.items.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(attachments.items) { a in
+                            HStack(spacing: 6) {
+                                Text(a.uploading
+                                      ? "\(a.name) · \(Int(a.progress * 100))%"
+                                      : (a.error != nil ? "\(a.name) · failed" : a.name))
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(Cursor.soft)
+                                    .lineLimit(1)
+                                Button {
+                                    attachments.remove(a.id)
+                                } label: {
+                                    Image(systemName: "xmark")
+                                        .font(.system(size: 9, weight: .bold))
+                                        .foregroundStyle(Cursor.muted)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Capsule().fill(Cursor.hover))
+                        }
+                    }
+                }
+            }
+            if !store.kajiOpenedURL.isEmpty {
+                Text("Opened \(store.kajiOpenedURL)")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Cursor.chromium)
+                    .lineLimit(1)
+            }
             HStack(alignment: .bottom, spacing: 10) {
+                Button {
+                    attachments.pickFiles()
+                } label: {
+                    Image(systemName: "paperclip")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Cursor.soft)
+                        .frame(width: 32, height: 32)
+                }
+                .buttonStyle(.plain)
+                .disabled(!kajiUnlocked)
+                .help("Attach files")
                 TextField("Ask Kaji", text: $model.draft, axis: .vertical)
                     .textFieldStyle(.plain)
                     .font(.system(size: 16))
@@ -210,21 +264,31 @@ struct KajiAppView: View {
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(Color.black)
                         .frame(width: 32, height: 32)
-                        .background(Circle().fill(model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.busy || !kajiUnlocked ? Cursor.muted : Color.white))
+                        .background(Circle().fill(kajiSendEnabled ? Color.white : Cursor.muted))
                 }
                 .buttonStyle(.plain)
-                .disabled(model.busy || model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !kajiUnlocked)
+                .disabled(!kajiSendEnabled)
             }
             .padding(14)
             .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Cursor.composer))
             .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(Cursor.border))
-            .padding(.horizontal, 20)
             .padding(.bottom, 6)
-            Text("Kaji is alpha and prone to wrong answers.")
+            if let path = store.kajiLastWritePath, !path.isEmpty {
+                Button("Open in Finder") {
+                    let url = URL(fileURLWithPath: path)
+                    NSWorkspace.shared.activateFileViewerSelecting([url])
+                }
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Cursor.chromium)
+                .buttonStyle(.plain)
+                .padding(.bottom, 4)
+            }
+            Text("Kaji uses the browser and your folders. Alpha — check writes before you trust them.")
                 .font(.system(size: 11))
                 .foregroundStyle(Cursor.muted)
                 .padding(.bottom, 10)
         }
+        .padding(.horizontal, 20)
         .background(Color.black)
     }
 }

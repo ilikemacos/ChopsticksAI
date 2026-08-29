@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kaji — Think different. Ask Kaji.</title>
-<meta name="description" content="Kaji is Chopsticks HQ’s Grok-style assistant. Alpha. Prone to wrong answers. Pro only. The web is the computer — no VM. Think different. Ask Kaji.">
+<meta name="description" content="Kaji uses the browser and, on Mac, your folders. Agent. Pro. Think different. Ask Kaji.">
 <link rel="canonical" href="https://chopstickshq.com/chopsticks-ai/web/kaji/">
 <link rel="icon" href="/favicon.ico">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://chopstickshq.com https://*.supabase.co; frame-src https:; object-src 'none'">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/chopsticks-ai/web/grok-ui.css?v=20260828plan">
+<link rel="stylesheet" href="/chopsticks-ai/web/grok-ui.css?v=20260828ux">
 </head>
 <body class="grok-app has-intro">
 <div class="grok-shell">
@@ -37,7 +37,7 @@
 
   <div class="grok-main">
     <div class="app-shell">
-      <aside class="browser-rail" id="browser-rail" hidden>
+      <aside class="browser-rail" id="browser-rail">
         <div class="browser-bar">
           <span class="browser-kicker">Web computer</span>
           <button type="button" id="browser-back" title="Back">←</button>
@@ -45,6 +45,7 @@
           <input class="browser-url" id="browser-url" type="text" value="https://chopstickshq.com/" spellcheck="false">
           <button type="button" id="browser-go">Go</button>
           <a class="browser-open-tab" id="browser-open-tab" href="https://chopstickshq.com/" target="_blank" rel="noopener">Open tab</a>
+          <button type="button" class="browser-open-tab" id="browser-copy-url">Copy URL</button>
         </div>
         <div class="browser-stage">
           <iframe class="browser-frame" id="browser-frame" title="Kaji web computer" src="https://chopstickshq.com/" sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
@@ -53,6 +54,7 @@
             <p id="frame-fallback-status">This site blocked embedding. Open a new tab instead of a blank frame.</p>
             <p class="frame-fallback-snippet" id="frame-fallback-snippet" hidden></p>
             <a class="grok-auth-btn grok-auth-btn-fill" id="frame-fallback-open" href="https://chopstickshq.com/" target="_blank" rel="noopener">Open in a new tab</a>
+            <button type="button" class="grok-auth-btn" id="frame-fallback-copy">Copy URL</button>
           </div>
         </div>
       </aside>
@@ -64,22 +66,29 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6L12 2z"/></svg>
               </div>
               <h1>Think different. Ask Kaji.</h1>
-              <p class="grok-intro-sub">Alpha agent. GLM 5.2, North Mini Code, Nemotron 3 Ultra, Laguna S 2.1. On the Mac app, Kaji can list, read, and write files in Home, Desktop, Documents, and Downloads. The <strong>web</strong> is the computer — no VM.</p>
+              <p class="grok-intro-sub">Kaji uses the browser. Mac file tools live in the cs.AI Mac app. Drop a file, then ask Kaji to use it.</p>
               <div class="grok-pills">
                 <button type="button" class="grok-pill grok-pill-pro" data-suggest="What is Chopsticks HQ?">What’s Chopsticks HQ?</button>
                 <button type="button" class="grok-pill" data-suggest="Open chopstickshq.com and tell me what’s new">Use the web computer</button>
-                <button type="button" class="grok-pill" data-suggest="Roast the idea of shipping a fake Chromium browser">Be Grok about it</button>
+                <button type="button" class="grok-pill" id="pill-attach">Drop a file, then ask Kaji to use it</button>
                 <button type="button" class="grok-pill" data-suggest="Explain rNitro like I’m five">Explain rNitro</button>
               </div>
             </div>
           </div>
         </div>
         <div class="grok-composer" id="composer">
+          <div class="grok-composer-meta">
+            <div class="attach-row" id="attach-row" hidden></div>
+            <p class="kaji-opened-url" id="kaji-opened-url" hidden></p>
+            <p class="hint" id="kaji-status" hidden></p>
+          </div>
           <div class="grok-composer-box">
             <textarea id="input" rows="1" placeholder="Ask Kaji" aria-label="Message Kaji"></textarea>
+            <input type="file" id="file-input" multiple hidden>
             <div class="grok-composer-tools">
               <div class="grok-composer-tools-left">
                 <span class="grok-tool-btn" id="kaji-badge">Kaji · Agent</span>
+                <button type="button" class="grok-tool-btn" id="attach-btn" title="Attach files">Attach</button>
               </div>
               <div class="grok-composer-tools-right">
                 <button type="button" class="grok-send" id="send" disabled title="Send">
@@ -92,7 +101,7 @@
         <footer class="grok-footer">
           <a href="/chopsticks-ai/web/upgrades/">Pro</a>
           · <a href="/chopsticks-ai/web/">Agents</a>
-          · Kaji is alpha · prone to wrong answers
+          · Kaji uses the browser · Mac files in the Mac app
         </footer>
       </div>
     </div>
@@ -112,7 +121,7 @@
 <div class="kaji-gate" id="kaji-gate">
   <div class="kaji-gate-card">
     <h2>Think different. Ask Kaji.</h2>
-    <p>Kaji is alpha and prone to wrong answers. It is also Pro — five Fathom Pro keys (or founder). Sign in, redeem on Upgrades, then come back. No Linux VM. The web is the computer.</p>
+    <p>Kaji is Pro. Sign in, redeem five Fathom keys, then come back. It uses the browser. Mac file tools live in the cs.AI Mac app.</p>
     <p>
       <button type="button" class="grok-auth-btn grok-auth-btn-fill" id="gate-signin">Sign in</button>
       <a class="grok-auth-btn" href="/chopsticks-ai/web/upgrades/">Get Pro</a>
@@ -171,6 +180,147 @@
   var ACTIVE_CHAT_KEY = 'chq.activeCloudChatId';
   var inspectTimer = null;
   var lastNav = 'https://chopstickshq.com/';
+  var pendingAttach = [];
+  var MAX_BATCH = 500 * 1024 * 1024;
+  var TEXT_PREVIEW = 200000;
+  var attachRow = document.getElementById('attach-row');
+  var attachBtn = document.getElementById('attach-btn');
+  var fileInput = document.getElementById('file-input');
+  var composerEl = document.getElementById('composer');
+  var kajiStatus = document.getElementById('kaji-status');
+  var openedEl = document.getElementById('kaji-opened-url');
+
+  function setStatus(msg) {
+    if (!kajiStatus) return;
+    kajiStatus.textContent = msg || '';
+    kajiStatus.hidden = !msg;
+  }
+  function copyLastUrl() {
+    var u = lastNav || (urlEl && urlEl.value) || '';
+    if (!u) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(u);
+  }
+  var copyBtn = document.getElementById('browser-copy-url');
+  if (copyBtn) copyBtn.onclick = copyLastUrl;
+  var fallbackCopy = document.getElementById('frame-fallback-copy');
+  if (fallbackCopy) fallbackCopy.onclick = copyLastUrl;
+
+  function fmtBytes(n) {
+    if (n >= 1024 * 1024) return (n / (1024 * 1024)).toFixed(1) + ' MB';
+    if (n >= 1024) return (n / 1024).toFixed(0) + ' KB';
+    return n + ' B';
+  }
+  function batchBytes() {
+    return pendingAttach.reduce(function (s, a) { return s + (a.size || 0); }, 0);
+  }
+  function renderAttachRow() {
+    if (!attachRow) return;
+    if (!pendingAttach.length) {
+      attachRow.hidden = true;
+      attachRow.innerHTML = '';
+      return;
+    }
+    attachRow.hidden = false;
+    attachRow.innerHTML = pendingAttach.map(function (a) {
+      var label = a.name + ' · ' + fmtBytes(a.size || 0);
+      if (a.uploading) label += ' · ' + Math.round((a.progress || 0) * 100) + '%';
+      if (a.error) label += ' · ' + a.error;
+      return '<div class="attach-chip" data-id="' + a.id + '">' +
+        '<span>' + label.replace(/</g, '&lt;') + '</span>' +
+        '<button type="button" aria-label="Remove" data-rm="' + a.id + '">×</button></div>';
+    }).join('');
+  }
+  if (attachRow) attachRow.addEventListener('click', function (e) {
+    var id = e.target && e.target.getAttribute('data-rm');
+    if (!id) return;
+    pendingAttach = pendingAttach.filter(function (a) { return a.id !== id; });
+    renderAttachRow();
+    syncSend();
+  });
+  async function readTextPreview(file) {
+    var mime = file.type || '';
+    var name = (file.name || '').toLowerCase();
+    var texty = /^text\//.test(mime) ||
+      /\.(txt|md|json|js|ts|py|swift|html|css|xml|yaml|yml|sh|csv|log)$/.test(name);
+    if (!texty || file.size > 512 * 1024) return '';
+    try { return String(await file.text()).slice(0, TEXT_PREVIEW); } catch (e) { return ''; }
+  }
+  async function queueFiles(fileList) {
+    var files = Array.prototype.slice.call(fileList || []);
+    if (!files.length) return;
+    if (!Cloud || !Cloud.isSignedIn || !Cloud.isSignedIn()) {
+      setStatus('Sign in to attach files');
+      return;
+    }
+    var add = 0;
+    for (var i = 0; i < files.length; i++) add += files[i].size || 0;
+    if (batchBytes() + add > MAX_BATCH) {
+      setStatus('Batch would exceed 500 MB');
+      return;
+    }
+    for (var j = 0; j < files.length; j++) {
+      var f = files[j];
+      if (!f.size) continue;
+      var item = {
+        id: 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        name: f.name,
+        mime: f.type || 'application/octet-stream',
+        size: f.size,
+        uploading: true,
+        progress: 0
+      };
+      pendingAttach.push(item);
+      renderAttachRow();
+      try {
+        var text = await readTextPreview(f);
+        var up = await Cloud.uploadAttachment(f, {
+          chatId: cloudChatId || null,
+          onProgress: function (p) { item.progress = p; renderAttachRow(); }
+        });
+        item.uploading = false;
+        item.path = up.path;
+        item.url = up.signedUrl;
+        item.text = text;
+        item.progress = 1;
+      } catch (err) {
+        item.uploading = false;
+        item.error = (err && err.message) || 'upload failed';
+      }
+      renderAttachRow();
+    }
+    setStatus(pendingAttach.some(function (a) { return a.error; }) ? 'Some uploads failed' : '');
+    syncSend();
+  }
+  function openAttach() {
+    if (!Cloud || !Cloud.isSignedIn || !Cloud.isSignedIn()) {
+      setStatus('Sign in to attach files');
+      if (window.openCsAuth) window.openCsAuth();
+      return;
+    }
+    if (fileInput) fileInput.click();
+  }
+  if (attachBtn) attachBtn.onclick = openAttach;
+  var pillAttach = document.getElementById('pill-attach');
+  if (pillAttach) pillAttach.onclick = openAttach;
+  if (fileInput) fileInput.addEventListener('change', function () {
+    queueFiles(fileInput.files);
+    fileInput.value = '';
+  });
+  if (composerEl) {
+    ;['dragenter', 'dragover'].forEach(function (ev) {
+      composerEl.addEventListener(ev, function (e) {
+        e.preventDefault();
+        composerEl.classList.add('drag');
+      });
+    });
+    ;['dragleave', 'drop'].forEach(function (ev) {
+      composerEl.addEventListener(ev, function (e) {
+        e.preventDefault();
+        composerEl.classList.remove('drag');
+        if (ev === 'drop') queueFiles(e.dataTransfer.files);
+      });
+    });
+  }
 
   function rememberChatId(id) {
     cloudChatId = id || null;
@@ -213,12 +363,23 @@
     var href = String(u || '').trim();
     if (!/^https:\/\//i.test(href)) return;
     lastNav = href;
-    if (rail) rail.hidden = false;
+    if (rail) {
+      rail.hidden = false;
+      rail.classList.add('kaji-rail-flash');
+      try { rail.scrollIntoView({ inline: 'nearest', block: 'nearest' }); } catch (e) {}
+      setTimeout(function () { rail.classList.remove('kaji-rail-flash'); }, 1600);
+    }
     if (urlEl) urlEl.value = href;
     if (overlay) overlay.setAttribute('data-snippet', snippet || '');
     setFallback(false, href, snippet);
     if (frame) frame.src = href;
     if (openTab) openTab.href = href;
+    if (openedEl) {
+      var host = href;
+      try { host = new URL(href).hostname; } catch (e) {}
+      openedEl.textContent = 'Opened ' + host;
+      openedEl.hidden = false;
+    }
     clearTimeout(inspectTimer);
     inspectTimer = setTimeout(inspectFrame, 1400);
   }
@@ -244,7 +405,8 @@
     return esc(s).replace(/\n/g, '<br>');
   }
   function syncSend() {
-    send.disabled = busy || !String(input.value || '').trim() || !allowed;
+    var ready = pendingAttach.filter(function (a) { return a.url && !a.error; });
+    send.disabled = busy || !allowed || (!String(input.value || '').trim() && !ready.length) || pendingAttach.some(function (a) { return a.uploading; });
   }
   function setAllowed(on) {
     allowed = !!on;
@@ -269,27 +431,46 @@
   }
   function submit(text) {
     text = String(text || input.value || '').trim();
-    if (!text || busy) return;
+    if (busy) return;
     if (!allowed) { gate.classList.add('open'); return; }
+    if (pendingAttach.some(function (a) { return a.uploading; })) {
+      setStatus('Wait for uploads to finish…');
+      return;
+    }
+    var ready = pendingAttach.filter(function (a) { return a.url && !a.error; });
+    if (!text && !ready.length) return;
+    var attachNote = ready.length
+      ? '\n\n[' + ready.length + ' attachment' + (ready.length === 1 ? '' : 's') + ': ' +
+        ready.map(function (a) { return a.name; }).join(', ') + ']'
+      : '';
+    var userText = text || 'Please review the attached files.';
     input.value = '';
-    addTurn('user', md(text));
-    history.push({ role: 'user', content: text });
+    addTurn('user', md(userText + attachNote));
+    history.push({ role: 'user', content: userText });
     busy = true;
     syncSend();
     var thinking = addTurn('bot', 'Thinking…');
     var headers = { 'content-type': 'application/json' };
     var s = Cloud.getSession && Cloud.getSession();
     if (s && s.access_token) headers.authorization = 'Bearer ' + s.access_token;
+    var body = {
+      messages: history.slice(-12),
+      mode: 'agent',
+      tier: 'kaji',
+      enableTools: true,
+      disableSearch: false
+    };
+    if (ready.length) {
+      body.attachments = ready.map(function (a) {
+        return { name: a.name, mime: a.mime, size: a.size, url: a.url, path: a.path, text: a.text || '' };
+      });
+    }
+    pendingAttach = [];
+    renderAttachRow();
     fetch(API, {
       method: 'POST',
       headers: headers,
-      body: JSON.stringify({
-        messages: history.slice(-12),
-        mode: 'agent',
-        tier: 'kaji',
-        enableTools: true,
-        disableSearch: false
-      })
+      body: JSON.stringify(body)
     }).then(function (r) { return r.json().then(function (d) { return { r: r, d: d }; }); })
       .then(function (x) {
         var d = x.d || {};
@@ -306,7 +487,7 @@
         if (Cloud && Cloud.isSignedIn && Cloud.isSignedIn()) {
           (async function () {
             try {
-              var title = text.slice(0, 60);
+              var title = userText.slice(0, 60);
               if (!cloudChatId) {
                 var created = await Cloud.createChat({ title: title, client: 'web', tier: 'kaji' });
                 rememberChatId(created && created.id);
@@ -342,7 +523,7 @@
     log.innerHTML = '';
     if (intro) log.appendChild(intro);
     document.body.classList.add('has-intro');
-    rail.hidden = true;
+    if (openedEl) { openedEl.hidden = true; openedEl.textContent = ''; }
     refreshChats();
   };
   function setDrawer(open) {

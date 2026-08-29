@@ -5,12 +5,8 @@ private let apiURL = URL(string: "https://chopstickshq.com/api/chopsticks-ai")!
 private let appMarketingVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "3.5.0"
 
 private let starters = [
-    "What is ChopsticksAI?",
-    "How do I install rNitro?",
-    "macOS says it can't be opened",
-    "How do I unlock Fathom Pro?",
-    "Explain how SSDs work",
-    "Write me a haiku about Mondays",
+    "What is Chopsticks HQ?",
+    "Plan a change to the Mac app",
 ]
 
 private let effortTiers: [(id: String, label: String)] = [
@@ -851,7 +847,7 @@ final class ChatModel: ObservableObject {
                let href = first["url"] as? String,
                href.lowercased().hasPrefix("https://") {
                 AppStore.shared.pendingBrowserURL = href
-                AppStore.shared.nav = .search
+                AppStore.shared.kajiOpenedURL = href
             }
             let agents = parseAgents(obj)
             let conversation = parseConversation(obj)
@@ -936,6 +932,14 @@ final class ChatModel: ObservableObject {
                 if result.mode == "kaji_local_tools", let tools = result.localTools, !tools.isEmpty {
                     lastPartial = result.text
                     let executed = KajiMacFiles.run(tools)
+                    let chips = AppStore.shared.applyKajiToolResults(executed)
+                    if !chips.isEmpty {
+                        mutateActive { session in
+                            for chip in chips {
+                                session.lines.append(ChatLine(role: "tool", text: chip))
+                            }
+                        }
+                    }
                     working["kajiResume"] = [
                         "model": result.resumeModel ?? "",
                         "text": result.text,
@@ -1189,8 +1193,8 @@ struct RootShell: View {
     @ObservedObject private var auth = AuthStore.shared
 
     private var secondaryWidth: CGFloat {
-        guard store.sidebarExpanded, store.nav != .settings, store.nav != .kaji else { return 0 }
-        if store.nav == .agents {
+        guard store.sidebarExpanded, store.nav != .settings else { return 0 }
+        if store.nav == .agents || store.nav == .kaji {
             return store.compact ? 180 : 220
         }
         return store.compact ? 168 : 200
@@ -1331,9 +1335,9 @@ struct RootShell: View {
 
     private var railItems: [AppNav] {
         if CSAIEdition.current.isOffline {
-            return [.agents, .search, .cloudAgents, .automations, .repos, .marketplace, .moreModels, .usage, .account]
+            return [.agents, .search, .labs, .usage, .account]
         }
-        return [.agents, .kaji, .search, .cloudAgents, .automations, .repos, .marketplace, .moreModels, .usage, .account]
+        return [.agents, .kaji, .search, .labs, .usage, .account]
     }
 
     
@@ -1345,7 +1349,7 @@ struct RootShell: View {
                 EmptyView()
             } else {
                 Group {
-                    if store.nav == .agents {
+                    if store.nav == .agents || store.nav == .kaji {
                         agentsSidebar
                     } else {
                         VStack(alignment: .leading, spacing: 0) {
@@ -1377,8 +1381,9 @@ struct RootShell: View {
 
     private var sidebarBlurb: String {
         switch store.nav {
-        case .search: return "Chromium browser · Google search"
-        case .kaji: return "Think different. Ask Kaji. · alpha · prone to wrong answers"
+        case .search: return "In-app browser"
+        case .kaji: return "Kaji uses the browser and your folders."
+        case .labs: return "Preview rooms — Cloud Agents, Automations, Repos, Marketplace"
         case .cloudAgents: return "Remote agent runs"
         case .automations: return "Schedules & event triggers"
         case .repos: return "Local repositories"
@@ -1399,7 +1404,7 @@ struct RootShell: View {
                     HStack(spacing: 6) {
                         Image(systemName: "plus")
                             .font(.system(size: 11, weight: .semibold))
-                        Text("New Agent")
+                        Text(store.nav == .kaji ? "New Kaji" : "New Agent")
                             .font(.system(size: 12.5, weight: .medium))
                     }
                     .frame(maxWidth: .infinity)
@@ -1767,6 +1772,8 @@ struct RootShell: View {
             KajiAppView(store: store, model: chat)
         case .search:
             ChromiumBrowserView()
+        case .labs:
+            LabsView(store: store)
         case .cloudAgents:
             CloudAgentsView()
         case .automations:
@@ -1822,6 +1829,25 @@ struct AgentChatView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
+            if let banner = store.whatsNewBanner, !banner.isEmpty {
+                HStack(alignment: .top, spacing: 10) {
+                    Text(banner)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Cursor.soft)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 8)
+                    Button("Dismiss") {
+                        store.dismissWhatsNewBanner()
+                    }
+                    .font(.system(size: 11, weight: .semibold))
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Cursor.chromium)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Cursor.panel)
+                .overlay(alignment: .bottom) { Rectangle().fill(Cursor.hairline).frame(height: 1) }
+            }
             ZStack(alignment: .bottom) {
                 messageList
                 if showEmpty { emptyState }
@@ -1840,23 +1866,6 @@ struct AgentChatView: View {
             Text("Agent")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(Cursor.text)
-            Text(modeLabel)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(Cursor.muted)
-            Text("·")
-                .foregroundStyle(Cursor.muted)
-            Text(effortLabel)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(Cursor.muted)
-            if !store.webSearchEnabled {
-                Text("Search off")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Cursor.muted)
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 3)
-                    .background(Capsule().fill(Cursor.hover))
-                    .transition(.scale.combined(with: .opacity))
-            }
             if store.offlineChatMode || store.privacyMode {
                 Text(store.privacyMode ? "Privacy" : "Offline")
                     .font(.system(size: 10, weight: .semibold))
@@ -1992,6 +2001,22 @@ struct AgentChatView: View {
             if model.usage.hasAny || !store.webSearchEnabled {
                 ChatUsageBar(stats: model.usage, webSearchEnabled: store.webSearchEnabled, resetInMs: store.usage.resetInMs)
             }
+            if !store.kajiOpenedURL.isEmpty {
+                HStack {
+                    Text("Opened \(store.kajiOpenedURL)")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Cursor.chromium)
+                        .lineLimit(1)
+                    Spacer()
+                    Button("Browser") {
+                        store.nav = .search
+                    }
+                    .font(.system(size: 11, weight: .semibold))
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Cursor.chromium)
+                }
+                .padding(.horizontal, 4)
+            }
             if !attachments.status.isEmpty {
                 Text(attachments.status)
                     .font(.system(size: 10.5, design: .monospaced))
@@ -2079,7 +2104,7 @@ struct AgentChatView: View {
                     }
                     .buttonStyle(.plain)
                     .help(store.webSearchEnabled
-                          ? "Automatic Chromium web search on each question. Click to turn off."
+                          ? "Automatic web search on each question. Click to turn off."
                           : "Web search is off. Click to re-enable, or use /search … for one-off lookups.")
 
                     Menu {
@@ -2238,6 +2263,19 @@ struct MessageRow: View {
     }
 
     var body: some View {
+        if line.role == "tool" {
+            HStack(spacing: 8) {
+                Image(systemName: "folder")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Cursor.muted)
+                Text(line.text)
+                    .font(.system(size: 11.5, weight: .medium))
+                    .foregroundStyle(Cursor.soft)
+                Spacer()
+            }
+            .padding(.horizontal, 4)
+            .padding(.vertical, 2)
+        } else {
         HStack(alignment: .top, spacing: 12) {
             ZStack {
                 Circle()
@@ -2298,6 +2336,7 @@ struct MessageRow: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
         }
     }
 }
