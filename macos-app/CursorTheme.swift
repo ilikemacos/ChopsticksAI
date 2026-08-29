@@ -26,6 +26,7 @@ enum AppNav: String, CaseIterable, Identifiable {
     case agents
     case kaji
     case search
+    case labs
     case cloudAgents
     case automations
     case repos
@@ -42,6 +43,7 @@ enum AppNav: String, CaseIterable, Identifiable {
         case .agents: return "Agents"
         case .kaji: return "Kaji"
         case .search: return "Browser"
+        case .labs: return "Labs"
         case .cloudAgents: return "Cloud Agents (preview)"
         case .automations: return "Automations (preview)"
         case .repos: return "Repositories"
@@ -58,6 +60,7 @@ enum AppNav: String, CaseIterable, Identifiable {
         case .agents: return "bubble.left.and.bubble.right"
         case .kaji: return "sparkle"
         case .search: return "globe"
+        case .labs: return "square.grid.2x2"
         case .cloudAgents: return "cloud"
         case .automations: return "arrow.triangle.2.circlepath"
         case .repos: return "externaldrive"

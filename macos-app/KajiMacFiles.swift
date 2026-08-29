@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 
 enum KajiMacFiles {
     private static let maxRead = 80_000
@@ -94,12 +95,24 @@ enum KajiMacFiles {
         return ["ok": true, "path": url.path, "content": text]
     }
 
+    private static func confirmWrite(path: String, bytes: Int) -> Bool {
+        let alert = NSAlert()
+        alert.messageText = "Kaji wants to write a file"
+        alert.informativeText = "\(path)\n\(bytes) bytes"
+        alert.addButton(withTitle: "Write")
+        alert.addButton(withTitle: "Don’t write")
+        return alert.runModal() == .alertFirstButtonReturn
+    }
+
     private static func writeFile(_ raw: String, content: String) -> [String: Any] {
         guard let url = resolve(raw) else {
             return ["ok": false, "error": "path not allowed"]
         }
         if content.utf8.count > maxWrite {
             return ["ok": false, "error": "content too large"]
+        }
+        guard confirmWrite(path: url.path, bytes: content.utf8.count) else {
+            return ["ok": false, "error": "user cancelled write"]
         }
         do {
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)

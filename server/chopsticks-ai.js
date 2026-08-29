@@ -1017,8 +1017,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 
-const APP_VERSION = "3.7.5b";
-const PREVIEW_APP_VERSION = "3.7.5b";
+const APP_VERSION = "3.7.6";
+const PREVIEW_APP_VERSION = "3.7.6";
 
 function appVersionFor(account) {
   return canPickOpenRouterModel(account) ? PREVIEW_APP_VERSION : APP_VERSION;
@@ -1513,7 +1513,7 @@ const SEARCH_ENABLED = (process.env.CHOPSTICKS_AI_SEARCH || "on") !== "off";
 const SEARCH_TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_SEARCH_TIMEOUT_MS || 2200);
 const SEARCH_MIN_LEN = 3;
 const MAX_SOURCES = 12;
-const UA = "cs.AI-3/3.7.5b (+https://chopstickshq.com/chopsticks-ai/)";
+const UA = "cs.AI-3/3.7.6 (+https://chopstickshq.com/chopsticks-ai/)";
 
 function clockNow() {
   const d = new Date();
