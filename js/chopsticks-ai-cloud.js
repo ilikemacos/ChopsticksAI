@@ -218,7 +218,7 @@
       return Boolean(session && session.modelPicker);
     },
     getAppVersion: function () {
-      var baked = '3.7.8';
+      var baked = '3.7.8b';
       var remote = (session && session.appVersion) || '';
       if (!remote) return baked;
       return verNewer(remote, baked) ? remote : baked;

@@ -30,6 +30,7 @@ html[data-theme="dark"], :root {
   --sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --display: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 body.cursor-app {
@@ -80,6 +81,7 @@ body.cursor-app {
   font-size: 15px;
   font-family: inherit;
   text-decoration: none;
+  transition: background 0.28s var(--ease), color 0.22s var(--ease), transform 0.42s var(--ease);
 }
 .rail-btn:hover { background: var(--cursor-hover); color: var(--cursor-soft); }
 .rail-btn.active, .rail-btn.primary { background: var(--cursor-selected); color: var(--cursor-text); }
@@ -92,7 +94,7 @@ body.cursor-app {
   min-width: 0;
   background: var(--cursor-sidebar);
   border-right: 1px solid var(--cursor-hairline);
-  transition: flex-basis 0.28s ease, opacity 0.2s ease;
+  transition: flex-basis 0.42s var(--ease), opacity 0.36s var(--ease);
 }
 .cursor-sidebar.collapsed {
   flex-basis: 0;
@@ -613,7 +615,11 @@ a:hover { color: var(--cursor-text); }
 .edition-offline #search-toggle,
 .edition-offline #plate-wrap { display: none !important; }
 
-.cursor-workspace .turn { margin-bottom: 1.5rem; }
+.cursor-workspace .turn { margin-bottom: 1.5rem; animation: csFade 0.38s var(--ease); }
+@keyframes csFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
 .cursor-workspace .turn.user { display: flex; justify-content: flex-end; }
 .cursor-workspace .turn.user .bubble {
   max-width: 85%; padding: 10px 14px; white-space: pre-wrap; word-wrap: break-word;
@@ -1069,7 +1075,7 @@ body.cursor-app {
   min-height: 36px;
   border-radius: 9px;
 }
-.rail-btn.active { background: var(--cursor-selected); transform: scale(1.02); }
+.rail-btn.active { background: var(--cursor-selected); transform: scale(1.01); }
 .cursor-sidebar { flex-basis: 220px; background: var(--cursor-sidebar); }
 .sidebar-head {
   padding: 12px 10px 10px;
@@ -1190,6 +1196,7 @@ body.cursor-app {
   background: var(--cursor-composer);
   border: 1px solid var(--cursor-border);
   box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  transition: border-color 0.28s var(--ease), box-shadow 0.28s var(--ease);
 }
 .cursor-workspace .composer-inner:focus-within {
   border-color: #3e4144;
@@ -1211,6 +1218,7 @@ body.cursor-app {
   color: var(--cursor-muted);
   font: 600 12px var(--sans);
   cursor: pointer;
+  transition: color 0.22s var(--ease), background 0.28s var(--ease), border-color 0.22s var(--ease);
 }
 .chip svg { width: 12px; height: 12px; }
 .chip:hover { color: var(--cursor-text); }
