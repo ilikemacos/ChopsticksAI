@@ -155,10 +155,10 @@ struct SettingsToggleRow: View {
         HStack(alignment: .top, spacing: 16) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(Cursor.text)
                 Text(subtitle)
-                    .font(.system(size: 12))
+                    .font(.system(size: 15))
                     .foregroundStyle(Cursor.muted)
             }
             Spacer()
@@ -868,7 +868,7 @@ struct MarketplaceView: View {
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Cursor.chromium)
                 }
-                Text("Kaji uses the browser and, on this Mac, your folders. Pro. Alpha — check what it writes.")
+                Text("Kaji uses the browser, your folders, and a headless Alpine command sandbox. Pro. Alpha — check writes and commands.")
                     .font(.system(size: 12.5))
                     .foregroundStyle(Cursor.muted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -1067,24 +1067,33 @@ struct SettingsView: View {
                     }
 
                 case .models:
-                    SettingsCard(title: "Plate", subtitle: "Everyday, Wagyu, then Apps. ChopCode and Kaji are Pro. Kaji is alpha and prone to wrong answers.") {
+                    SettingsCard(title: "Name mode", subtitle: "Sushi is Rice / Tamago / Wagyu. Sky is cs.AI 3.1, 3.3-Fast, 3.5-Air, csCode-Pro.") {
+                        SettingsToggleRow(
+                            title: "Sky mode",
+                            subtitle: store.skyPlates
+                                ? "On — cs.AI 3.1, 3.3-Fast, 3.3-Thinking, 3.5-Air, Air II–VI, csCode-Pro."
+                                : "Off — Sushi names (Rice, Tamago, Hibachi, Wagyu).",
+                            isOn: Binding(get: { store.skyPlates }, set: { store.setSkyPlates($0) })
+                        )
+                    }
+                    SettingsCard(title: "Plate", subtitle: "Everyday, then Air/Wagyu, then Apps. ChopCode / csCode-Pro and Kaji are Pro. Kaji is alpha.") {
                         Group {
-                            Text("Everyday").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
-                            plateSetting("rice", "Rice")
-                            plateSetting("tamago", "Tamago")
-                            plateSetting("hibachi", "Hibachi")
+                            Text(store.skyPlates ? "cs.AI" : "Everyday").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
+                            plateSetting("rice")
+                            plateSetting("tamago")
+                            plateSetting("hibachi")
                             Divider().overlay(Cursor.hairline)
-                            Text("Wagyu").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
-                            plateSetting("wagyua1", "Wagyu A1")
-                            plateSetting("wagyua2", "Wagyu A2")
-                            plateSetting("wagyua3", "Wagyu A3")
-                            plateSetting("wagyua4", "Wagyu A4")
-                            plateSetting("wagyua5", "Wagyu A5")
+                            Text(store.skyPlates ? "Air" : "Wagyu").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
+                            plateSetting("wagyua1")
+                            plateSetting("wagyua2")
+                            plateSetting("wagyua3")
+                            plateSetting("wagyua4")
+                            plateSetting("wagyua5")
                             Divider().overlay(Cursor.hairline)
                             Text("Apps").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
-                            plateSetting("chopcode", "ChopCode")
-                            plateSetting("kaji", "Kaji")
-                            plateSetting("stickercoderplus", "StickerCoder+")
+                            plateSetting("chopcode")
+                            plateSetting("kaji")
+                            plateSetting("stickercoderplus")
                         }
                     }
                     SettingsCard(title: "More models") {
@@ -1290,12 +1299,12 @@ struct SettingsView: View {
     }
 
     @ViewBuilder
-    private func plateSetting(_ id: String, _ label: String) -> some View {
+    private func plateSetting(_ id: String) -> some View {
         Button {
             store.setTier(id)
         } label: {
             HStack {
-                Text(label)
+                Text(PlateCatalog.label(id, sky: store.skyPlates))
                     .foregroundStyle(Cursor.text)
                 Spacer()
                 if store.tier == id {
