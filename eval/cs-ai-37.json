@@ -1,6 +1,6 @@
 {
   "stack": "cs.AI-3.7",
-  "ship": "3.7.8",
+  "ship": "3.7.8b",
   "note": "Frozen prompts. Change one lever at a time. Score cited vs invented, and whether tools/search ran when they should.",
   "score": [
     "cited_not_invented",

@@ -20,6 +20,10 @@ enum Cursor {
     static let green = Color(red: 0.35, green: 0.72, blue: 0.48)
     static let chromium = Color(red: 0.102, green: 0.451, blue: 0.910)
     static var mozilla: Color { chromium }
+
+    static let motionPanel = Animation.spring(response: 0.52, dampingFraction: 0.92)
+    static let motionNav = Animation.spring(response: 0.48, dampingFraction: 0.94)
+    static let motionSoft = Animation.easeInOut(duration: 0.36)
 }
 
 enum AppNav: String, CaseIterable, Identifiable {

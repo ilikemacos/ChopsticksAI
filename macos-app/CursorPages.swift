@@ -950,7 +950,7 @@ struct SettingsView: View {
                             isOn: Binding(
                                 get: { store.sidebarExpanded },
                                 set: { on in
-                                    withAnimation(.spring(response: 0.38, dampingFraction: 0.86)) {
+                                    withAnimation(Cursor.motionPanel) {
                                         store.setSidebarExpanded(on)
                                     }
                                 }

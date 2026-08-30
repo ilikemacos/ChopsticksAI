@@ -154,8 +154,8 @@ struct ChatUsageBar: View {
         .frame(maxWidth: 420)
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 4)
-        .animation(.spring(response: 0.34, dampingFraction: 0.82), value: stats)
-        .animation(.spring(response: 0.34, dampingFraction: 0.82), value: webSearchEnabled)
+        .animation(Cursor.motionPanel, value: stats)
+        .animation(Cursor.motionPanel, value: webSearchEnabled)
     }
 
     @ViewBuilder
@@ -218,7 +218,7 @@ struct ChatUsageBar: View {
                 }
             }
             .frame(height: 6)
-            .animation(.spring(response: 0.45, dampingFraction: 0.86), value: progress)
+            .animation(Cursor.motionPanel, value: progress)
         }
     }
 }
@@ -1196,9 +1196,9 @@ struct RootShell: View {
             secondarySidebar
             mainPane
         }
-        .animation(.spring(response: 0.38, dampingFraction: 0.86), value: store.sidebarExpanded)
-        .animation(.spring(response: 0.34, dampingFraction: 0.88), value: store.nav)
-        .animation(.easeInOut(duration: 0.22), value: store.compact)
+        .animation(Cursor.motionPanel, value: store.sidebarExpanded)
+        .animation(Cursor.motionNav, value: store.nav)
+        .animation(Cursor.motionSoft, value: store.compact)
         .preferredColorScheme(.dark)
         .background(Cursor.bg)
         .font(.system(size: 15))
@@ -1246,7 +1246,7 @@ struct RootShell: View {
     private var iconRail: some View {
         VStack(alignment: store.railLabels ? .leading : .center, spacing: 6) {
             Button {
-                withAnimation(.spring(response: 0.38, dampingFraction: 0.86)) {
+                withAnimation(Cursor.motionPanel) {
                     store.toggleSidebar()
                 }
             } label: {
@@ -1268,7 +1268,7 @@ struct RootShell: View {
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
                         .fill(Cursor.hover.opacity(0.65))
                 )
-                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: store.sidebarExpanded)
+                .animation(Cursor.motionPanel, value: store.sidebarExpanded)
             }
             .buttonStyle(.plain)
             .help(store.sidebarExpanded ? "Collapse sidebar" : "Expand sidebar")
@@ -1283,7 +1283,7 @@ struct RootShell: View {
         .padding(.vertical, 12)
         .padding(.horizontal, store.railLabels ? 8 : 8)
         .frame(width: store.railLabels ? 148 : 52)
-        .animation(.spring(response: 0.36, dampingFraction: 0.86), value: store.railLabels)
+        .animation(Cursor.motionPanel, value: store.railLabels)
         .background(Cursor.rail)
         .overlay(alignment: .trailing) {
             Rectangle().fill(Cursor.hairline).frame(width: 1)
@@ -1293,7 +1293,7 @@ struct RootShell: View {
     private func railButton(_ item: AppNav) -> some View {
         let selected = store.nav == item
         return Button {
-            withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
+            withAnimation(Cursor.motionNav) {
                 store.nav = item
                 if !store.sidebarExpanded, item != .settings {
                     store.setSidebarExpanded(true)
@@ -1317,8 +1317,8 @@ struct RootShell: View {
                 RoundedRectangle(cornerRadius: 9, style: .continuous)
                     .fill(selected ? Cursor.selected : Color.clear)
             )
-            .scaleEffect(selected ? 1.02 : 1)
-            .animation(.spring(response: 0.28, dampingFraction: 0.75), value: store.nav)
+            .scaleEffect(selected ? 1.01 : 1)
+            .animation(Cursor.motionNav, value: store.nav)
         }
         .buttonStyle(.plain)
         .help(item.title)
@@ -1916,7 +1916,7 @@ struct AgentChatView: View {
                 Text(store.webSearchEnabled ? "Plan, search, build anything" : "Plan and build — web search is off")
                     .font(.system(size: 15))
                     .foregroundStyle(Cursor.muted)
-                    .animation(.easeInOut(duration: 0.22), value: store.webSearchEnabled)
+                    .animation(Cursor.motionSoft, value: store.webSearchEnabled)
             }
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                 ForEach(starters, id: \.self) { s in
@@ -1979,10 +1979,10 @@ struct AgentChatView: View {
                 .frame(maxWidth: .infinity)
             }
             .onChange(of: model.lines.count) { _, _ in
-                withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo("bottom", anchor: .bottom) }
+                withAnimation(Cursor.motionSoft) { proxy.scrollTo("bottom", anchor: .bottom) }
             }
             .onChange(of: model.busy) { _, _ in
-                withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo("bottom", anchor: .bottom) }
+                withAnimation(Cursor.motionSoft) { proxy.scrollTo("bottom", anchor: .bottom) }
             }
         }
     }
@@ -2071,7 +2071,7 @@ struct AgentChatView: View {
                     .help("Attach files or images (up to 500 MB, sign in)")
 
                     Button {
-                        withAnimation(.spring(response: 0.32, dampingFraction: 0.78)) {
+                        withAnimation(Cursor.motionNav) {
                             store.toggleWebSearch()
                         }
                     } label: {
@@ -2423,7 +2423,7 @@ struct MultiAgentPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: compact ? 8 : 10) {
             Button {
-                withAnimation(.easeInOut(duration: 0.16)) { expanded.toggle() }
+                withAnimation(Cursor.motionSoft) { expanded.toggle() }
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: expanded ? "chevron.down" : "chevron.right")
@@ -2519,7 +2519,7 @@ struct AgentTurnRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Button {
-                withAnimation(.easeInOut(duration: 0.14)) { open.toggle() }
+                withAnimation(Cursor.motionSoft) { open.toggle() }
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: open ? "chevron.down" : "chevron.right")
@@ -2572,7 +2572,7 @@ struct AgentTraceRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Button {
-                withAnimation(.easeInOut(duration: 0.14)) { open.toggle() }
+                withAnimation(Cursor.motionSoft) { open.toggle() }
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: open ? "chevron.down" : "chevron.right")
