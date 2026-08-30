@@ -1,28 +1,132 @@
 {
   "stack": "cs.AI-3.7",
-  "ship": "3.7.7",
+  "ship": "3.7.8",
   "note": "Frozen prompts. Change one lever at a time. Score cited vs invented, and whether tools/search ran when they should.",
-  "score": ["cited_not_invented", "tool_used_or_skipped_correctly", "no_catalog_dump"],
+  "score": [
+    "cited_not_invented",
+    "tool_used_or_skipped_correctly",
+    "no_catalog_dump"
+  ],
   "prompts": [
-    { "id": 1, "kind": "hq", "text": "What is Chopsticks HQ?", "expect": "no web, no tools, HQ facts only" },
-    { "id": 2, "kind": "hq", "text": "What is Fathom?", "expect": "HQ retrieve, no leftover catalog" },
-    { "id": 3, "kind": "hq", "text": "How do I install rNitro?", "expect": "HQ steps" },
-    { "id": 4, "kind": "hq", "text": "What is MacBar?", "expect": "HQ product" },
-    { "id": 5, "kind": "trivial", "text": "hi", "expect": "no search, no critic, no tools" },
-    { "id": 6, "kind": "current", "text": "What’s the latest cs.AI Online version?", "expect": "search on" },
-    { "id": 7, "kind": "current", "text": "Latest news on chopstickshq.com", "expect": "search + sources" },
-    { "id": 8, "kind": "compare", "text": "Compare Tamago and Hibachi plates", "expect": "web or HQ, no invented token counts" },
-    { "id": 9, "kind": "compare", "text": "Rice vs Tamago for a one-line answer", "expect": "plates from selfFacts/KB" },
-    { "id": 10, "kind": "code", "text": "Write hello.py that prints hi", "expect": "write_file, cold temperature" },
-    { "id": 11, "kind": "code", "text": "Fix this: print('hi'", "expect": "code, tools if agent" },
-    { "id": 12, "kind": "kaji-web", "text": "Open https://chopstickshq.com and summarize the homepage", "expect": "open_page with page text in tool result" },
-    { "id": 13, "kind": "kaji-files", "text": "List ~/Desktop", "expect": "list_dir on Mac; no web" },
-    { "id": 14, "kind": "kaji-files", "text": "Read ~/Documents and summarize what’s there", "expect": "list_dir or read_file, no HQ dump" },
-    { "id": 15, "kind": "kaji-write", "text": "Write ~/Desktop/hello.py with print('kaji')", "expect": "write_mac_file confirm" },
-    { "id": 16, "kind": "math", "text": "What is 17 * 19?", "expect": "minimal band, no web" },
-    { "id": 17, "kind": "research", "text": "Cite a paper on BM25 ranking", "expect": "search, critic vs evidence" },
-    { "id": 18, "kind": "creative", "text": "Write a four-line poem about chopsticks", "expect": "temperature 0.35, no tools" },
-    { "id": 19, "kind": "long", "text": "Explain how ssds work and when I would pick NVMe over SATA for a workstation in 2026", "expect": "web + critic, numbers from evidence" },
-    { "id": 20, "kind": "unknown", "text": "What is the exact wattage of a product we never sold?", "expect": "say unknown, no invented watts" }
+    {
+      "id": 1,
+      "kind": "hq",
+      "text": "What is Chopsticks HQ?",
+      "expect": "no web, no tools, HQ facts only"
+    },
+    {
+      "id": 2,
+      "kind": "hq",
+      "text": "What is Fathom?",
+      "expect": "HQ retrieve, no leftover catalog"
+    },
+    {
+      "id": 3,
+      "kind": "hq",
+      "text": "How do I install rNitro?",
+      "expect": "HQ steps"
+    },
+    {
+      "id": 4,
+      "kind": "hq",
+      "text": "What is MacBar?",
+      "expect": "HQ product"
+    },
+    {
+      "id": 5,
+      "kind": "trivial",
+      "text": "hi",
+      "expect": "no search, no critic, no tools"
+    },
+    {
+      "id": 6,
+      "kind": "current",
+      "text": "What\u2019s the latest cs.AI Online version?",
+      "expect": "search on"
+    },
+    {
+      "id": 7,
+      "kind": "current",
+      "text": "Latest news on chopstickshq.com",
+      "expect": "search + sources"
+    },
+    {
+      "id": 8,
+      "kind": "compare",
+      "text": "Compare Tamago and Hibachi plates",
+      "expect": "web or HQ, no invented token counts"
+    },
+    {
+      "id": 9,
+      "kind": "compare",
+      "text": "Rice vs Tamago for a one-line answer",
+      "expect": "plates from selfFacts/KB"
+    },
+    {
+      "id": 10,
+      "kind": "code",
+      "text": "Write hello.py that prints hi",
+      "expect": "write_file, cold temperature"
+    },
+    {
+      "id": 11,
+      "kind": "code",
+      "text": "Fix this: print('hi'",
+      "expect": "code, tools if agent"
+    },
+    {
+      "id": 12,
+      "kind": "kaji-web",
+      "text": "Open https://chopstickshq.com and summarize the homepage",
+      "expect": "open_page with page text in tool result"
+    },
+    {
+      "id": 13,
+      "kind": "kaji-files",
+      "text": "List ~/Desktop",
+      "expect": "list_dir on Mac; no web"
+    },
+    {
+      "id": 14,
+      "kind": "kaji-files",
+      "text": "Read ~/Documents and summarize what\u2019s there",
+      "expect": "list_dir or read_file, no HQ dump"
+    },
+    {
+      "id": 15,
+      "kind": "kaji-write",
+      "text": "Write ~/Desktop/hello.py with print('kaji')",
+      "expect": "write_mac_file confirm"
+    },
+    {
+      "id": 16,
+      "kind": "math",
+      "text": "What is 17 * 19?",
+      "expect": "minimal band, no web"
+    },
+    {
+      "id": 17,
+      "kind": "research",
+      "text": "Cite a paper on BM25 ranking",
+      "expect": "search, critic vs evidence"
+    },
+    {
+      "id": 18,
+      "kind": "creative",
+      "text": "Write a four-line poem about chopsticks",
+      "expect": "temperature 0.35, no tools"
+    },
+    {
+      "id": 19,
+      "kind": "long",
+      "text": "Explain how ssds work and when I would pick NVMe over SATA for a workstation in 2026",
+      "expect": "web + critic, numbers from evidence"
+    },
+    {
+      "id": 20,
+      "kind": "unknown",
+      "text": "What is the exact wattage of a product we never sold?",
+      "expect": "say unknown, no invented watts"
+    }
   ]
 }

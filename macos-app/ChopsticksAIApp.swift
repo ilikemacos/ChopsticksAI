@@ -9,19 +9,9 @@ private let starters = [
     "Plan a change to the Mac app",
 ]
 
-private let effortTiers: [(id: String, label: String)] = [
-    ("rice", "Rice"),
-    ("tamago", "Tamago"),
-    ("hibachi", "Hibachi"),
-    ("wagyua1", "Wagyu A1"),
-    ("wagyua2", "Wagyu A2"),
-    ("wagyua3", "Wagyu A3"),
-    ("wagyua4", "Wagyu A4"),
-    ("wagyua5", "Wagyu A5"),
-    ("chopcode", "ChopCode"),
-    ("kaji", "Kaji"),
-    ("stickercoderplus", "StickerCoder+"),
-]
+private func effortTiers(sky: Bool) -> [(id: String, label: String)] {
+    PlateCatalog.ids.map { ($0, PlateCatalog.label($0, sky: sky)) }
+}
 
 struct SearchSource: Equatable, Identifiable, Codable {
     var id: UUID = UUID()
@@ -931,7 +921,7 @@ final class ChatModel: ObservableObject {
                 guard let result = await requestReply(payload: working, userText: userText) else { break }
                 if result.mode == "kaji_local_tools", let tools = result.localTools, !tools.isEmpty {
                     lastPartial = result.text
-                    let executed = KajiMacFiles.run(tools)
+                    let executed = await KajiMacFiles.run(tools)
                     let chips = AppStore.shared.applyKajiToolResults(executed)
                     if !chips.isEmpty {
                         mutateActive { session in
@@ -1211,6 +1201,7 @@ struct RootShell: View {
         .animation(.easeInOut(duration: 0.22), value: store.compact)
         .preferredColorScheme(.dark)
         .background(Cursor.bg)
+        .font(.system(size: 15))
         .frame(minWidth: 980, minHeight: 640)
         .onAppear {
             store.bootstrapAccountState()
@@ -1382,7 +1373,7 @@ struct RootShell: View {
     private var sidebarBlurb: String {
         switch store.nav {
         case .search: return "In-app browser"
-        case .kaji: return "Kaji uses the browser and your folders."
+        case .kaji: return "Kaji uses the browser, your folders, and a headless Alpine sandbox."
         case .labs: return "Preview rooms — Cloud Agents, Automations, Repos, Marketplace"
         case .cloudAgents: return "Remote agent runs"
         case .automations: return "Schedules & event triggers"
@@ -1812,7 +1803,7 @@ struct AgentChatView: View {
     }
 
     private var effortLabel: String {
-        effortTiers.first(where: { $0.id == store.tier })?.label ?? "Tamago"
+        PlateCatalog.label(store.tier, sky: store.skyPlates)
     }
 
     private var composerPlaceholder: String {
@@ -1923,7 +1914,7 @@ struct AgentChatView: View {
                     .font(.system(size: 26, weight: .semibold))
                     .foregroundStyle(Cursor.text)
                 Text(store.webSearchEnabled ? "Plan, search, build anything" : "Plan and build — web search is off")
-                    .font(.system(size: 13.5))
+                    .font(.system(size: 15))
                     .foregroundStyle(Cursor.muted)
                     .animation(.easeInOut(duration: 0.22), value: store.webSearchEnabled)
             }
@@ -2056,7 +2047,7 @@ struct AgentChatView: View {
             VStack(alignment: .leading, spacing: 0) {
                 TextField(composerPlaceholder, text: $model.draft, axis: .vertical)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 13.5))
+                    .font(.system(size: 15))
                     .foregroundStyle(Cursor.text)
                     .lineLimit(1...10)
                     .focused($focused)
@@ -2131,26 +2122,25 @@ struct AgentChatView: View {
                     .fixedSize()
 
                     Menu {
-                        Section("Everyday") {
-                            ForEach(effortTiers.filter { ["rice", "tamago", "hibachi"].contains($0.id) }, id: \.id) { t in
+                        let plates = effortTiers(sky: store.skyPlates)
+                        Section(store.skyPlates ? "cs.AI" : "Everyday") {
+                            ForEach(plates.filter { ["rice", "tamago", "hibachi"].contains($0.id) }, id: \.id) { t in
                                 plateMenuRow(t)
                             }
                         }
-                        Section("Wagyu") {
-                            ForEach(effortTiers.filter { $0.id.hasPrefix("wagyu") }, id: \.id) { t in
+                        Section(store.skyPlates ? "Air" : "Wagyu") {
+                            ForEach(plates.filter { $0.id.hasPrefix("wagyu") }, id: \.id) { t in
                                 plateMenuRow(t)
                             }
                         }
                         Section("Apps") {
-                            ForEach(effortTiers.filter { ["chopcode", "kaji"].contains($0.id) }, id: \.id) { t in
+                            ForEach(plates.filter { ["chopcode", "kaji"].contains($0.id) }, id: \.id) { t in
                                 plateMenuRow(t)
                             }
                         }
-                        if effortTiers.contains(where: { $0.id == "stickercoderplus" }) {
-                            Section("More") {
-                                ForEach(effortTiers.filter { $0.id == "stickercoderplus" }, id: \.id) { t in
-                                    plateMenuRow(t)
-                                }
+                        Section("More") {
+                            ForEach(plates.filter { $0.id == "stickercoderplus" }, id: \.id) { t in
+                                plateMenuRow(t)
                             }
                         }
                     } label: {
@@ -2299,7 +2289,7 @@ struct MessageRow: View {
 
                 if isUser {
                     Text(line.text)
-                        .font(.system(size: compact ? 13 : 13.5))
+                        .font(.system(size: 15))
                         .foregroundStyle(Cursor.text)
                         .lineSpacing(3)
                         .textSelection(.enabled)
@@ -2316,7 +2306,7 @@ struct MessageRow: View {
                     }
                     if !assistantProse.isEmpty {
                         Text(assistantProse)
-                            .font(.system(size: compact ? 13 : 13.5))
+                            .font(.system(size: 15))
                             .foregroundStyle(Cursor.text)
                             .lineSpacing(4)
                             .textSelection(.enabled)

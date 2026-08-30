@@ -70,7 +70,7 @@ function analyzeRequest(text, opts) {
   }
 
   const namedUrl = /https:\/\//i.test(ask);
-  const kajiFileWork = kaji && /\b(list|read|write|desktop|documents|downloads|folder|open_page|open https|open this url)\b/i.test(ask);
+  const kajiFileWork = kaji && /\b(list|read|write|desktop|documents|downloads|folder|open_page|open https|open this url|run_command|sandbox|uname)\b/i.test(ask);
   const webRequired = namedUrl
     || (!trivial && (webHint || (!kaji && len > 80)));
   const toolsRequired = coding || chopCode || kajiFileWork || (kaji && namedUrl);

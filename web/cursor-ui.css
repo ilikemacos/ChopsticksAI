@@ -40,7 +40,7 @@ body.cursor-app {
   overflow: hidden;
   background: var(--cursor-bg);
   color: var(--cursor-text);
-  font: 14px/1.55 var(--sans);
+  font: 15px/1.55 var(--sans);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -276,6 +276,15 @@ body.cursor-app {
   background: var(--cursor-panel); box-shadow: 0 16px 48px rgba(0,0,0,0.55);
   z-index: 40;
 }
+.plate-style-row {
+  display: flex; gap: 6px; padding: 8px 10px 6px;
+}
+.plate-style-btn {
+  flex: 1; border: 1px solid var(--cursor-border); background: transparent;
+  color: var(--cursor-muted); border-radius: 999px; padding: 6px 8px;
+  font: 600 12px/1.2 var(--sans); cursor: pointer;
+}
+.plate-style-btn.is-on { color: var(--cursor-text); background: var(--cursor-selected); }
 .plate-group {
   padding: 10px 12px 4px;
   font: 700 10px/1.2 var(--sans);
@@ -290,7 +299,7 @@ body.cursor-app {
 }
 .plate-item:hover { background: var(--cursor-hover); }
 .plate-item.is-on { background: var(--cursor-selected); }
-.plate-item-name { flex: 1; min-width: 0; font: 600 14px/1.2 var(--sans); color: var(--cursor-text); }
+.plate-item-name { flex: 1; min-width: 0; font: 600 15px/1.2 var(--sans); color: var(--cursor-text); }
 .plate-item-tag { flex: none; font: 500 12px var(--sans); color: var(--cursor-muted); }
 .plate-item.is-locked .plate-item-name { color: var(--cursor-soft); }
 .plate-menu-foot {
@@ -397,7 +406,7 @@ body.cursor-app {
   border-radius: 0;
   padding: 4px 2px 8px;
   min-height: 2.4rem;
-  font-size: 14px;
+  font-size: 15px;
 }
 .composer.drag .composer-inner { border-color: rgba(255,255,255,0.28); }
 .cursor-workspace .composer-toolbar {
@@ -611,7 +620,7 @@ a:hover { color: var(--cursor-text); }
   background: var(--cursor-hover); border: 1px solid var(--cursor-hairline); border-radius: 12px;
 }
 .cursor-workspace .turn.bot .bubble {
-  font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;
+  font-size: 15px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;
 }
 .cursor-workspace .turn.bot .bubble a { text-decoration: underline; text-underline-offset: 2px; }
 .cursor-workspace .bubble code.inline {
@@ -1049,7 +1058,7 @@ body.upgrades-page .cursor-workspace { overflow: auto; }
 .up-plan .nbtn { margin-top: auto; align-self: flex-start; }
 
 body.cursor-app {
-  font: 13.5px/1.45 var(--sans);
+  font: 15px/1.5 var(--sans);
   letter-spacing: -0.01em;
 }
 .cursor-rail {

@@ -4,7 +4,7 @@ private let kajiStarters = [
     "List ~/Desktop",
     "Read ~/Documents and summarize what’s there",
     "Open https://chopstickshq.com and tell me what’s new",
-    "What’s Chopsticks HQ?",
+    "Run uname -a in the sandbox",
 ]
 
 struct KajiAppView: View {
@@ -44,7 +44,7 @@ struct KajiAppView: View {
                         .font(.system(size: 11, weight: .semibold))
                     Text("Web computer")
                         .font(.system(size: 12, weight: .semibold))
-                    Text("No VM")
+                    Text("WebKit")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(Cursor.muted)
                     Spacer()
@@ -114,8 +114,8 @@ struct KajiAppView: View {
             Text("Think different. Ask Kaji.")
                 .font(.system(size: 26, weight: .semibold))
                 .foregroundStyle(Cursor.text)
-            Text("Kaji uses the browser and your folders (Home, Desktop, Documents, Downloads).")
-                .font(.system(size: 13.5))
+            Text("Kaji uses the browser, your folders, and a headless Alpine sandbox for commands.")
+                .font(.system(size: 15))
                 .foregroundStyle(Cursor.muted)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 420)
@@ -150,8 +150,8 @@ struct KajiAppView: View {
                 VStack(spacing: 12) {
                     Text("Think different. Ask Kaji.")
                         .font(.system(size: 22, weight: .bold))
-                    Text("Kaji is Pro. Sign in, redeem five Fathom keys, then come back. It uses the browser and, on this Mac, your folders.")
-                        .font(.system(size: 13.5))
+                    Text("Kaji is Pro. Sign in, redeem five Fathom keys, then come back. It uses the browser, your folders, and a headless Alpine sandbox on this Mac.")
+                        .font(.system(size: 15))
                         .foregroundStyle(Cursor.muted)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: 360)
@@ -248,7 +248,7 @@ struct KajiAppView: View {
                 .help("Attach files")
                 TextField("Ask Kaji", text: $model.draft, axis: .vertical)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 16))
+                    .font(.system(size: 15))
                     .lineLimit(1...8)
                     .focused($focused)
                     .disabled(!kajiUnlocked)
@@ -283,7 +283,7 @@ struct KajiAppView: View {
                 .buttonStyle(.plain)
                 .padding(.bottom, 4)
             }
-            Text("Kaji uses the browser and your folders. Alpha — check writes before you trust them.")
+            Text("Kaji uses the browser, your folders, and a headless Alpine sandbox. Alpha — confirm writes and commands.")
                 .font(.system(size: 11))
                 .foregroundStyle(Cursor.muted)
                 .padding(.bottom, 10)
