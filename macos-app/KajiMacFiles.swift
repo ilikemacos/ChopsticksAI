@@ -9,20 +9,27 @@ enum KajiMacFiles {
         "/private/var/", "/System/", "/usr/", "/bin/", "/sbin/",
     ]
 
-    static func run(_ calls: [[String: Any]]) -> [[String: Any]] {
-        calls.map { call in
+    static func run(_ calls: [[String: Any]]) async -> [[String: Any]] {
+        var out: [[String: Any]] = []
+        for call in calls {
             let id = String(call["id"] as? String ?? "")
             let name = String(call["name"] as? String ?? "")
             let rawArgs = call["arguments"] as? String ?? "{}"
             let args = (try? JSONSerialization.jsonObject(with: Data(rawArgs.utf8))) as? [String: Any] ?? [:]
-            let result = execute(name: name, args: args)
+            let result: [String: Any]
+            if name == "run_command" {
+                result = await KajiLinuxGuest.run(command: args["command"] as? String ?? "")
+            } else {
+                result = execute(name: name, args: args)
+            }
             let payload = (try? JSONSerialization.data(withJSONObject: result)) ?? Data("{}".utf8)
-            return [
+            out.append([
                 "id": id,
                 "name": name,
                 "content": String(data: payload, encoding: .utf8) ?? "{}",
-            ]
+            ])
         }
+        return out
     }
 
     private static func execute(name: String, args: [String: Any]) -> [String: Any] {

@@ -37,7 +37,7 @@ body.grok-app {
   overflow: hidden;
   background: var(--grok-canvas);
   color: var(--grok-text);
-  font: 16px/1.55 var(--sans);
+  font: 15px/1.55 var(--sans);
   font-feature-settings: 'zero' 1;
   -webkit-font-smoothing: antialiased;
 }

@@ -266,6 +266,24 @@ const TIER_ALIASES = {
   wagyua3: "wagyua3",
   wagyua4: "wagyua4",
   wagyua5: "wagyua5",
+  "3.1": "rice",
+  "csai3.1": "rice",
+  "3.3-fast": "tamago",
+  "3.3fast": "tamago",
+  "3.3-thinking": "hibachi",
+  "3.3thinking": "hibachi",
+  "3.5-air": "wagyua5",
+  airii: "wagyua1",
+  air2: "wagyua1",
+  airiii: "wagyua2",
+  air3: "wagyua2",
+  airvi: "wagyua3",
+  air6: "wagyua3",
+  airv: "wagyua4",
+  air5: "wagyua4",
+  "cscode-pro": "chopcode",
+  cscodepro: "chopcode",
+  cscode: "chopcode",
 };
 const DEFAULT_TIER = "tamago";
 const tierOf = (name) => {
@@ -1017,8 +1035,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 
-const APP_VERSION = "3.7.7";
-const PREVIEW_APP_VERSION = "3.7.7";
+const APP_VERSION = "3.7.8";
+const PREVIEW_APP_VERSION = "3.7.8";
 const STACK_NAME = "cs.AI-3.7";
 
 function appVersionFor(account) {
@@ -2076,7 +2094,7 @@ function selfFacts(tier, appVersion) {
     t.stickerCoder
       ? "- StickerCoder+ mode: prioritise complete, runnable code, write_file tool use, and sharp engineering answers."
       : t.kaji
-        ? "- Kaji mode (alpha, agentic): GLM 5.2, North Mini Code, Nemotron 3 Ultra, and Laguna S 2.1 (OpenRouter :free). Tools: write_file, open_page, and on Mac list_dir / read_file / write_mac_file in Home, Desktop, Documents, Downloads. The in-app browser is the web computer — no Linux VM. Prefer “I don’t know” over a confident guess."
+        ? "- Kaji mode (alpha, agentic): GLM 5.2, North Mini Code, Nemotron 3 Ultra, and Laguna S 2.1 (OpenRouter :free). Tools: write_file, open_page, and on Mac list_dir / read_file / write_mac_file plus run_command in a headless Alpine sandbox (Virtualization.framework, no network, not a Linux desktop). The in-app browser is WebKit — use open_page for the web. Prefer “I don’t know” over a confident guess."
       : t.chopCode
         ? "- ChopCode mode: ten coding specialists run in parallel (each educated on today's date and live research), then Lead merges their drafts into one answer. Prioritise complete, runnable code and clear file fences."
         : null,
@@ -2140,9 +2158,10 @@ function systemPrompt(grounding, mode, web, tier, language, appVersion) {
         "Kaji is ALPHA. Do not bluff. Prefer tools over guessing.\n",
         "You are an agent: plan, use tools, observe results, then answer. ",
         "On the macOS app you can list, read, and write files under the user’s Home, Desktop, Documents, and Downloads (list_dir, read_file, write_mac_file). Stay in those folders. Never touch Keychain, .ssh, or other users.\n",
+        "On the macOS app you also have run_command: a headless Alpine Linux guest (Apple Virtualization, aarch64/x86_64, no NIC, no desktop). Commands run after the user confirms. Scratch folder: ~/Downloads/Kaji-scratch. Do not call this a Linux desktop, SSH box, or Chrome.\n",
         "You were trained on the full Chopsticks HQ catalog plus live web research. ",
         "The in-app browser is your web computer: use open_page for https URLs. Use write_file for downloadable files in chat. ",
-        "Never claim you have a Linux VM, SSH, or a desktop container.\n\n",
+        "Never claim you have SSH, a Linux desktop, or that the in-app browser is Chrome.\n\n",
       ].join("")
     : tier.chopCode
     ? [
@@ -2360,7 +2379,7 @@ const KAJI_TOOLS = AGENT_TOOLS.concat([
     function: {
       name: "open_page",
       description:
-        "Open an https URL in Kaji’s web computer (the in-app browser). This is your web machine — no VM. Use for docs, news, product pages, and anything you would otherwise ‘run’ in a browser.",
+        "Open an https URL in Kaji’s web computer (the in-app WebKit view). This is your web machine — not Chrome and not the Linux sandbox. Use for docs, news, product pages, and anything you would otherwise open in a browser.",
       parameters: {
         type: "object",
         properties: {
@@ -2417,9 +2436,24 @@ const KAJI_TOOLS = AGENT_TOOLS.concat([
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "run_command",
+      description:
+        "Run a shell command in Kaji’s headless Alpine sandbox on the Mac app (Apple Virtualization, no network, no desktop). User must confirm. CWD is ~/Downloads/Kaji-scratch inside the guest. Web Kaji cannot run this. Prefer open_page for browsing.",
+      parameters: {
+        type: "object",
+        properties: {
+          command: { type: "string", description: "Shell command, e.g. uname -a or ls" },
+        },
+        required: ["command"],
+      },
+    },
+  },
 ]);
 
-const KAJI_LOCAL_TOOL_NAMES = new Set(["list_dir", "read_file", "write_mac_file"]);
+const KAJI_LOCAL_TOOL_NAMES = new Set(["list_dir", "read_file", "write_mac_file", "run_command"]);
 
 function isMacKajiClient(payload) {
   const c = String((payload && payload.client) || "").toLowerCase();
@@ -2704,7 +2738,7 @@ async function continueWithTools({
         result = {
           ok: false,
           pending: true,
-          error: "Mac file tools run on the cs.AI Mac app.",
+          error: "Mac file and sandbox tools run on the cs.AI Mac app.",
         };
       }
       msgs.push({
@@ -3709,7 +3743,11 @@ async function handler(event) {
         (tier.kaji && (intel.toolsRequired || wantsFiles))
         || (!tier.kaji && payload.enableTools !== false && (payload.tools === true || wantsFiles))
       );
-    const activeTools = tier.kaji ? KAJI_TOOLS : AGENT_TOOLS;
+    const activeTools = tier.kaji
+      ? (isMacKajiClient(payload)
+        ? KAJI_TOOLS
+        : KAJI_TOOLS.filter((t) => t.function && t.function.name !== "run_command"))
+      : AGENT_TOOLS;
 
     const longRun = replyTokens > LONG_REPLY_TOKENS;
     const pickedModel = normalizeOpenRouterModelId(payload.model);

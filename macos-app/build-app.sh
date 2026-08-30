@@ -7,7 +7,7 @@ AI="$REPO/engine"
 SITE="${CHOPSTICKS_AI_SITE:-$REPO/../chopstickshq-site/chopsticks-ai}"
 BUNDLE="chopsticksAI.app"
 EXEC="chopsticksAI"
-VERSION="${1:-v3.7.7}"
+VERSION="${1:-v3.7.8}"
 EDITION="${2:-online}"
 BUILD="$ROOT/build"
 if [[ "$EDITION" == "offline" ]]; then
@@ -88,6 +88,7 @@ SWIFT_CMD+=(
   -framework AppKit
   -framework WebKit
   -framework IOKit
+  -framework Virtualization
   -o "$BIN"
   "$AI/ChopsticksAIKB.swift"
   "$AI/ChopsticksAIEngine.swift"
@@ -105,8 +106,10 @@ SWIFT_CMD+=(
   "$ROOT/ChromiumBrowser.swift"
   "$ROOT/MoreModelsStore.swift"
   "$ROOT/MoreModelsView.swift"
+  "$ROOT/PlateCatalog.swift"
   "$ROOT/KajiApp.swift"
   "$ROOT/KajiMacFiles.swift"
+  "$ROOT/KajiLinuxGuest.swift"
   "$ROOT/ChopsticksAIApp.swift"
 )
 "${SWIFT_CMD[@]}"

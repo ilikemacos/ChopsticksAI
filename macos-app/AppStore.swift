@@ -21,6 +21,7 @@ private let webSearchKey = "chopsticksAI.webSearchEnabled"
 private let confirmFileSaveKey = "chopsticksAI.confirmFileSave"
 private let defaultWriteFolderKey = "chopsticksAI.defaultWriteFolder"
 private let betaFilePreviewKey = "chopsticksAI.betaFilePreview"
+private let plateStyleKey = "chopsticksAI.plateStyle"
 private let unlockKeysKey = "chopsticksAI.fathomProUnlockKeys"
 private let apiURL = URL(string: "https://chopstickshq.com/api/chopsticks-ai")!
 
@@ -162,6 +163,7 @@ final class AppStore: ObservableObject {
     @Published var defaultWriteFolder: String = UserDefaults.standard.string(forKey: defaultWriteFolderKey) ?? ""
     
     @Published var betaFilePreview: Bool = UserDefaults.standard.object(forKey: betaFilePreviewKey) as? Bool ?? true
+    @Published var skyPlates: Bool = (UserDefaults.standard.string(forKey: plateStyleKey) ?? "sushi") == "sky"
     @Published var customModes: [CustomMode] = []
     @Published var automations: [AutomationItem] = []
     @Published var repos: [RepoItem] = []
@@ -227,6 +229,8 @@ final class AppStore: ObservableObject {
             case "write_mac_file" where ok:
                 chip = "Wrote \(short)"
                 kajiLastWritePath = path
+            case "run_command" where ok:
+                chip = "Ran in Alpine sandbox"
             default:
                 break
             }
@@ -261,6 +265,11 @@ final class AppStore: ObservableObject {
         UserDefaults.standard.set(on, forKey: railLabelsKey)
     }
 
+    func setSkyPlates(_ on: Bool) {
+        skyPlates = on
+        UserDefaults.standard.set(on ? "sky" : "sushi", forKey: plateStyleKey)
+    }
+
     static func normalizeTier(_ raw: String) -> String {
         switch raw.lowercased().replacingOccurrences(of: " ", with: "") {
         case "low", "haiku", "fast": return "rice"
@@ -271,7 +280,15 @@ final class AppStore: ObservableObject {
         case "a2", "wagyu-a2", "wagyu2": return "wagyua2"
         case "a3", "wagyu-a3", "wagyu3": return "wagyua3"
         case "a4", "wagyu-a4", "wagyu4": return "wagyua4"
-        case "a5", "wagyu-a5", "wagyu5": return "wagyua5"
+        case "a5", "wagyu-a5", "wagyu5", "3.5-air", "cs.ai3.5-air", "csai3.5-air": return "wagyua5"
+        case "3.1", "cs.ai3.1", "csai3.1": return "rice"
+        case "3.3-fast", "3.3fast", "cs.ai3.3-fast": return "tamago"
+        case "3.3-thinking", "3.3thinking", "cs.ai3.3-thinking": return "hibachi"
+        case "airii", "air2": return "wagyua1"
+        case "airiii", "air3": return "wagyua2"
+        case "airvi", "air6": return "wagyua3"
+        case "airv", "air5": return "wagyua4"
+        case "cscode-pro", "cscodepro", "cscode": return "chopcode"
         case "kaji", "grok", "grokbot", "grok-bot": return "kaji"
         default: return raw
         }

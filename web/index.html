@@ -251,7 +251,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">3.7.7</span>
+  <span class="cursor-footer-ver">3.7.8</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -300,7 +300,12 @@
     xhighplus: 'hibachi', code: 'chopcode', kaji: 'kaji', grok: 'kaji', grokbot: 'kaji',
     insane: 'wagyua5', fable: 'wagyua5', stickercoderplus: 'wagyua5',
     wagyu: 'wagyua5', a1: 'wagyua1', a2: 'wagyua2', a3: 'wagyua3', a4: 'wagyua4', a5: 'wagyua5',
-    'wagyu-a1': 'wagyua1', 'wagyu-a2': 'wagyua2', 'wagyu-a3': 'wagyua3', 'wagyu-a4': 'wagyua4', 'wagyu-a5': 'wagyua5'
+    'wagyu-a1': 'wagyua1', 'wagyu-a2': 'wagyua2', 'wagyu-a3': 'wagyua3', 'wagyu-a4': 'wagyua4', 'wagyu-a5': 'wagyua5',
+    '3.1': 'rice', 'csai3.1': 'rice', '3.3-fast': 'tamago', '3.3fast': 'tamago',
+    '3.3-thinking': 'hibachi', '3.3thinking': 'hibachi', '3.5-air': 'wagyua5',
+    airii: 'wagyua1', air2: 'wagyua1', airiii: 'wagyua2', air3: 'wagyua2',
+    airvi: 'wagyua3', air6: 'wagyua3', airv: 'wagyua4', air5: 'wagyua4',
+    'cscode-pro': 'chopcode', cscodepro: 'chopcode', cscode: 'chopcode'
   };
   function normalizeTier(id) {
     var key = String(id || '').toLowerCase();
@@ -700,7 +705,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (3.7.7)';
+    if (g) g.textContent = 'Welcome to cs.AI (3.7.8)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -712,7 +717,9 @@
     }
     if (lead) lead.textContent = offline
       ? 'Ask about MacBar, Fathom, CSR, Doomlike-FPS, or anything else in the bundled product docs.'
-      : 'Rice is fastest. Tamago is the default. Hibachi is the flagship. Wagyu A1–A5 need an account. ChopCode is the coding plate.';
+      : (plateSkyOn()
+        ? 'cs.AI 3.1 is fastest. 3.3-Fast is the default. 3.3-Thinking is the flagship. Air grades need an account. csCode-Pro is the coding plate.'
+        : 'Rice is fastest. Tamago is the default. Hibachi is the flagship. Wagyu A1–A5 need an account. ChopCode is the coding plate.');
     if (dl) dl.href = offline ? '/chopsticks-ai/offline/' : '/chopsticks-ai/online/';
     var up = document.getElementById('rail-upgrades');
     if (up) up.href = '/chopsticks-ai/web/upgrades/?edition=' + (offline ? 'offline' : 'online');
@@ -929,30 +936,62 @@
     var savedLang = localStorage.getItem(LANG_KEY);
     if (savedLang && langSel.querySelector('option[value="' + savedLang + '"]')) langSel.value = savedLang;
   } catch (e) {}
+  var SKY_NAMES = {
+    rice: 'cs.AI 3.1', tamago: 'cs.AI 3.3-Fast', hibachi: 'cs.AI 3.3-Thinking',
+    wagyua1: 'Air II', wagyua2: 'Air III', wagyua3: 'Air VI', wagyua4: 'Air V',
+    wagyua5: 'cs.AI 3.5-Air', chopcode: 'csCode-Pro', kaji: 'Kaji'
+  };
+  var SUSHI_NAMES = {
+    rice: 'Rice', tamago: 'Tamago', hibachi: 'Hibachi',
+    wagyua1: 'Wagyu A1', wagyua2: 'Wagyu A2', wagyua3: 'Wagyu A3', wagyua4: 'Wagyu A4',
+    wagyua5: 'Wagyu A5', chopcode: 'ChopCode', kaji: 'Kaji'
+  };
+  function plateSkyOn() {
+    try { return localStorage.getItem('chq.plateStyle') === 'sky'; } catch (e) { return false; }
+  }
+  function setPlateSky(on) {
+    try { localStorage.setItem('chq.plateStyle', on ? 'sky' : 'sushi'); } catch (e) {}
+    renderPlateUI();
+    updateOfflineToggleUI();
+  }
+  function plateDisplayName(id) {
+    var t = normalizeTier(id);
+    var map = plateSkyOn() ? SKY_NAMES : SUSHI_NAMES;
+    return map[t] || t;
+  }
   var PLATES = [
-    { id: 'rice', name: 'Rice', tag: 'Fast', group: 'Everyday' },
-    { id: 'tamago', name: 'Tamago', tag: 'Default', group: 'Everyday' },
-    { id: 'hibachi', name: 'Hibachi', tag: 'Flagship', group: 'Everyday' },
-    { id: 'wagyua1', name: 'Wagyu A1', tag: 'A1', group: 'Wagyu' },
-    { id: 'wagyua2', name: 'Wagyu A2', tag: 'A2', group: 'Wagyu' },
-    { id: 'wagyua3', name: 'Wagyu A3', tag: 'A3', group: 'Wagyu' },
-    { id: 'wagyua4', name: 'Wagyu A4', tag: 'A4', group: 'Wagyu' },
-    { id: 'wagyua5', name: 'Wagyu A5', tag: 'A5', group: 'Wagyu' },
-    { id: 'chopcode', name: 'ChopCode', tag: 'Code', group: 'Apps' },
-    { id: 'kaji', name: 'Kaji', tag: 'Alpha', group: 'Apps' }
+    { id: 'rice', tag: 'Fast', group: 'Everyday' },
+    { id: 'tamago', tag: 'Default', group: 'Everyday' },
+    { id: 'hibachi', tag: 'Flagship', group: 'Everyday' },
+    { id: 'wagyua1', tag: 'A1', group: 'Wagyu' },
+    { id: 'wagyua2', tag: 'A2', group: 'Wagyu' },
+    { id: 'wagyua3', tag: 'A3', group: 'Wagyu' },
+    { id: 'wagyua4', tag: 'A4', group: 'Wagyu' },
+    { id: 'wagyua5', tag: 'A5', group: 'Wagyu' },
+    { id: 'chopcode', tag: 'Code', group: 'Apps' },
+    { id: 'kaji', tag: 'Alpha', group: 'Apps' }
   ];
-  var PLATE_GROUPS = [
-    { label: 'Everyday', ids: ['rice', 'tamago', 'hibachi'] },
-    { label: 'Wagyu', ids: ['wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
-    { label: 'Apps', ids: ['chopcode', 'kaji'] }
-  ];
+  function plateGroups() {
+    return plateSkyOn()
+      ? [
+          { label: 'cs.AI', ids: ['rice', 'tamago', 'hibachi'] },
+          { label: 'Air', ids: ['wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
+          { label: 'Apps', ids: ['chopcode', 'kaji'] }
+        ]
+      : [
+          { label: 'Everyday', ids: ['rice', 'tamago', 'hibachi'] },
+          { label: 'Wagyu', ids: ['wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
+          { label: 'Apps', ids: ['chopcode', 'kaji'] }
+        ];
+  }
   var plateBtn = document.getElementById('plate-btn');
   var plateMenu = document.getElementById('plate-menu');
   var plateWrap = document.getElementById('plate-wrap');
   var plateHint = document.getElementById('plate-hint');
   function currentPlate() {
     var id = normalizeTier(tierSel.value);
-    return PLATES.filter(function (p) { return p.id === id; })[0] || PLATES[1];
+    var row = PLATES.filter(function (p) { return p.id === id; })[0] || PLATES[1];
+    return { id: row.id, name: plateDisplayName(row.id), tag: row.tag, group: row.group };
   }
   var chopcodeAllowed = false;
   var kajiAllowed = false;
@@ -1032,7 +1071,7 @@
     var on = row.id === onId ? ' is-on' : '';
     var tag = locked ? plateLockLabel(row) : (row.tag || '');
     return '<button type="button" class="plate-item' + on + (locked ? ' is-locked' : '') + ' plate-' + row.id + '" data-plate="' + row.id + '" role="option">' +
-      '<span class="plate-item-name">' + row.name + '</span>' +
+      '<span class="plate-item-name">' + plateDisplayName(row.id) + '</span>' +
       '<span class="plate-item-tag">' + tag + '</span>' +
       '</button>';
   }
@@ -1049,13 +1088,18 @@
       status.className = 'plate-status plate-' + p.id;
     }
     if (plateMenu) {
-      plateMenu.innerHTML = PLATE_GROUPS.map(function (g) {
+      var sky = plateSkyOn();
+      plateMenu.innerHTML = '<div class="plate-style-row">' +
+        '<button type="button" class="plate-style-btn' + (sky ? '' : ' is-on') + '" data-style="sushi">Sushi</button>' +
+        '<button type="button" class="plate-style-btn' + (sky ? ' is-on' : '') + '" data-style="sky">Sky</button>' +
+        '</div>' +
+        plateGroups().map(function (g) {
         var rows = PLATES.filter(function (row) { return g.ids.indexOf(row.id) >= 0; });
         return '<div class="plate-group">' + g.label + '</div>' +
           rows.map(function (row) { return plateRowHtml(row, p.id); }).join('');
       }).join('') +
         (isWagyu(p.id) && !wagyuLocked()
-          ? '<div class="plate-menu-foot">Wagyu A1–A5 · A5 is the highest grade. Same allowance, more context on higher grades.</div>'
+          ? '<div class="plate-menu-foot">' + (sky ? 'Air II–VI and 3.5-Air. Same allowance, more context on higher Air grades.' : 'Wagyu A1–A5 · A5 is the highest grade. Same allowance, more context on higher grades.') + '</div>'
           : p.id === 'chopcode'
             ? '<div class="plate-menu-foot">Attach files in the composer. Same chat as the other plates.</div>'
             : p.id === 'kaji'
@@ -1070,7 +1114,7 @@
       plateHint.textContent = (isWagyu(p.id) && !wagyuLocked())
         ? (p.name + ' — A5 is the highest Wagyu grade. cs.AI can make mistakes.')
         : (p.id === 'chopcode'
-          ? 'ChopCode — attach files in the composer. Verify code before you run it.'
+          ? (plateDisplayName('chopcode') + ' — attach files in the composer. Verify code before you run it.')
           : 'cs.AI can make mistakes. Verify important info.');
     }
   }
@@ -1078,7 +1122,7 @@
     return EFFORT[tierSel.value] || EFFORT.tamago;
   }
   function showTier() {
-    var ver = '3.7.7';
+    var ver = '3.7.8';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
@@ -1410,6 +1454,12 @@
       plateBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
     plateMenu.addEventListener('click', function (e) {
+      var styleBtn = e.target.closest('[data-style]');
+      if (styleBtn) {
+        e.stopPropagation();
+        setPlateSky(styleBtn.getAttribute('data-style') === 'sky');
+        return;
+      }
       var item = e.target.closest('[data-plate]');
       if (!item) return;
       setPlate(item.getAttribute('data-plate'));
