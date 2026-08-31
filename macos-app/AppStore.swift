@@ -163,7 +163,7 @@ final class AppStore: ObservableObject {
     @Published var defaultWriteFolder: String = UserDefaults.standard.string(forKey: defaultWriteFolderKey) ?? ""
     
     @Published var betaFilePreview: Bool = UserDefaults.standard.object(forKey: betaFilePreviewKey) as? Bool ?? true
-    @Published var skyPlates: Bool = (UserDefaults.standard.string(forKey: plateStyleKey) ?? "sushi") == "sky"
+    @Published var skyPlates: Bool = UserDefaults.standard.string(forKey: plateStyleKey) != "sushi"
     @Published var customModes: [CustomMode] = []
     @Published var automations: [AutomationItem] = []
     @Published var repos: [RepoItem] = []
@@ -176,6 +176,8 @@ final class AppStore: ObservableObject {
     @Published var kajiActivity: [String] = []
     @Published var kajiOpenedURL = ""
     @Published var kajiLastWritePath: String?
+    @Published var kajiLastCommand: String?
+    @Published var kajiLastCommandOk: Bool?
     @Published var whatsNewBanner: String?
 
     private init() {
@@ -229,8 +231,11 @@ final class AppStore: ObservableObject {
             case "write_mac_file" where ok:
                 chip = "Wrote \(short)"
                 kajiLastWritePath = path
-            case "run_command" where ok:
-                chip = "Ran in Alpine sandbox"
+            case "run_command":
+                let cmd = String(json["command"] as? String ?? "")
+                if !cmd.isEmpty { kajiLastCommand = cmd }
+                kajiLastCommandOk = ok
+                chip = ok ? "Ran in Alpine sandbox" : "Command not run"
             default:
                 break
             }

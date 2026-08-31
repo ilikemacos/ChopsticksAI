@@ -1035,8 +1035,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 
-const APP_VERSION = "3.7.8b";
-const PREVIEW_APP_VERSION = "3.7.8b";
+const APP_VERSION = "3.8.0";
+const PREVIEW_APP_VERSION = "3.8.0";
 const STACK_NAME = "cs.AI-3.7";
 
 function appVersionFor(account) {
@@ -2094,7 +2094,7 @@ function selfFacts(tier, appVersion) {
     t.stickerCoder
       ? "- StickerCoder+ mode: prioritise complete, runnable code, write_file tool use, and sharp engineering answers."
       : t.kaji
-        ? "- Kaji mode (alpha, agentic): GLM 5.2, North Mini Code, Nemotron 3 Ultra, and Laguna S 2.1 (OpenRouter :free). Tools: write_file, open_page, and on Mac list_dir / read_file / write_mac_file plus run_command in a headless Alpine sandbox (Virtualization.framework, no network, not a Linux desktop). The in-app browser is WebKit — use open_page for the web. Prefer “I don’t know” over a confident guess."
+        ? "- Kaji mode (alpha, agentic): tools write_file, open_page, and on Mac list_dir / read_file / write_mac_file plus run_command in a headless Alpine sandbox (no network, not a Linux desktop). The in-app browser is WebKit. Prefer “I don’t know” over a confident guess. Do not name underlying models or vendors."
       : t.chopCode
         ? "- ChopCode mode: ten coding specialists run in parallel (each educated on today's date and live research), then Lead merges their drafts into one answer. Prioritise complete, runnable code and clear file fences."
         : null,
