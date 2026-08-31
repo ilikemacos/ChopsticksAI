@@ -19,17 +19,17 @@ enum KajiLinuxGuest {
     static func run(command raw: String) async -> [String: Any] {
         let command = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         if command.isEmpty {
-            return ["ok": false, "error": "empty command"]
+            return ["ok": false, "error": "empty command", "command": command]
         }
         if command.count > 4000 {
-            return ["ok": false, "error": "command too long"]
+            return ["ok": false, "error": "command too long", "command": command]
         }
         if command.contains("KAJI_END") {
-            return ["ok": false, "error": "command not allowed"]
+            return ["ok": false, "error": "command not allowed", "command": command]
         }
         let allowed = await MainActor.run { confirm(command) }
         guard allowed else {
-            return ["ok": false, "error": "user cancelled command"]
+            return ["ok": false, "error": "user cancelled command", "command": command]
         }
         do {
             try await ensureBooted()
@@ -37,11 +37,12 @@ enum KajiLinuxGuest {
             return [
                 "ok": true,
                 "guest": "alpine",
+                "command": command,
                 "cwd": scratchURL.path,
                 "output": String(output.prefix(24_000)),
             ]
         } catch {
-            return ["ok": false, "error": String(describing: error)]
+            return ["ok": false, "error": String(describing: error), "command": command]
         }
     }
 

@@ -28,6 +28,7 @@ struct KajiAppView: View {
         HSplitView {
             VStack(spacing: 0) {
                 header
+                commandBar
                 ZStack(alignment: .bottom) {
                     kajiMessages
                     if showEmpty { empty }
@@ -101,6 +102,38 @@ struct KajiAppView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+        .background(Color.black)
+        .overlay(alignment: .bottom) { Rectangle().fill(Cursor.hairline).frame(height: 1) }
+    }
+
+    private var commandBar: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text("Commands")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(Cursor.muted)
+            if let cmd = store.kajiLastCommand, !cmd.isEmpty {
+                Text(cmd)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(Cursor.soft)
+                    .lineLimit(1)
+                if let ok = store.kajiLastCommandOk {
+                    Text(ok ? "Confirmed" : "Not run")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(ok ? Cursor.green : Cursor.muted)
+                }
+            } else {
+                Text("Headless Alpine — confirm before each run")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Cursor.muted)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 8)
+            Text("~/Downloads/Kaji-scratch")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundStyle(Cursor.muted)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 7)
         .background(Color.black)
         .overlay(alignment: .bottom) { Rectangle().fill(Cursor.hairline).frame(height: 1) }
     }
