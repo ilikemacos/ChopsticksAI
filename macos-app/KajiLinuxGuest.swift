@@ -1,4 +1,3 @@
-import AppKit
 import Foundation
 import Virtualization
 
@@ -27,7 +26,7 @@ enum KajiLinuxGuest {
         if command.contains("KAJI_END") {
             return ["ok": false, "error": "command not allowed", "command": command]
         }
-        let allowed = await MainActor.run { confirm(command) }
+        let allowed = await KajiCommandGate.shared.request(command)
         guard allowed else {
             return ["ok": false, "error": "user cancelled command", "command": command]
         }
@@ -46,14 +45,10 @@ enum KajiLinuxGuest {
         }
     }
 
-    @MainActor
-    private static func confirm(_ command: String) -> Bool {
-        let alert = NSAlert()
-        alert.messageText = "Kaji wants to run a command in the Linux sandbox"
-        alert.informativeText = "Headless Alpine (no network, no desktop). Scratch folder:\n~/Downloads/Kaji-scratch\n\n\(command)"
-        alert.addButton(withTitle: "Run")
-        alert.addButton(withTitle: "Don’t run")
-        return alert.runModal() == .alertFirstButtonReturn
+    static var scratchFolderURL: URL {
+        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+            ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Downloads")
+        return downloads.appendingPathComponent("Kaji-scratch", isDirectory: true)
     }
 
     private static var cacheURL: URL {
@@ -62,11 +57,7 @@ enum KajiLinuxGuest {
         return base.appendingPathComponent("chopsticksAI/kaji-alpine", isDirectory: true)
     }
 
-    private static var scratchURL: URL {
-        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
-            ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Downloads")
-        return downloads.appendingPathComponent("Kaji-scratch", isDirectory: true)
-    }
+    private static var scratchURL: URL { scratchFolderURL }
 
     private static var arch: String {
         #if arch(arm64)

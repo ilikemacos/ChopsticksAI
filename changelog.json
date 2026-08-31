@@ -1,7 +1,18 @@
 {
   "product": "cs.AI",
-  "latest": "3.8.0",
+  "latest": "3.8.1",
   "entries": [
+    {
+      "version": "3.8.1",
+      "date": "2026-08-30",
+      "title": "Kaji confirm in the command bar",
+      "changes": [
+        "Run / Don’t run for Alpine commands lives on the Kaji Commands strip — no modal",
+        "Last command output is one truncated line; scratch path opens in Finder",
+        "Online page uses Sky plate names by default; Sushi names stay in Settings",
+        "Ship 3.8.1 — stack is still cs.AI-3.7"
+      ]
+    },
     {
       "version": "3.8.0",
       "date": "2026-08-30",

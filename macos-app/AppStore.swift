@@ -178,6 +178,7 @@ final class AppStore: ObservableObject {
     @Published var kajiLastWritePath: String?
     @Published var kajiLastCommand: String?
     @Published var kajiLastCommandOk: Bool?
+    @Published var kajiLastCommandOutput: String?
     @Published var whatsNewBanner: String?
 
     private init() {
@@ -235,6 +236,17 @@ final class AppStore: ObservableObject {
                 let cmd = String(json["command"] as? String ?? "")
                 if !cmd.isEmpty { kajiLastCommand = cmd }
                 kajiLastCommandOk = ok
+                let out = String(json["output"] as? String ?? "")
+                    .replacingOccurrences(of: "\n", with: " ")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                let err = String(json["error"] as? String ?? "")
+                if ok {
+                    kajiLastCommandOutput = out.isEmpty ? "(no output)" : String(out.prefix(180))
+                } else if err.contains("cancelled") {
+                    kajiLastCommandOutput = "Cancelled"
+                } else {
+                    kajiLastCommandOutput = err.isEmpty ? "Not run" : String(err.prefix(140))
+                }
                 chip = ok ? "Ran in Alpine sandbox" : "Command not run"
             default:
                 break
