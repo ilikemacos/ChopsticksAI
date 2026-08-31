@@ -1,7 +1,18 @@
 {
   "product": "cs.AI",
-  "latest": "3.7.8b",
+  "latest": "3.8.0",
   "entries": [
+    {
+      "version": "3.8.0",
+      "date": "2026-08-30",
+      "title": "Sky names, Kaji command bar",
+      "changes": [
+        "New installs default to Sky plate names (Sushi stays a toggle)",
+        "Kaji header shows last command, confirm state, and ~/Downloads/Kaji-scratch",
+        "Kaji no longer lists underlying model names in its system prompt",
+        "Ship 3.8.0 — stack is still cs.AI-3.7"
+      ]
+    },
     {
       "version": "3.7.8b",
       "date": "2026-08-30",
@@ -18,6 +29,7 @@
       "title": "Sushi or Sky plates · Kaji Alpine sandbox",
       "changes": [
         "Settings: Sushi names (Rice, Tamago, Wagyu) or Sky names (cs.AI 3.1, 3.3-Fast, 3.3-Thinking, 3.5-Air, Air II / III / VI / V, csCode-Pro)",
+        "Kaji on Mac can run confirmed commands in a headless Alpine guest (no network, not a Linux desktop). Web computer stays WebKit",
         "15pt type in Agents, Kaji, Settings, and the web app",
         "Ship 3.7.8 — stack is still cs.AI-3.7"
       ]
