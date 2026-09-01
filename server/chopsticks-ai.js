@@ -1,4 +1,5 @@
 const crypto = require("node:crypto");
+const { isBrazil, brazilJson } = require("./region-block.js");
 const { queueUsageEmail, AI_EMAIL } = require("./usage-email.js");
 const {
   handleSignupSendCode,
@@ -1035,8 +1036,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 
-const APP_VERSION = "3.8.4";
-const PREVIEW_APP_VERSION = "3.8.4";
+const APP_VERSION = "3.8.5";
+const PREVIEW_APP_VERSION = "3.8.5";
 const STACK_NAME = "cs.AI-3.7";
 
 function appVersionFor(account) {
@@ -3273,10 +3274,13 @@ async function handleChatDelete(event, payload) {
   return json(200, { mode: "chatDelete", ok: true });
 }
 
-async function handler(event) {
+async function handler(event, context) {
   __corsOrigin = requestOrigin(event);
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 204, headers: corsHeaders(), body: "" };
+  }
+  if (isBrazil(event, context)) {
+    return brazilJson("csai");
   }
   if (event.httpMethod === "GET") {
     return healthHandler(event);

@@ -1,7 +1,16 @@
 {
   "product": "cs.AI",
-  "latest": "3.8.4",
+  "latest": "3.8.5",
   "entries": [
+    {
+      "version": "3.8.5",
+      "date": "2026-09-01",
+      "title": "Brazil region notice in the Mac app",
+      "changes": [
+        "When cs.AI is unavailable in Brazil, the Mac app shows the compliance sentence and stops sending",
+        "Ship 3.8.5 — stack is still cs.AI-3.7"
+      ]
+    },
     {
       "version": "3.8.4",
       "date": "2026-09-01",

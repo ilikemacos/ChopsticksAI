@@ -259,7 +259,7 @@ struct KajiAppView: View {
     private var kajiSendEnabled: Bool {
         let typed = !model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let files = !attachments.ready.isEmpty
-        return kajiUnlocked && !model.busy && !attachments.isUploading && (typed || files)
+        return kajiUnlocked && !model.busy && !attachments.isUploading && store.regionUnavailable == nil && (typed || files)
     }
 
     private var composer: some View {
@@ -268,6 +268,17 @@ struct KajiAppView: View {
                 Text(attachments.status)
                     .font(.system(size: 10.5, design: .monospaced))
                     .foregroundStyle(Cursor.chromium)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            if let msg = store.regionUnavailable {
+                Text(msg)
+                    .font(.system(size: 12.5))
+                    .foregroundStyle(Cursor.text)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Cursor.panel))
+                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Cursor.hairline))
             }
             if !attachments.items.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -319,7 +330,7 @@ struct KajiAppView: View {
                     .font(.system(size: 15))
                     .lineLimit(1...8)
                     .focused($focused)
-                    .disabled(!kajiUnlocked)
+                    .disabled(!kajiUnlocked || store.regionUnavailable != nil)
                     .onKeyPress { press in
                         guard press.key == .return, !press.modifiers.contains(.shift) else { return .ignored }
                         Task { await model.send(model.draft) }

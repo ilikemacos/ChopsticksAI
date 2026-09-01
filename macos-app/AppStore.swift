@@ -172,6 +172,7 @@ final class AppStore: ObservableObject {
     @Published var keyDraft = ""
     @Published var usage = UsageSnapshot()
     @Published var usageBusy = false
+    @Published var regionUnavailable: String?
     @Published var pendingBrowserURL = ""
     @Published var kajiActivity: [String] = []
     @Published var kajiOpenedURL = ""
@@ -537,6 +538,26 @@ final class AppStore: ObservableObject {
         saveUnlockKeys()
     }
 
+    static let regionUnavailableFallback =
+        "cs.AI is currently unavailable in Brazil while we complete regional privacy, data-processing, and compliance requirements."
+
+    static func regionUnavailableMessage(obj: [String: Any]?, status: Int?) -> String? {
+        if (obj?["code"] as? String) == "region_unavailable" {
+            let err = (obj?["error"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return err.isEmpty ? regionUnavailableFallback : err
+        }
+        if status == 451 {
+            let err = (obj?["error"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return err.isEmpty ? regionUnavailableFallback : err
+        }
+        return nil
+    }
+
+    func noteRegionUnavailable(_ message: String) {
+        regionUnavailable = message
+        usage.error = message
+    }
+
     func refreshUsage() async {
         usageBusy = true
         defer { usageBusy = false }
@@ -557,9 +578,13 @@ final class AppStore: ObservableObject {
         req.httpBody = try? JSONSerialization.data(withJSONObject: payload)
         do {
             let (data, resp) = try await URLSession.shared.data(for: req)
-            guard let http = resp as? HTTPURLResponse, http.statusCode == 200,
-                  let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-            else {
+            let http = resp as? HTTPURLResponse
+            let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+            if let msg = Self.regionUnavailableMessage(obj: obj, status: http?.statusCode) {
+                noteRegionUnavailable(msg)
+                return
+            }
+            guard let http, http.statusCode == 200, let obj else {
                 usage.error = "Could not reach chopstickshq.com for usage."
                 return
             }
