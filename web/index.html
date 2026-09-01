@@ -253,7 +253,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">3.8.4</span>
+  <span class="cursor-footer-ver">3.8.5</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -707,7 +707,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (3.8.4)';
+    if (g) g.textContent = 'Welcome to cs.AI (3.8.5)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -1126,7 +1126,7 @@
     return EFFORT[tierSel.value] || EFFORT.tamago;
   }
   function showTier() {
-    var ver = '3.8.4';
+    var ver = '3.8.5';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
@@ -1427,7 +1427,16 @@
     } catch (e) {}
     fetch(API, { method: 'POST', headers: headers, body: JSON.stringify(body) })
       .then(function (r) { return r.json(); })
-      .then(function (d) { showUsage(d); })
+      .then(function (d) {
+        if (d && d.code === 'region_unavailable') {
+          if (usageEl) {
+            usageEl.className = 'usage warn';
+            usageEl.textContent = d.error || '';
+          }
+          return;
+        }
+        showUsage(d);
+      })
       .catch(function () {});
   }
   tierSel.addEventListener('change', function () {
@@ -2048,6 +2057,13 @@
       })
       .then(function (d) {
         stopRoom();
+        if (d && d.code === 'region_unavailable') {
+          var need = d.error || 'cs.AI is currently unavailable in Brazil while we complete regional privacy, data-processing, and compliance requirements.';
+          history.push({ role: 'assistant', content: need });
+          thinking.replaceChild(renderAssistant(need), thinking.lastChild);
+          saveSession();
+          return;
+        }
         if (d && (d.mode === 'auth_required' || d.mode === 'chopcode_pro')) {
           var need = d.error || 'Sign in to use this plate.';
           history.push({ role: 'assistant', content: need });
