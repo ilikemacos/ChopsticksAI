@@ -113,8 +113,10 @@
       <input id="auth-password" type="password" autocomplete="current-password" placeholder="••••••••" minlength="6">
       <button type="button" class="auth-pass-toggle" id="auth-pass-toggle">Show</button>
     </div>
-    <p class="auth-hint">Email and password. No verification code.</p>
+    <p class="auth-hint">Create account sends a 6-digit code to your email (expires in 10 minutes). Sign in is email and password.</p>
     <p class="auth-hint">Forgot password? Email <a href="mailto:chopstickshq@lam.ws?subject=Forgot%20cs.AI%20password">chopstickshq@lam.ws</a> — we don’t send reset links yet.</p>
+    <label for="auth-code" id="auth-code-label" hidden>Verification code</label>
+    <input id="auth-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code" hidden>
     </div>
     <div id="auth-member" hidden>
       <p id="auth-member-email">Signed in</p>
@@ -251,7 +253,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">3.8.1</span>
+  <span class="cursor-footer-ver">3.8.2</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -705,7 +707,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (3.8.1)';
+    if (g) g.textContent = 'Welcome to cs.AI (3.8.2)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -1124,7 +1126,7 @@
     return EFFORT[tierSel.value] || EFFORT.tamago;
   }
   function showTier() {
-    var ver = '3.8.1';
+    var ver = '3.8.2';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
@@ -2282,10 +2284,20 @@
     var ok = document.getElementById('auth-ok');
     var email = document.getElementById('auth-email');
     var pass = document.getElementById('auth-password');
+    var code = document.getElementById('auth-code');
+    var codeLabel = document.getElementById('auth-code-label');
+    var signupToken = '';
+    function showCodeField(on) {
+      if (code) code.hidden = !on;
+      if (codeLabel) codeLabel.hidden = !on;
+      if (on && code) code.focus();
+    }
     function open() {
       if (!modal) return;
       err.textContent = '';
       ok.textContent = '';
+      showCodeField(false);
+      signupToken = '';
       updateAccountUI();
       modal.classList.add('is-open');
       email && email.focus();
@@ -2339,23 +2351,36 @@
     document.getElementById('auth-signup').addEventListener('click', function () {
       err.textContent = '';
       ok.textContent = '';
-      Cloud.signUp(email.value.trim(), pass.value)
+      var emailVal = email.value.trim();
+      var passVal = pass.value;
+      var codeVal = code ? String(code.value || '').trim() : '';
+      if (signupToken && codeVal) {
+        Cloud.verifySignup(emailVal, passVal, codeVal, signupToken)
+          .then(function (r) {
+            if (r && r.needsConfirm) {
+              ok.textContent = r.message || 'Account created. Sign in.';
+              return;
+            }
+            ok.textContent = 'Account created. Loading…';
+            updateAccountUI();
+            return loadAccountChats(true);
+          })
+          .then(function () {
+            if (ok.textContent.indexOf('Loading') >= 0) {
+              ok.textContent = 'Account ready.';
+              setTimeout(close, 700);
+            }
+          })
+          .catch(function (e) { err.textContent = e.message || 'Sign up failed'; });
+        return;
+      }
+      Cloud.sendSignupCode(emailVal, passVal)
         .then(function (r) {
-          if (r && r.needsConfirm) {
-            ok.textContent = r.message || 'Account created. Sign in.';
-            return;
-          }
-          ok.textContent = 'Account created. Loading…';
-          updateAccountUI();
-          return loadAccountChats(true);
+          signupToken = (r && r.signupToken) || '';
+          showCodeField(true);
+          ok.textContent = 'Check your email for a 6-digit code (and spam). It expires in 10 minutes.';
         })
-        .then(function () {
-          if (ok.textContent.indexOf('Loading') >= 0) {
-            ok.textContent = 'Account ready.';
-            setTimeout(close, 700);
-          }
-        })
-        .catch(function (e) { err.textContent = e.message || 'Sign up failed'; });
+        .catch(function (e) { err.textContent = e.message || 'Could not send code'; });
     });
     document.getElementById('auth-signout').addEventListener('click', function () {
       Cloud.signOut().then(function () {

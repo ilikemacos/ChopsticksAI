@@ -406,6 +406,8 @@ struct AccountView: View {
     var onSignedIn: (() -> Void)?
     @State private var email = ""
     @State private var password = ""
+    @State private var code = ""
+    @State private var awaitingCode = false
     @State private var showPassword = false
     @State private var error = ""
 
@@ -437,7 +439,7 @@ struct AccountView: View {
                             }
                         }
                     } else {
-                        SettingsCard(title: "Sign in or create account", subtitle: "Email + password.") {
+                        SettingsCard(title: "Sign in or create account", subtitle: "Sign in with email and password. Create account emails a 6-digit code.") {
                             TextField("Email", text: $email)
                                 .textFieldStyle(.plain)
                                 .foregroundStyle(Cursor.text)
@@ -459,6 +461,13 @@ struct AccountView: View {
                             Toggle("Show password", isOn: $showPassword)
                                 .toggleStyle(.checkbox)
                                 .foregroundStyle(Cursor.muted)
+                            if awaitingCode {
+                                TextField("6-digit code", text: $code)
+                                    .textFieldStyle(.plain)
+                                    .foregroundStyle(Cursor.text)
+                                    .padding(10)
+                                    .background(RoundedRectangle(cornerRadius: 8).fill(Cursor.hover))
+                            }
                             Link("Forgot password? Email chopstickshq@lam.ws", destination: URL(string: "mailto:chopstickshq@lam.ws?subject=Forgot%20cs.AI%20password")!)
                                 .font(.system(size: 12))
                                 .foregroundStyle(Cursor.blue)
@@ -476,7 +485,7 @@ struct AccountView: View {
                                 PrimaryButton(title: auth.busy ? "Working…" : "Sign in") {
                                     Task { await signIn() }
                                 }
-                                GhostButton(title: "Create account") {
+                                GhostButton(title: awaitingCode ? "Confirm code" : "Create account") {
                                     Task { await signUp() }
                                 }
                             }
@@ -513,10 +522,17 @@ struct AccountView: View {
 
     private func signUp() async {
         error = ""
+        let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
         do {
-            let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
-            try await auth.signUp(email: trimmed, password: password)
-            if auth.isSignedIn { onSignedIn?() }
+            if awaitingCode {
+                try await auth.signUp(email: trimmed, password: password, code: code)
+                awaitingCode = false
+                code = ""
+                if auth.isSignedIn { onSignedIn?() }
+            } else {
+                _ = try await auth.sendSignupCode(email: trimmed, password: password)
+                awaitingCode = true
+            }
         } catch {
             self.error = error.localizedDescription
         }

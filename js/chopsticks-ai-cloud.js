@@ -218,7 +218,7 @@
       return Boolean(session && session.modelPicker);
     },
     getAppVersion: function () {
-      var baked = '3.8.1';
+      var baked = '3.8.2';
       var remote = (session && session.appVersion) || '';
       if (!remote) return baked;
       return verNewer(remote, baked) ? remote : baked;
@@ -237,25 +237,41 @@
     },
 
     sendSignupCode: async function (email, password) {
-      return this.signUp(email, password);
-    },
-
-    verifySignup: async function (email, password) {
-      return this.signUp(email, password);
-    },
-
-    signUp: async function (email, password) {
-      clearStoredSession();
-      emit();
       var body = await apiPost({
-        action: 'authSignUp',
+        action: 'signupSendCode',
         email: email,
         password: password
+      });
+      if (body && body.signupToken) {
+        try { sessionStorage.setItem('chq.signupToken', body.signupToken); } catch (e) {}
+        return {
+          needsCode: true,
+          signupToken: body.signupToken,
+          expiresInMs: body.expiresInMs || 600000
+        };
+      }
+      throw new Error((body && body.error) || 'Could not send verification email.');
+    },
+
+    verifySignup: async function (email, password, code, signupToken) {
+      clearStoredSession();
+      emit();
+      var token = signupToken;
+      if (!token) {
+        try { token = sessionStorage.getItem('chq.signupToken'); } catch (e) { token = ''; }
+      }
+      var body = await apiPost({
+        action: 'signupVerify',
+        email: email,
+        password: password,
+        code: String(code || '').trim(),
+        signupToken: token
       });
       if (body.access_token) {
         session = normalizeSession(body);
         if (!session) throw new Error('Sign up succeeded but session was invalid.');
         saveLocalSession(session);
+        try { sessionStorage.removeItem('chq.signupToken'); } catch (e) {}
         await validateSession();
         return { needsConfirm: false, session: session };
       }
@@ -263,6 +279,11 @@
         return { needsConfirm: true, message: body.message };
       }
       throw new Error(body.error || 'Could not create account.');
+    },
+
+    signUp: async function (email, password, code, signupToken) {
+      if (code) return this.verifySignup(email, password, code, signupToken);
+      return this.sendSignupCode(email, password);
     },
 
     verifyLogin: async function (email, password) {

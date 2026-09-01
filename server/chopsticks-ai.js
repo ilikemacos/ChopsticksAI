@@ -1035,8 +1035,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 
-const APP_VERSION = "3.8.1";
-const PREVIEW_APP_VERSION = "3.8.1";
+const APP_VERSION = "3.8.2";
+const PREVIEW_APP_VERSION = "3.8.2";
 const STACK_NAME = "cs.AI-3.7";
 
 function appVersionFor(account) {
@@ -2108,7 +2108,7 @@ function selfFacts(tier, appVersion) {
     "- You answer general questions on any topic, and are the in-house expert on Chopsticks HQ software.",
     "- You need no OpenRouter API key from the user; Fathom Pro unlock keys can be redeemed as usage credits in the Usage tab.",
     "- cs.AI Enterprise is for large companies: custom usage, seats, invoice/PO, SSO reviewed on request. There is no public price. Direct orgs to https://chopstickshq.com/chopsticks-ai/enterprise/ and chopstickshq@lam.ws (subject: cs.AI Enterprise). Do not invent certifications or a checkout URL.",
-    "- Email sign-in runs on chopstickshq.com — email and password only, no verification email.",
+    "- Email sign-in is password. Create account emails a 6-digit code (10 minutes) from chopstickshq@lam.ws to the address they typed.",
     "- You are available on every page of chopstickshq.com, in ChopsticksAI at /chopailab, and inside MacBar's Chat tab.",
     "- Retrieval is hybrid keyword + BM25 + entity matching on HQ knowledge, plus ranked live web evidence. There is no vector index.",
     "- Do not name or speculate about any underlying model, provider or vendor.",
