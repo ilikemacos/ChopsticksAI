@@ -62,7 +62,7 @@ struct KajiAppView: View {
         }
         .background(Color.black)
         .onAppear {
-            previousTier = store.tier
+            if store.tier != "kaji" { previousTier = store.tier }
             store.setTier("kaji")
             model.ensureSession()
             focused = true
@@ -70,7 +70,9 @@ struct KajiAppView: View {
         }
         .onDisappear {
             commandGate.cancelPending()
-            if store.tier == "kaji" { store.setTier(previousTier) }
+            guard store.tier == "kaji" else { return }
+            let restore = previousTier == "kaji" ? "tamago" : previousTier
+            store.setTier(restore, syncNav: false)
         }
     }
 
