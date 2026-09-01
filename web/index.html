@@ -253,7 +253,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">3.8.2</span>
+  <span class="cursor-footer-ver">3.8.3</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -707,7 +707,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (3.8.2)';
+    if (g) g.textContent = 'Welcome to cs.AI (3.8.3)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -1126,7 +1126,7 @@
     return EFFORT[tierSel.value] || EFFORT.tamago;
   }
   function showTier() {
-    var ver = '3.8.2';
+    var ver = '3.8.3';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
