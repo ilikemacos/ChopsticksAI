@@ -58,7 +58,7 @@
 
         <section class="upgrades-auth-card" id="auth-guest">
           <h2>Sign in</h2>
-          <p>Same email and password as the chat app. Creates an account if you need one.</p>
+          <p>Same email and password as the chat app. Create account emails a 6-digit code (10 minutes) to that address.</p>
           <label for="auth-email">Email</label>
           <input id="auth-email" type="email" autocomplete="username" placeholder="you@company.com">
           <label for="auth-password">Password</label>
@@ -67,6 +67,8 @@
             <button type="button" class="auth-pass-toggle" id="auth-pass-toggle">Show</button>
           </div>
           <p class="auth-hint">Forgot password? Email <a href="mailto:chopstickshq@lam.ws?subject=Forgot%20cs.AI%20password">chopstickshq@lam.ws</a>.</p>
+          <label for="auth-code" id="auth-code-label" hidden>Verification code</label>
+          <input id="auth-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code" hidden>
 <p class="auth-err" id="auth-err"></p>
           <p class="auth-ok" id="auth-ok"></p>
           <div class="upgrades-auth-actions">
@@ -90,8 +92,8 @@
               <h3>Free</h3>
               <p class="price">775k <span>tokens · 5h reset</span></p>
               <ul>
-                <li>Rice, Tamago, Hibachi</li>
-                <li>Wagyu with sign-in</li>
+                <li>Sky plates: 3.1, 3.3-Fast, 3.3-Thinking</li>
+                <li>Air grades with sign-in</li>
               </ul>
             </article>
             <article class="up-plan" data-plan="pro">
@@ -100,7 +102,7 @@
               <p class="price">Fathom keys</p>
               <ul>
                 <li>2 keys → 800k · 2h 30m</li>
-                <li>5 keys → 900k · 2h · ChopCode + Kaji</li>
+                <li>5 keys → 900k · 2h · csCode-Pro + Kaji</li>
                 <li>10 keys → 1m · 1h</li>
               </ul>
             </article>
@@ -109,7 +111,8 @@
               <h3>Enterprise</h3>
               <p class="price">Custom</p>
               <ul>
-                <li>Seats, SSO review, invoices</li>
+                <li>Seats, SSO reviewed on request, invoices</li>
+                <li>Not a self-serve checkout</li>
                 <li>chopstickshq@lam.ws</li>
               </ul>
               <a class="nbtn primary" href="mailto:chopstickshq@lam.ws?subject=cs.AI%20Enterprise">Contact sales</a>
@@ -132,7 +135,7 @@
   </div>
 </div>
 <script src="/js/theme.js"></script>
-<script src="/js/chopsticks-ai-cloud.js"></script>
+<script src="/js/chopsticks-ai-cloud.js?v=20260831-382"></script>
 <script>
 (function () {
   var Cloud = window.ChopsticksAICloud;
@@ -261,17 +264,33 @@
   document.getElementById('auth-signup').onclick = function () {
     err.textContent = '';
     ok.textContent = '';
-    Cloud.signUp(email.value.trim(), pass.value)
+    var codeEl = document.getElementById('auth-code');
+    var codeLabel = document.getElementById('auth-code-label');
+    var codeVal = codeEl ? String(codeEl.value || '').trim() : '';
+    var token = '';
+    try { token = sessionStorage.getItem('chq.signupToken') || ''; } catch (e) {}
+    if (token && codeVal) {
+      Cloud.verifySignup(email.value.trim(), pass.value, codeVal, token)
+        .then(function (r) {
+          if (r && r.needsConfirm) {
+            ok.textContent = r.message || 'Account created. Sign in.';
+          } else {
+            ok.textContent = 'Account ready.';
+            updateAccountUI();
+            pollUsage();
+          }
+        })
+        .catch(function (e) { err.textContent = e.message || 'Sign up failed'; });
+      return;
+    }
+    Cloud.sendSignupCode(email.value.trim(), pass.value)
       .then(function (r) {
-        if (r && r.needsConfirm) {
-          ok.textContent = r.message || 'Account created. Sign in.';
-        } else {
-          ok.textContent = 'Account ready.';
-          updateAccountUI();
-          pollUsage();
-        }
+        if (codeEl) codeEl.hidden = false;
+        if (codeLabel) codeLabel.hidden = false;
+        if (codeEl) codeEl.focus();
+        ok.textContent = 'Check your email for a 6-digit code (and spam). It expires in 10 minutes.';
       })
-      .catch(function (e) { err.textContent = e.message || 'Sign up failed'; });
+      .catch(function (e) { err.textContent = e.message || 'Could not send code'; });
   };
   document.getElementById('top-signout').onclick = function () {
     Cloud.signOut().then(function () {
