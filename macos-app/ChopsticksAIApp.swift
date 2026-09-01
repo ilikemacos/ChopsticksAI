@@ -595,6 +595,11 @@ final class ChatModel: ObservableObject {
         let attach = AttachmentStore.shared
         let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !busy else { return }
+        if let msg = store.regionUnavailable {
+            mutateActive { $0.lines.append(ChatLine(role: "assistant", text: msg)) }
+            draft = ""
+            return
+        }
         let ready = attach.ready
         guard !text.isEmpty || !ready.isEmpty else { return }
         ensureSession()
@@ -768,6 +773,10 @@ final class ChatModel: ObservableObject {
             let (data, resp) = try await URLSession.shared.data(for: req)
             let http = resp as? HTTPURLResponse
             let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+            if let msg = AppStore.regionUnavailableMessage(obj: obj, status: http?.statusCode) {
+                AppStore.shared.noteRegionUnavailable(msg)
+                return ReplyResult(text: msg, usage: UsageStats(), sources: [], offline: false)
+            }
             let reply = (obj?["reply"] as? String)?
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
@@ -1992,6 +2001,16 @@ struct AgentChatView: View {
             if model.usage.hasAny || !store.webSearchEnabled {
                 ChatUsageBar(stats: model.usage, webSearchEnabled: store.webSearchEnabled, resetInMs: store.usage.resetInMs)
             }
+            if let msg = store.regionUnavailable {
+                Text(msg)
+                    .font(.system(size: 12.5))
+                    .foregroundStyle(Cursor.text)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Cursor.panel))
+                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Cursor.hairline))
+            }
             if !store.kajiOpenedURL.isEmpty {
                 HStack {
                     Text("Opened \(store.kajiOpenedURL)")
@@ -2232,7 +2251,7 @@ struct AgentChatView: View {
     private var sendEnabled: Bool {
         let typed = !model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let files = !AttachmentStore.shared.ready.isEmpty
-        return !model.busy && (typed || files)
+        return !model.busy && store.regionUnavailable == nil && (typed || files)
     }
 }
 
