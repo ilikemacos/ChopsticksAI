@@ -1,7 +1,17 @@
 {
   "product": "cs.AI",
-  "latest": "3.8.2",
+  "latest": "3.8.3",
   "entries": [
+    {
+      "version": "3.8.3",
+      "date": "2026-08-31",
+      "title": "Honest Free / Pro / Enterprise copy",
+      "changes": [
+        "Plans say 5 Fathom keys unlock csCode-Pro and Kaji; Free lists Sky plates and no key",
+        "Upgrades Create account uses the 6-digit email code",
+        "Ship 3.8.3 — stack is still cs.AI-3.7"
+      ]
+    },
     {
       "version": "3.8.2",
       "date": "2026-08-31",
