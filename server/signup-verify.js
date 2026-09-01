@@ -250,20 +250,15 @@ async function sendLoginCodeEmail(email, code) {
   if (!ok) throw new Error("Could not send verification email. Try again in a minute.");
 }
 
-async function handleSignupSendCode(event, payload, rateLimited) {
-  return handleAuthSignUp(event, payload, rateLimited);
-}
-
-async function handleSignupVerify(event, payload, rateLimited) {
-  return handleAuthSignUp(event, payload, rateLimited);
-}
-
-async function handleAuthSignUp(event, payload, rateLimited) {
-  const who = (event && event.headers && (
+function clientWho(event) {
+  return (event && event.headers && (
     event.headers["x-nf-client-connection-ip"] ||
     event.headers["cf-connecting-ip"]
   )) || "unknown";
+}
 
+async function handleSignupSendCode(event, payload, rateLimited) {
+  const who = clientWho(event);
   if (rateLimited && rateLimited(who)) {
     return json(429, { error: "rate limited", retryInMs: 60000 });
   }
@@ -279,16 +274,38 @@ async function handleAuthSignUp(event, payload, rateLimited) {
   if (await isEmailBlacklisted(email)) {
     return json(403, { error: GENERIC_AUTH });
   }
+  if (!signupSecret()) {
+    return json(503, { error: "account backend not configured" });
+  }
+  if (signupSendRateLimited(email)) {
+    return json(429, { error: "Wait a minute before requesting another code.", retryInMs: SIGNUP_RESEND_MS });
+  }
+
+  try {
+    const code = generateSignupCode();
+    const signupToken = mintSignupToken(email, code, "signup");
+    await sendSignupCodeEmail(email, code);
+    return json(200, {
+      mode: "signupSendCode",
+      ok: true,
+      needsCode: true,
+      signupToken,
+      expiresInMs: SIGNUP_CODE_TTL_MS,
+    });
+  } catch {
+    return json(503, { error: "Could not send verification email. Try again in a minute." });
+  }
+}
+
+async function completeSignup(email, password) {
   if (!env("SUPABASE_URL") || !env("SUPABASE_SERVICE_ROLE_KEY")) {
     return json(503, { error: "account backend not configured" });
   }
-
   try {
     await adminCreateUser(email, password);
   } catch {
     return json(400, { error: GENERIC_AUTH });
   }
-
   try {
     const session = await passwordSignIn(email, password);
     return json(200, {
@@ -309,6 +326,43 @@ async function handleAuthSignUp(event, payload, rateLimited) {
       message: "Account created. Sign in with your email and password.",
     });
   }
+}
+
+async function handleSignupVerify(event, payload, rateLimited) {
+  const who = clientWho(event);
+  if (rateLimited && rateLimited(who)) {
+    return json(429, { error: "rate limited", retryInMs: 60000 });
+  }
+
+  const email = normalizeEmail(payload.email);
+  const password = String(payload.password || "");
+  const code = String(payload.code || "").trim();
+  const token = String(payload.signupToken || payload.signup_token || "");
+  if (!validEmail(email)) {
+    return json(400, { error: "Enter a valid email address." });
+  }
+  if (password.length < 6) {
+    return json(400, { error: "Password must be at least 6 characters." });
+  }
+  if (!/^\d{6}$/.test(code)) {
+    return json(400, { error: "Enter the 6-digit code from your email." });
+  }
+  if (await isEmailBlacklisted(email)) {
+    return json(403, { error: GENERIC_AUTH });
+  }
+  if (!verifySignupCode(token, email, code, "signup")) {
+    return json(400, { error: "That code is invalid or expired." });
+  }
+  return completeSignup(email, password);
+}
+
+async function handleAuthSignUp(event, payload, rateLimited) {
+  const code = String(payload.code || "").trim();
+  const token = String(payload.signupToken || payload.signup_token || "");
+  if (!code || !token) {
+    return json(400, { error: "Enter the 6-digit code from your email." });
+  }
+  return handleSignupVerify(event, payload, rateLimited);
 }
 
 async function handleAuthSignIn(event, payload, rateLimited) {
