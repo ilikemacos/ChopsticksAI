@@ -311,11 +311,9 @@ final class AppStore: ObservableObject {
         }
     }
 
-    func setTier(_ id: String) {
+    func setTier(_ id: String, syncNav: Bool = true) {
         let next = Self.normalizeTier(id)
-        if next == "kaji" {
-            nav = .kaji
-        } else if nav == .kaji {
+        if syncNav, next != "kaji", nav == .kaji {
             nav = .agents
         }
         tier = next
