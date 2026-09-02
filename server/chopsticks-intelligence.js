@@ -89,9 +89,10 @@ function analyzeRequest(text, opts) {
   };
 }
 
-function computeBudget(intel, tier) {
-  const c = intel.complexity;
-  if (intel.trivial || intel.hqOnly) {
+function computeBudget(intel, tier, opts) {
+  const maxMode = Boolean(opts && opts.maxMode);
+  const c = maxMode ? 1 : intel.complexity;
+  if (!maxMode && (intel.trivial || intel.hqOnly)) {
     return {
       band: "minimal",
       searchCycles: 0,
@@ -120,7 +121,9 @@ function computeBudget(intel, tier) {
       tier.searchMax || 8,
       band === "maximum" ? 8 : band === "deep" ? 6 : band === "normal" ? 4 : 2
     );
-  const critics = intel.verificationRequired && band !== "minimal" ? (band === "maximum" ? 2 : 1) : 0;
+  const critics = maxMode
+    ? 2
+    : (intel.verificationRequired && band !== "minimal" ? (band === "maximum" ? 2 : 1) : 0);
   const evidenceCap = band === "maximum" ? 6 : band === "deep" ? 5 : 4;
 
   return {

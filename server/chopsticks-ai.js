@@ -1035,9 +1035,10 @@ const MAX_REPLY_TOKENS = 400;
 const MAX_REPLY_TOKENS_CEILING = 8000;
 
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
+const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "3.8.5";
-const PREVIEW_APP_VERSION = "3.8.5";
+const APP_VERSION = "3.8.6";
+const PREVIEW_APP_VERSION = "3.8.6";
 const STACK_NAME = "cs.AI-3.7";
 
 function appVersionFor(account) {
@@ -2116,7 +2117,7 @@ function selfFacts(tier, appVersion) {
   ].filter(Boolean).join("\n");
 }
 
-function systemPrompt(grounding, mode, web, tier, language, appVersion) {
+function systemPrompt(grounding, mode, web, tier, language, appVersion, maxMode) {
   const ver = appVersion || APP_VERSION;
   const agent = mode === "agent" || tier.chopCode ? [
     "\n\nYou are running as the ChopsticksAI agent",
@@ -2230,6 +2231,9 @@ function systemPrompt(grounding, mode, web, tier, language, appVersion) {
     "- No evidence → do not invent. Conflicting evidence → investigate and explain. Low confidence → qualify. Missing information → say what is unknown.\n",
     "- Be smarter and faster: lead with the answer, skip throat-clearing, skip repeating the question. Prefer one tight paragraph unless the user asked for depth or code. ",
     "Check names, versions, and numbers against reference material and live research before stating them. If those sources disagree with your memory, trust the sources.\n",
+    maxMode
+      ? "- Max mode is on. Think carefully before answering: consider alternatives, verify numbers, then give a complete answer. Keep the user-visible reply within about 1000 tokens. Do not dump a long hidden chain of thought.\n"
+      : "",
     "- Follow the user's requested format exactly. If they want a letter, a number, JSON, or a single word, that is the whole answer.\n",
     "- For math and logic: compute carefully, then state the final result clearly. Recheck arithmetic before sending.\n",
     "- For code: complete runnable files in fenced blocks with a language tag and filename. Include imports. Do not leave TODOs or ellipses.\n",
@@ -3599,8 +3603,11 @@ async function handler(event, context) {
     });
   }
 
+  const maxModeOn = payload.maxMode === true;
   const wanted = Number(payload.maxTokens);
-  const tierCap = tier.maxReply || MAX_REPLY_TOKENS_CEILING;
+  const tierCap = maxModeOn
+    ? BILLABLE_MAX_MODE
+    : (tier.maxReply || MAX_REPLY_TOKENS_CEILING);
   const replyTokens = Number.isFinite(wanted)
     ? Math.max(100, Math.min(tierCap, MAX_REPLY_TOKENS_CEILING, Math.round(wanted)))
     : (payload.mode === "agent" ? tierCap : MAX_REPLY_TOKENS);
@@ -3625,7 +3632,15 @@ async function handler(event, context) {
     && intel.category !== "DEBUGGING"
     && !intel.toolsRequired
   );
-  const budget = computeBudget(intel, tier);
+  if (maxModeOn) {
+    intel.complexity = 1;
+    intel.trivial = false;
+    intel.hqOnly = false;
+    intel.verificationRequired = true;
+    intel.decompose = true;
+    if (!clientSearchOff) intel.webRequired = true;
+  }
+  const budget = computeBudget(intel, tier, { maxMode: maxModeOn });
   const kajiResume = payload.kajiResume && typeof payload.kajiResume === "object" ? payload.kajiResume : null;
   const searchOn = !kajiResume && !intel.trivial && !intel.hqOnly && intel.webRequired && (
     wantsSearch(searchQuery) && (!clientSearchOff || hadPrefix)
@@ -3690,7 +3705,7 @@ async function handler(event, context) {
     role: "system",
     content: systemPrompt(
       kbFacts(tier.grounding || GROUNDING_INTENTS),
-      payload.mode, webSection, tier, language, appVer
+      payload.mode, webSection, tier, language, appVer, maxModeOn
     ),
   };
   const messages = fitContext(system, modelTurns, contextFor(tier, plan));
@@ -3785,7 +3800,7 @@ async function handler(event, context) {
         role: "system",
         content: systemPrompt(
           kbFacts(2),
-          payload.mode, "", tier, language, appVer
+          payload.mode, "", tier, language, appVer, maxModeOn
         ),
       },
       modelTurns,
@@ -3970,7 +3985,7 @@ async function handler(event, context) {
         role: "system",
         content: systemPrompt(
           kbFacts(Math.min(3, tier.grounding || 3)),
-          payload.mode, "", tier, language, appVer
+          payload.mode, "", tier, language, appVer, maxModeOn
         ),
       };
       const slimMessages = fitContext(slimSystem, modelTurns, 12000);
@@ -4029,7 +4044,7 @@ async function handler(event, context) {
                 role: "system",
                 content: systemPrompt(
                   kbFacts(2),
-                  payload.mode, "", tier, language, appVer
+                  payload.mode, "", tier, language, appVer, maxModeOn
                 ),
               },
               modelTurns,
@@ -4168,7 +4183,7 @@ async function handler(event, context) {
       }
     }
 
-    const spentResult = await budgetSpend(BILLABLE_PER_REPLY, now, budgetOpts);
+    const spentResult = await budgetSpend(maxModeOn ? BILLABLE_MAX_MODE : BILLABLE_PER_REPLY, now, budgetOpts);
     queueUsageEmail(plan, spentResult, account);
 
     if (!reply && !producedFiles.length) {

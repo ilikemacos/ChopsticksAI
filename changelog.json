@@ -1,7 +1,16 @@
 {
   "product": "cs.AI",
-  "latest": "3.8.5",
+  "latest": "3.8.6",
   "entries": [
+    {
+      "version": "3.8.6",
+      "date": "2026-09-01",
+      "title": "Max mode",
+      "changes": [
+        "Max mode thinks harder and uses 1,000 tokens per request",
+        "Ship 3.8.6 — stack is still cs.AI-3.7"
+      ]
+    },
     {
       "version": "3.8.5",
       "date": "2026-09-01",
