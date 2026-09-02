@@ -1109,6 +1109,7 @@ struct SettingsView: View {
                             Text("Apps").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
                             plateSetting("chopcode")
                             plateSetting("kaji")
+                            plateSetting("max")
                             plateSetting("stickercoderplus")
                         }
                     }

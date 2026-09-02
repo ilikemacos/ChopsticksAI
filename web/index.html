@@ -244,6 +244,7 @@
             <option value="wagyua5">Wagyu A5</option>
             <option value="chopcode">ChopCode</option>
             <option value="kaji">Kaji</option>
+            <option value="max">Max</option>
           </select>
         </div>
         <button type="button" class="send" id="send" title="Send" aria-label="Send" disabled>
@@ -255,7 +256,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">3.8.6</span>
+  <span class="cursor-footer-ver">3.8.7</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -286,6 +287,7 @@
     wagyua5: { label: 'Wagyu A5', maxTokens: 8000 },
     chopcode: { label: 'ChopCode', maxTokens: 4000 },
     kaji: { label: 'Kaji', maxTokens: 6000 },
+    max: { label: 'Max', maxTokens: 1000 },
     low: { label: 'Rice', maxTokens: 800 },
     high: { label: 'Tamago', maxTokens: 2000 },
     pro: { label: 'Hibachi', maxTokens: 4000 },
@@ -309,7 +311,8 @@
     '3.3-thinking': 'hibachi', '3.3thinking': 'hibachi', '3.5-air': 'wagyua5',
     airii: 'wagyua1', air2: 'wagyua1', airiii: 'wagyua2', air3: 'wagyua2',
     airvi: 'wagyua3', air6: 'wagyua3', airv: 'wagyua4', air5: 'wagyua4',
-    'cscode-pro': 'chopcode', cscodepro: 'chopcode', cscode: 'chopcode'
+    'cscode-pro': 'chopcode', cscodepro: 'chopcode', cscode: 'chopcode',
+    max: 'max', maxmode: 'max', csmax: 'max'
   };
   function normalizeTier(id) {
     var key = String(id || '').toLowerCase();
@@ -711,7 +714,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (3.8.6)';
+    if (g) g.textContent = 'Welcome to cs.AI (3.8.7)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -945,12 +948,12 @@
   var SKY_NAMES = {
     rice: 'cs.AI 3.1', tamago: 'cs.AI 3.3-Fast', hibachi: 'cs.AI 3.3-Thinking',
     wagyua1: 'Air II', wagyua2: 'Air III', wagyua3: 'Air VI', wagyua4: 'Air V',
-    wagyua5: 'cs.AI 3.5-Air', chopcode: 'csCode-Pro', kaji: 'Kaji'
+    wagyua5: 'cs.AI 3.5-Air', chopcode: 'csCode-Pro', kaji: 'Kaji', max: 'Max'
   };
   var SUSHI_NAMES = {
     rice: 'Rice', tamago: 'Tamago', hibachi: 'Hibachi',
     wagyua1: 'Wagyu A1', wagyua2: 'Wagyu A2', wagyua3: 'Wagyu A3', wagyua4: 'Wagyu A4',
-    wagyua5: 'Wagyu A5', chopcode: 'ChopCode', kaji: 'Kaji'
+    wagyua5: 'Wagyu A5', chopcode: 'ChopCode', kaji: 'Kaji', max: 'Max'
   };
   function plateSkyOn() {
     try {
@@ -977,19 +980,20 @@
     { id: 'wagyua4', tag: 'A4', group: 'Wagyu' },
     { id: 'wagyua5', tag: 'A5', group: 'Wagyu' },
     { id: 'chopcode', tag: 'Code', group: 'Apps' },
-    { id: 'kaji', tag: 'Alpha', group: 'Apps' }
+    { id: 'kaji', tag: 'Alpha', group: 'Apps' },
+    { id: 'max', tag: 'Think', group: 'Apps' }
   ];
   function plateGroups() {
     return plateSkyOn()
       ? [
           { label: 'cs.AI', ids: ['rice', 'tamago', 'hibachi'] },
           { label: 'Air', ids: ['wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
-          { label: 'Apps', ids: ['chopcode', 'kaji'] }
+          { label: 'Apps', ids: ['chopcode', 'kaji', 'max'] }
         ]
       : [
           { label: 'Everyday', ids: ['rice', 'tamago', 'hibachi'] },
           { label: 'Wagyu', ids: ['wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
-          { label: 'Apps', ids: ['chopcode', 'kaji'] }
+          { label: 'Apps', ids: ['chopcode', 'kaji', 'max'] }
         ];
   }
   var plateBtn = document.getElementById('plate-btn');
@@ -1051,6 +1055,7 @@
     if (!EFFORT[id]) id = 'tamago';
     tierSel.value = id;
     try { localStorage.setItem('chq.aiTier', id); } catch (e) {}
+    if (id === 'max') setMaxMode(true);
     if (id === 'chopcode' && prev !== 'chopcode') setWebSearch(true);
     showTier();
     renderPlateUI();
@@ -1128,11 +1133,11 @@
   }
   function effortInfo() {
     var info = EFFORT[tierSel.value] || EFFORT.tamago;
-    if (maxModeOn()) return { label: info.label, maxTokens: 1000 };
+    if (maxModeOn() || tierSel.value === 'max') return { label: info.label, maxTokens: 1000 };
     return info;
   }
   function showTier() {
-    var ver = '3.8.6';
+    var ver = '3.8.7';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
@@ -2033,7 +2038,7 @@
       maxTokens: effortInfo().maxTokens,
       unlockKeys: unlockKeys(),
       enableTools: true,
-      maxMode: maxModeOn(),
+      maxMode: maxModeOn() || tierSel.value === 'max',
       disableSearch: !sr.hadPrefix && !webSearchOn(),
       attachments: ready.map(function (a) {
         return {
