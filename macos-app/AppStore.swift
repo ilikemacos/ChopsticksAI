@@ -308,6 +308,7 @@ final class AppStore: ObservableObject {
         case "airv", "air5": return "wagyua4"
         case "cscode-pro", "cscodepro", "cscode": return "chopcode"
         case "kaji", "grok", "grokbot", "grok-bot": return "kaji"
+        case "max", "maxmode", "csmax": return "max"
         default: return raw
         }
     }

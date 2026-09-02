@@ -908,7 +908,7 @@ final class ChatModel: ObservableObject {
             "maxTokens": tierMaxTokens(store.tier),
             "unlockKeys": store.unlockKeys,
             "enableTools": store.enableTools,
-            "maxMode": store.maxMode,
+            "maxMode": store.maxMode || store.tier == "max",
             "client": "macos",
         ]
         if !forceSearch && !store.webSearchEnabled {
@@ -1170,7 +1170,7 @@ final class ChatModel: ObservableObject {
     }
 
     private func tierMaxTokens(_ tier: String) -> Int {
-        if AppStore.shared.maxMode { return 1000 }
+        if AppStore.shared.maxMode || tier == "max" { return 1000 }
         switch tier {
         case "rice": return 800
         case "tamago": return 1600
@@ -2181,7 +2181,7 @@ struct AgentChatView: View {
                             }
                         }
                         Section("Apps") {
-                            ForEach(plates.filter { ["chopcode", "kaji"].contains($0.id) }, id: \.id) { t in
+                            ForEach(plates.filter { ["chopcode", "kaji", "max"].contains($0.id) }, id: \.id) { t in
                                 plateMenuRow(t)
                             }
                         }
@@ -2252,6 +2252,7 @@ struct AgentChatView: View {
     private func plateMenuRow(_ t: (id: String, label: String)) -> some View {
         Button {
             store.setTier(t.id)
+            if t.id == "max" { store.setMaxMode(true) }
         } label: {
             if t.id == store.tier {
                 Label(t.label, systemImage: "checkmark")

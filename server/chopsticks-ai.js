@@ -212,6 +212,20 @@ TIERS.kaji = {
   timeoutMs: 24000,
   temperature: 0.18,
 };
+TIERS.max = {
+  label: "Max",
+  max: true,
+  models: TIERS.hibachi.models,
+  longModels: TIERS.hibachi.longModels,
+  context: 96000,
+  refine: true,
+  refineModels: TIERS.hibachi.refineModels || ["groq/llama-3.3-70b-versatile"],
+  maxReply: 1000,
+  grounding: 10,
+  searchMax: 10,
+  timeoutMs: 26000,
+  temperature: 0.15,
+};
 const TIER_ALIASES = {
   rice: "rice",
   haiku: "rice",
@@ -238,6 +252,9 @@ const TIER_ALIASES = {
   grok: "kaji",
   grokbot: "kaji",
   "grok-bot": "kaji",
+  max: "max",
+  maxmode: "max",
+  csmax: "max",
   wagyu: "wagyua5",
   fable: "wagyua5",
   insane: "wagyua5",
@@ -1037,8 +1054,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "3.8.6";
-const PREVIEW_APP_VERSION = "3.8.6";
+const APP_VERSION = "3.8.7";
+const PREVIEW_APP_VERSION = "3.8.7";
 const STACK_NAME = "cs.AI-3.7";
 
 function appVersionFor(account) {
@@ -3603,7 +3620,7 @@ async function handler(event, context) {
     });
   }
 
-  const maxModeOn = payload.maxMode === true;
+  const maxModeOn = payload.maxMode === true || Boolean(tier.max);
   const wanted = Number(payload.maxTokens);
   const tierCap = maxModeOn
     ? BILLABLE_MAX_MODE
