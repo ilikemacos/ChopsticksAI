@@ -4,7 +4,7 @@ enum PlateCatalog {
     static let ids = [
         "rice", "tamago", "hibachi",
         "wagyua1", "wagyua2", "wagyua3", "wagyua4", "wagyua5",
-        "chopcode", "kaji", "stickercoderplus",
+        "chopcode", "kaji", "max", "stickercoderplus",
     ]
 
     static func label(_ id: String, sky: Bool) -> String {
@@ -20,6 +20,7 @@ enum PlateCatalog {
             case "wagyua5": return "cs.AI 3.5-Air"
             case "chopcode": return "csCode-Pro"
             case "kaji": return "Kaji"
+            case "max": return "Max"
             case "stickercoderplus": return "StickerCoder+"
             default: return id
             }
@@ -35,6 +36,7 @@ enum PlateCatalog {
         case "wagyua5": return "Wagyu A5"
         case "chopcode": return "ChopCode"
         case "kaji": return "Kaji"
+        case "max": return "Max"
         case "stickercoderplus": return "StickerCoder+"
         default: return id
         }

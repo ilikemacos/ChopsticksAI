@@ -1,7 +1,16 @@
 {
   "product": "cs.AI",
-  "latest": "3.8.6",
+  "latest": "3.8.7",
   "entries": [
+    {
+      "version": "3.8.7",
+      "date": "2026-09-02",
+      "title": "Max in Apps",
+      "changes": [
+        "Max is an Apps plate next to Kaji and csCode-Pro; it still thinks harder at 1,000 tokens per request",
+        "Ship 3.8.7 — stack is still cs.AI-3.7"
+      ]
+    },
     {
       "version": "3.8.6",
       "date": "2026-09-01",
