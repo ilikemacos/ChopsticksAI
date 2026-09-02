@@ -1065,7 +1065,7 @@ struct SettingsView: View {
                         Divider().overlay(Cursor.hairline)
                         SettingsToggleRow(
                             title: "Max mode",
-                            subtitle: "Prefer higher effort for complex tasks.",
+                            subtitle: "Think harder. Each Max request uses 1,000 tokens from your allowance.",
                             isOn: Binding(get: { store.maxMode }, set: { store.setMaxMode($0) })
                         )
                         Divider().overlay(Cursor.hairline)

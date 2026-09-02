@@ -26,6 +26,7 @@
 <style>
   .attach-chip.busy { color: var(--cursor-muted); }
   .search-toggle.off { color: var(--cursor-muted); }
+  .max-toggle.off { color: var(--cursor-muted); }
   .auth-hint { color: var(--cursor-muted); font-size: 12px; margin: 6px 0 0; line-height: 1.35; }
 </style>
 </head>
@@ -224,6 +225,7 @@
         Attach
       </button>
       <button type="button" class="chip search-toggle on" id="search-toggle" title="Web search">Search</button>
+      <button type="button" class="chip max-toggle" id="max-toggle" title="Max mode">Max off</button>
       <div class="composer-toolbar-right">
         <input type="text" id="or-model-filter" class="model-filter" hidden placeholder="Filter…" aria-label="Filter models">
         <button type="button" class="tool-btn" id="or-groq-filter" hidden title="Groq models">Groq</button>
@@ -253,7 +255,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">3.8.5</span>
+  <span class="cursor-footer-ver">3.8.6</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -674,7 +676,9 @@
   var status = document.getElementById('status');
   var usageEl = document.getElementById('usage');
   var searchToggle = document.getElementById('search-toggle');
+  var maxToggle = document.getElementById('max-toggle');
   var WEB_SEARCH_KEY = 'chq.webSearch';
+  var MAX_MODE_KEY = 'chq.maxMode';
   var lastUsageData = null;
   var tierSel = document.getElementById('tier');
   var langSel = document.getElementById('lang');
@@ -707,7 +711,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (3.8.5)';
+    if (g) g.textContent = 'Welcome to cs.AI (3.8.6)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -1123,10 +1127,12 @@
     }
   }
   function effortInfo() {
-    return EFFORT[tierSel.value] || EFFORT.tamago;
+    var info = EFFORT[tierSel.value] || EFFORT.tamago;
+    if (maxModeOn()) return { label: info.label, maxTokens: 1000 };
+    return info;
   }
   function showTier() {
-    var ver = '3.8.5';
+    var ver = '3.8.6';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
@@ -1212,6 +1218,26 @@
 
   function webSearchOn() {
     try { return localStorage.getItem(WEB_SEARCH_KEY) !== 'off'; } catch (e) { return true; }
+  }
+
+  function maxModeOn() {
+    try { return localStorage.getItem(MAX_MODE_KEY) === 'on'; } catch (e) { return false; }
+  }
+
+  function setMaxMode(on) {
+    try { localStorage.setItem(MAX_MODE_KEY, on ? 'on' : 'off'); } catch (e) {}
+    updateMaxToggleUI();
+  }
+
+  function updateMaxToggleUI() {
+    if (!maxToggle) return;
+    var on = maxModeOn();
+    maxToggle.textContent = on ? 'Max' : 'Max off';
+    maxToggle.classList.toggle('on', on);
+    maxToggle.classList.toggle('off', !on);
+    maxToggle.title = on
+      ? 'Max mode: thinks harder. Each request uses 1,000 tokens. Click to turn off.'
+      : 'Max mode is off. Click to think harder (1,000 tokens per request).';
   }
 
   function setWebSearch(on) {
@@ -1491,9 +1517,13 @@
     if (plateWrap && !plateWrap.contains(e.target)) closePlateMenu();
   });
   updateSearchToggleUI();
+  updateMaxToggleUI();
   syncComposerChrome();
   if (searchToggle) {
     searchToggle.addEventListener('click', function () { setWebSearch(!webSearchOn()); });
+  }
+  if (maxToggle) {
+    maxToggle.addEventListener('click', function () { setMaxMode(!maxModeOn()); });
   }
   pollUsage();
 
@@ -2003,6 +2033,7 @@
       maxTokens: effortInfo().maxTokens,
       unlockKeys: unlockKeys(),
       enableTools: true,
+      maxMode: maxModeOn(),
       disableSearch: !sr.hadPrefix && !webSearchOn(),
       attachments: ready.map(function (a) {
         return {
