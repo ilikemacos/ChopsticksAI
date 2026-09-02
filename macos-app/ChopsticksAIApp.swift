@@ -908,6 +908,7 @@ final class ChatModel: ObservableObject {
             "maxTokens": tierMaxTokens(store.tier),
             "unlockKeys": store.unlockKeys,
             "enableTools": store.enableTools,
+            "maxMode": store.maxMode,
             "client": "macos",
         ]
         if !forceSearch && !store.webSearchEnabled {
@@ -1169,6 +1170,7 @@ final class ChatModel: ObservableObject {
     }
 
     private func tierMaxTokens(_ tier: String) -> Int {
+        if AppStore.shared.maxMode { return 1000 }
         switch tier {
         case "rice": return 800
         case "tamago": return 1600
@@ -2116,6 +2118,32 @@ struct AgentChatView: View {
                     .help(store.webSearchEnabled
                           ? "Automatic web search on each question. Click to turn off."
                           : "Web search is off. Click to re-enable, or use /search … for one-off lookups.")
+
+                    Button {
+                        withAnimation(Cursor.motionNav) {
+                            store.setMaxMode(!store.maxMode)
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "brain")
+                                .font(.system(size: 10, weight: .medium))
+                            Text(store.maxMode ? "Max" : "Max off")
+                                .font(.system(size: 11.5, weight: .medium))
+                        }
+                        .foregroundStyle(store.maxMode ? Cursor.chromium : Cursor.muted)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 5)
+                        .background(
+                            Capsule().fill(
+                                store.maxMode ? Cursor.chromium.opacity(0.14) : Cursor.hover
+                            )
+                        )
+                        .overlay(Capsule().strokeBorder(
+                            store.maxMode ? Cursor.chromium.opacity(0.35) : Cursor.border
+                        ))
+                    }
+                    .buttonStyle(.plain)
+                    .help("Max mode thinks harder. Each request uses 1,000 tokens.")
 
                     Menu {
                         ForEach(store.customModes) { mode in
