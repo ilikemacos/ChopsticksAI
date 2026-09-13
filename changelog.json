@@ -1,7 +1,27 @@
 {
   "product": "cs.AI",
-  "latest": "3.9.2",
+  "latest": "4.0.0",
   "entries": [
+    {
+      "version": "4.0.0",
+      "date": "2026-09-13",
+      "title": "cs.AI-4",
+      "changes": [
+        "cs.AI-4 Air is the coordinated multi-model plate; other plates run GLM 5.2 free and Nemotron 3 Ultra free with more tokens and context as you go up",
+        "Account create works when the HMAC and Resend extras are missing, as long as Supabase URL and anon key are set",
+        "Agents UI tracks Cursor’s rail, colors, and type",
+        "Ship 4.0.0 — stack is cs.AI-4"
+      ]
+    },
+    {
+      "version": "3.9.3",
+      "date": "2026-09-13",
+      "title": "cs.AI mark",
+      "changes": [
+        "Mac app and web use a chopsticks mark instead of the old circle and sparkle",
+        "Ship 3.9.3 — stack is still cs.AI-3.7"
+      ]
+    },
     {
       "version": "3.9.2",
       "date": "2026-09-13",

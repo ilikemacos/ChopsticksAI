@@ -17,12 +17,12 @@
 <meta property="og:description" content="cs.AI in the browser — plates, search, files, account sync.">
 <meta property="og:url" content="https://chopstickshq.com/chopsticks-ai/web/">
 <meta name="twitter:card" content="summary">
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+<link rel="icon" href="/chopsticks-ai/web/cs-ai-mark-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/chopsticks-ai/web/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/chopsticks-ai/web/cursor-ui.css?v=20260828plan">
+<link rel="stylesheet" href="/chopsticks-ai/web/cursor-ui.css?v=20260913c4">
 <style>
   .attach-chip.busy { color: var(--cursor-muted); }
   .search-toggle.off { color: var(--cursor-muted); }
@@ -85,7 +85,7 @@
   <div class="cursor-workspace">
     <header class="cursor-topbar">
       <div class="cursor-topbar-brand">
-        <svg class="topbar-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3l1.6 5L19 9.6l-5.4 1.6L12 16.2l-1.6-5L5 9.6l5.4-1.6L12 3z"/></svg>
+        <svg class="csai-mark" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><rect x="14.15" y="3.2" width="3.7" height="25.6" rx="1.85" transform="rotate(-20 16 16)"/><rect x="14.15" y="3.2" width="3.7" height="25.6" rx="1.85" transform="rotate(20 16 16)"/></svg>
         <span class="cursor-topbar-title" id="topbar-title">Agent</span>
         <span class="topbar-sep">·</span>
         <span class="topbar-plate" id="topbar-plate">Tamago</span>
@@ -191,7 +191,7 @@
   <div class="inner" id="log">
     <div class="intro" id="intro">
       <div class="intro-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6L12 3z"/></svg>
+        <svg viewBox="0 0 32 32" fill="currentColor"><rect x="14.15" y="3.2" width="3.7" height="25.6" rx="1.85" transform="rotate(-20 16 16)"/><rect x="14.15" y="3.2" width="3.7" height="25.6" rx="1.85" transform="rotate(20 16 16)"/></svg>
       </div>
       <h1 id="intro-greeting">Welcome to cs.AI</h1>
       <p class="intro-sub" id="intro-sub">What do you want to know?</p>
@@ -242,6 +242,7 @@
             <option value="wagyua3">Wagyu A3</option>
             <option value="wagyua4">Wagyu A4</option>
             <option value="wagyua5">Wagyu A5</option>
+            <option value="csai4air">cs.AI-4 Air</option>
             <option value="chopcode">ChopCode</option>
             <option value="kaji">Kaji</option>
             <option value="max">Max</option>
@@ -256,7 +257,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">3.9.2</span>
+  <span class="cursor-footer-ver">4.0.0</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -287,7 +288,8 @@
     wagyua5: { label: 'Wagyu A5', maxTokens: 8000 },
     chopcode: { label: 'ChopCode', maxTokens: 4000 },
     kaji: { label: 'Kaji', maxTokens: 6000 },
-    max: { label: 'Max', maxTokens: 1000 },
+    max: { label: 'Max', maxTokens: 2000 },
+    csai4air: { label: 'cs.AI-4 Air', maxTokens: 8000 },
     low: { label: 'Rice', maxTokens: 800 },
     high: { label: 'Tamago', maxTokens: 2000 },
     pro: { label: 'Hibachi', maxTokens: 4000 },
@@ -312,7 +314,9 @@
     airii: 'wagyua1', air2: 'wagyua1', airiii: 'wagyua2', air3: 'wagyua2',
     airvi: 'wagyua3', air6: 'wagyua3', airv: 'wagyua4', air5: 'wagyua4',
     'cscode-pro': 'chopcode', cscodepro: 'chopcode', cscode: 'chopcode',
-    max: 'max', maxmode: 'max', csmax: 'max'
+    max: 'max', maxmode: 'max', csmax: 'max',
+    csai4air: 'csai4air', air4: 'csai4air', '4-air': 'csai4air', '4air': 'csai4air',
+    'csai-4-air': 'csai4air'
   };
   function normalizeTier(id) {
     var key = String(id || '').toLowerCase();
@@ -714,7 +718,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (3.9.2)';
+    if (g) g.textContent = 'Welcome to cs.AI (4.0.0)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -960,12 +964,12 @@
   var SKY_NAMES = {
     rice: 'cs.AI 3.1', tamago: 'cs.AI 3.3-Fast', hibachi: 'cs.AI 3.3-Thinking',
     wagyua1: 'Air II', wagyua2: 'Air III', wagyua3: 'Air VI', wagyua4: 'Air V',
-    wagyua5: 'cs.AI 3.5-Air', chopcode: 'csCode-Pro', kaji: 'Kaji', max: 'Max'
+    wagyua5: 'cs.AI 3.5-Air', csai4air: 'cs.AI-4 Air', chopcode: 'csCode-Pro', kaji: 'Kaji', max: 'Max'
   };
   var SUSHI_NAMES = {
     rice: 'Rice', tamago: 'Tamago', hibachi: 'Hibachi',
     wagyua1: 'Wagyu A1', wagyua2: 'Wagyu A2', wagyua3: 'Wagyu A3', wagyua4: 'Wagyu A4',
-    wagyua5: 'Wagyu A5', chopcode: 'ChopCode', kaji: 'Kaji', max: 'Max'
+    wagyua5: 'Wagyu A5', csai4air: 'cs.AI-4 Air', chopcode: 'ChopCode', kaji: 'Kaji', max: 'Max'
   };
   function plateSkyOn() {
     try {
@@ -991,6 +995,7 @@
     { id: 'wagyua3', tag: 'A3', group: 'Wagyu' },
     { id: 'wagyua4', tag: 'A4', group: 'Wagyu' },
     { id: 'wagyua5', tag: 'A5', group: 'Wagyu' },
+    { id: 'csai4air', tag: 'Team', group: 'Air' },
     { id: 'chopcode', tag: 'Code', group: 'Apps' },
     { id: 'kaji', tag: 'Alpha', group: 'Apps' },
     { id: 'max', tag: 'Think', group: 'Apps' }
@@ -999,12 +1004,12 @@
     return plateSkyOn()
       ? [
           { label: 'cs.AI', ids: ['rice', 'tamago', 'hibachi'] },
-          { label: 'Air', ids: ['wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
+          { label: 'Air', ids: ['csai4air', 'wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
           { label: 'Apps', ids: ['chopcode', 'kaji', 'max'] }
         ]
       : [
           { label: 'Everyday', ids: ['rice', 'tamago', 'hibachi'] },
-          { label: 'Wagyu', ids: ['wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
+          { label: 'Wagyu', ids: ['csai4air', 'wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
           { label: 'Apps', ids: ['chopcode', 'kaji', 'max'] }
         ];
   }
@@ -1021,7 +1026,7 @@
   var kajiAllowed = false;
   function isWagyu(id) {
     var t = normalizeTier(id);
-    return t === 'wagyu' || /^wagyua[1-5]$/.test(t);
+    return t === 'wagyu' || t === 'csai4air' || /^wagyua[1-5]$/.test(t);
   }
   function wagyuLocked() {
     return !(Cloud && Cloud.isSignedIn && Cloud.isSignedIn());
@@ -1149,7 +1154,7 @@
     return info;
   }
   function showTier() {
-    var ver = '3.9.2';
+    var ver = '4.0.0';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;

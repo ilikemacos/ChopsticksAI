@@ -1,20 +1,20 @@
 
 html[data-theme="dark"], :root {
-  --cursor-bg: #000000;
-  --cursor-sidebar: #000000;
-  --cursor-rail: #000000;
-  --cursor-panel: #16181c;
-  --cursor-composer: #16181c;
-  --cursor-hover: #1e2126;
-  --cursor-selected: #272a2e;
-  --cursor-hairline: #2f3336;
-  --cursor-border: #2f3336;
-  --cursor-muted: #71767b;
-  --cursor-soft: #e7e9ea;
-  --cursor-text: #e7e9ea;
+  --cursor-bg: #161616;
+  --cursor-sidebar: #131313;
+  --cursor-rail: #111111;
+  --cursor-panel: #1c1c1c;
+  --cursor-composer: #212121;
+  --cursor-hover: #2a2a2a;
+  --cursor-selected: #303030;
+  --cursor-hairline: rgba(255,255,255,0.07);
+  --cursor-border: rgba(255,255,255,0.11);
+  --cursor-muted: rgba(255,255,255,0.42);
+  --cursor-soft: rgba(255,255,255,0.68);
+  --cursor-text: rgba(255,255,255,0.92);
   --cursor-accent: #ffffff;
-  --cursor-blue: #1d9bf0;
-  --cursor-green: #00ba7c;
+  --cursor-blue: #598cff;
+  --cursor-green: #59b87a;
   --bg: var(--cursor-bg);
   --bg2: var(--cursor-panel);
   --card: var(--cursor-composer);
@@ -26,10 +26,10 @@ html[data-theme="dark"], :root {
   --nav-bg: var(--cursor-bg);
   --nav-border: var(--cursor-hairline);
   --cs-col: min(40rem, calc(100% - 3rem));
-  --radius: 10px;
-  --sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --display: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --radius: 8px;
+  --sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --display: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -55,13 +55,13 @@ body.cursor-app {
 }
 
 .cursor-rail {
-  flex: 0 0 72px;
-  width: 72px;
+  flex: 0 0 48px;
+  width: 48px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 14px 0 max(16px, env(safe-area-inset-bottom));
+  gap: 2px;
+  padding: 8px 0 max(12px, env(safe-area-inset-bottom));
   background: var(--cursor-rail);
   border-right: 1px solid var(--cursor-hairline);
 }
@@ -70,11 +70,11 @@ body.cursor-app {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  min-height: 48px;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
   border: none;
-  border-radius: 12px;
+  border-radius: 6px;
   background: transparent;
   color: var(--cursor-muted);
   cursor: pointer;
@@ -1117,7 +1117,7 @@ body.cursor-app {
   min-height: 46px; padding: 11px 16px;
   background: var(--cursor-bg);
 }
-.topbar-sparkle { width: 14px; height: 14px; color: var(--cursor-soft); flex: 0 0 auto; }
+.topbar-sparkle, .csai-mark { width: 18px; height: 18px; color: var(--cursor-text); flex: 0 0 auto; }
 .cursor-topbar-title { font: 600 13px var(--sans); }
 .topbar-sep { color: var(--cursor-muted); font-size: 13px; }
 .topbar-plate { font: 500 11px var(--sans); color: var(--cursor-muted); }
@@ -1191,7 +1191,7 @@ body.cursor-app {
 .cursor-workspace .composer-inner {
   width: var(--cs-col, min(42rem, calc(100% - 3rem)));
   margin-inline: auto;
-  border-radius: 24px;
+  border-radius: 12px;
   padding: 12px 12px 10px;
   background: var(--cursor-composer);
   border: 1px solid var(--cursor-border);

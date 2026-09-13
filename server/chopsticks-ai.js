@@ -24,90 +24,72 @@ const {
   DECOMPOSE_HINT,
 } = require("./chopsticks-intelligence.js");
 
+const GLM52 = "z-ai/glm-5.2:free";
+const NEMO_ULTRA = "nvidia/nemotron-3-ultra-550b-a55b:free";
+
+function glmUltraPlate({
+  label, effort, context, maxReply, grounding, searchMax, timeoutMs, temperature, extra,
+}) {
+  const ultraLead = effort >= 3;
+  const models = ultraLead ? [NEMO_ULTRA, GLM52] : [GLM52, NEMO_ULTRA];
+  return {
+    label,
+    models,
+    longModels: [NEMO_ULTRA, GLM52],
+    refine: effort >= 3,
+    refineModels: effort >= 4 ? [NEMO_ULTRA, GLM52] : [GLM52],
+    context,
+    maxReply,
+    grounding,
+    searchMax,
+    timeoutMs,
+    temperature,
+    ...(extra || {}),
+  };
+}
+
 const TIERS = {
-  rice: {
+  rice: glmUltraPlate({
     label: "Rice",
-    models: [
-      "openrouter/free",
-      "google/gemma-4-26b-a4b-it:free",
-      "groq/llama-3.1-8b-instant",
-    ],
-    longModels: [
-      "openrouter/free",
-      "google/gemma-4-26b-a4b-it:free",
-      "groq/llama-3.1-8b-instant",
-    ],
-    context: 16000,
-    refine: false,
-    maxReply: 700,
+    effort: 1,
+    context: 24000,
+    maxReply: 900,
     grounding: 3,
     searchMax: 3,
-    timeoutMs: 14000,
+    timeoutMs: 16000,
     temperature: 0.15,
-  },
-  tamago: {
+  }),
+  tamago: glmUltraPlate({
     label: "Tamago",
-    models: [
-      "groq/llama-3.3-70b-versatile",
-      "nvidia/nemotron-3-super-120b-a12b:free",
-      "z-ai/glm-5.2:free",
-    ],
-    longModels: [
-      "groq/openai/gpt-oss-120b",
-      "nvidia/nemotron-3-super-120b-a12b:free",
-    ],
+    effort: 2,
     context: 48000,
-    refine: false,
     maxReply: 1800,
     grounding: 5,
     searchMax: 6,
     timeoutMs: 20000,
     temperature: 0.2,
-  },
-  hibachi: {
+  }),
+  hibachi: glmUltraPlate({
     label: "Hibachi",
-    models: [
-      "groq/openai/gpt-oss-120b",
-      "nvidia/nemotron-3-ultra-550b-a55b:free",
-      "google/gemma-4-31b-it:free",
-    ],
-    longModels: [
-      "nvidia/nemotron-3-ultra-550b-a55b:free",
-      "groq/openai/gpt-oss-120b",
-    ],
+    effort: 3,
     context: 96000,
-    refine: true,
-    refineModels: ["groq/llama-3.3-70b-versatile"],
     maxReply: 3500,
     grounding: 8,
     searchMax: 8,
     timeoutMs: 24000,
     temperature: 0.22,
-  },
-  wagyu: {
+  }),
+  wagyu: glmUltraPlate({
     label: "Wagyu A5",
-    wagyuGrade: 5,
-    models: [
-      "nvidia/nemotron-3-ultra-550b-a55b:free",
-      "groq/openai/gpt-oss-120b",
-      "google/gemma-4-26b-a4b-it:free",
-    ],
-    longModels: [
-      "nvidia/nemotron-3-ultra-550b-a55b:free",
-      "groq/openai/gpt-oss-120b",
-    ],
-    refine: true,
-    refineModels: [
-      "groq/llama-3.3-70b-versatile",
-      "google/gemma-4-26b-a4b-it:free",
-    ],
+    effort: 6,
     context: 160000,
     maxReply: 8000,
     grounding: 16,
     searchMax: 16,
     timeoutMs: 28000,
     temperature: 0.25,
-  },
+    extra: { wagyuGrade: 5 },
+  }),
 };
 const WAGYU_SHARED = {
   models: TIERS.wagyu.models,
@@ -162,72 +144,53 @@ TIERS.wagyua5 = { ...TIERS.wagyu, label: "Wagyu A5", wagyuGrade: 5 };
 TIERS.chopcode = {
     label: "ChopCode",
     chopCode: true,
-    models: [
-      "qwen/qwen3-coder:free",
-      "groq/llama-3.3-70b-versatile",
-      "z-ai/glm-5.2:free",
-      "nvidia/nemotron-3-ultra:free",
-      "cohere/north-mini-code:free",
-      "openai/gpt-oss-20b:free",
-      "poolside/laguna-s-2.1:free",
-      "nvidia/nemotron-3-super-120b-a12b:free",
-      "google/gemma-4-31b-it:free",
-      "google/gemma-4-26b-a4b-it:free",
-    ],
-    longModels: [
-      "qwen/qwen3-coder:free",
-      "z-ai/glm-5.2:free",
-      "groq/llama-3.3-70b-versatile",
-      "nvidia/nemotron-3-ultra:free",
-      "openai/gpt-oss-20b:free",
-    ],
-    context: 128000,
-    refine: true,
-    refineModels: ["moonshotai/kimi-k2.6:free"],
-    maxReply: 4096,
-    grounding: 8,
-    searchMax: 8,
-    timeoutMs: 24000,
-    temperature: 0.12,
+    ...glmUltraPlate({
+      label: "ChopCode",
+      effort: 4,
+      context: 128000,
+      maxReply: 4096,
+      grounding: 8,
+      searchMax: 8,
+      timeoutMs: 24000,
+      temperature: 0.12,
+    }),
 };
 TIERS.kaji = {
   label: "Kaji",
   kaji: true,
-    models: [
-      "z-ai/glm-5.2:free",
-      "cohere/north-mini-code:free",
-      "nvidia/nemotron-3-ultra:free",
-      "poolside/laguna-s-2.1:free",
-    ],
-    longModels: [
-      "nvidia/nemotron-3-ultra:free",
-      "z-ai/glm-5.2:free",
-      "poolside/laguna-s-2.1:free",
-      "cohere/north-mini-code:free",
-    ],
-  refine: true,
-  refineModels: ["z-ai/glm-5.2:free", "cohere/north-mini-code:free"],
-  context: 128000,
-  maxReply: 4096,
-  grounding: 8,
-  searchMax: 6,
-  timeoutMs: 24000,
-  temperature: 0.18,
+  ...glmUltraPlate({
+    label: "Kaji",
+    effort: 4,
+    context: 128000,
+    maxReply: 4096,
+    grounding: 8,
+    searchMax: 6,
+    timeoutMs: 24000,
+    temperature: 0.18,
+  }),
 };
-TIERS.max = {
+TIERS.max = glmUltraPlate({
   label: "Max",
-  max: true,
-  models: TIERS.hibachi.models,
-  longModels: TIERS.hibachi.longModels,
-  context: 96000,
-  refine: true,
-  refineModels: TIERS.hibachi.refineModels || ["groq/llama-3.3-70b-versatile"],
-  maxReply: 1000,
+  effort: 5,
+  context: 128000,
+  maxReply: 2000,
   grounding: 10,
   searchMax: 10,
   timeoutMs: 26000,
   temperature: 0.15,
-};
+  extra: { max: true },
+});
+TIERS.csai4air = glmUltraPlate({
+  label: "cs.AI-4 Air",
+  effort: 6,
+  context: 160000,
+  maxReply: 8000,
+  grounding: 16,
+  searchMax: 16,
+  timeoutMs: 26000,
+  temperature: 0.2,
+  extra: { air4: true, team: true },
+});
 const TIER_ALIASES = {
   rice: "rice",
   haiku: "rice",
@@ -257,6 +220,12 @@ const TIER_ALIASES = {
   max: "max",
   maxmode: "max",
   csmax: "max",
+  csai4air: "csai4air",
+  "csai-4-air": "csai4air",
+  "cs.ai-4-air": "csai4air",
+  "4-air": "csai4air",
+  air4: "csai4air",
+  "4air": "csai4air",
   wagyu: "wagyua5",
   fable: "wagyua5",
   insane: "wagyua5",
@@ -313,7 +282,7 @@ const tierOf = (name) => {
 };
 
 const AUTH_REQUIRED_TIERS = new Set([
-  "wagyu", "wagyua1", "wagyua2", "wagyua3", "wagyua4", "wagyua5", "chopcode", "kaji",
+  "wagyu", "wagyua1", "wagyua2", "wagyua3", "wagyua4", "wagyua5", "chopcode", "kaji", "csai4air",
 ]);
 
 function timingSafeString(a, b) {
@@ -1070,9 +1039,9 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "3.9.2";
-const PREVIEW_APP_VERSION = "3.9.2";
-const STACK_NAME = "cs.AI-3.7";
+const APP_VERSION = "4.0.0";
+const PREVIEW_APP_VERSION = "4.0.0";
+const STACK_NAME = "cs.AI-4";
 
 function appVersionFor(account) {
   return canPickOpenRouterModel(account) ? PREVIEW_APP_VERSION : APP_VERSION;
@@ -2125,8 +2094,10 @@ function selfFacts(tier, appVersion) {
     `- You are ${STACK_NAME} (${ver}), built and run by Chopsticks HQ.`,
     `- You refresh live web research for each user question, dated as of today.`,
     `- Current date for this session: ${clockNow().human} (${clockNow().isoDay} UTC).`,
-    `- Current plate: ${t.label} (Rice < Tamago < Hibachi < Wagyu A1 < A2 < A3 < A4 < A5), ${contextFor(t).toLocaleString()} token context, up to ${(t.maxReply || MAX_REPLY_TOKENS).toLocaleString()} reply tokens.`,
-    t.stickerCoder
+    `- Current plate: ${t.label}, ${contextFor(t).toLocaleString()} token context, up to ${(t.maxReply || MAX_REPLY_TOKENS).toLocaleString()} reply tokens.`,
+    t.air4 || t.team
+      ? "- cs.AI-4 Air runs a coordinated model team, then returns one answer."
+      : t.stickerCoder
       ? "- StickerCoder+ mode: prioritise complete, runnable code, write_file tool use, and sharp engineering answers."
       : t.kaji
         ? "- Kaji mode (alpha, agentic): tools write_file, open_page, and on Mac list_dir / read_file / write_mac_file plus run_command in a headless Alpine sandbox (no network, not a Linux desktop). The in-app browser is WebKit. Prefer “I don’t know” over a confident guess. Do not name underlying models or vendors."
