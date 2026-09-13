@@ -1098,6 +1098,7 @@ struct SettingsView: View {
                             plateSetting("rice")
                             plateSetting("tamago")
                             plateSetting("hibachi")
+                            plateSetting("csai4flash")
                             Divider().overlay(Cursor.hairline)
                             Text("PRO").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
                             plateSetting("csai4air")

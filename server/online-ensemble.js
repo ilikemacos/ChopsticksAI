@@ -61,6 +61,7 @@ const SYNTH_SYSTEM = [
   "Do not stitch quotes from the notes. Do not mention a team, drafts, reviewers, or model names.",
   "Be non-partisan: neither politically left nor right.",
   "If code is needed, use complete fenced files with language tags and filenames.",
+  "Never add a Sources section or list URLs.",
 ].join(" ");
 
 function clip(text, max) {
@@ -123,7 +124,7 @@ function shouldRunOnlineTeam({
   if (customModel || kajiResume || isWidget) return false;
   if (!(tier && (tier.air4 || tier.team))) return false;
   if (!intel || intel.trivial || intel.hqOnly) return false;
-  if (tier && (tier.chopCode || tier.kaji || tier.groqOnly)) return false;
+  if (tier && (tier.chopCode || tier.kaji || tier.groqOnly || tier.flash4)) return false;
   return true;
 }
 
@@ -141,7 +142,7 @@ async function runOnlineEnsemble({
   const keys = { openRouterKey, groqKey, anthropicKey };
   const question = clip(questionFromMessages(messages), 6000);
   const sysCtx = clip(systemFromMessages(messages), 7000);
-  const nowLine = `CURRENT DATE: ${clockHuman || ""} (${isoDay || ""} UTC). Treat this calendar day as now. Prefer live research over training cutoffs.`;
+  const nowLine = `CURRENT DATE: ${clockHuman || ""} (${isoDay || ""} UTC). Knowledge is current as of 13 September 2026. Treat this calendar day as now. Prefer live research over training cutoffs.`;
   let tokens = 0;
   const notes = [];
 

@@ -1,7 +1,17 @@
 {
   "product": "cs.AI",
-  "latest": "4.0.4",
+  "latest": "4.0.6",
   "entries": [
+    {
+      "version": "4.0.6",
+      "date": "2026-09-13",
+      "title": "cs.AI-4-Flash",
+      "changes": [
+        "New plate cs.AI-4-Flash — fast replies only",
+        "Every model call is dated 13 September 2026",
+        "Ship 4.0.6 — stack is cs.AI-4"
+      ]
+    },
     {
       "version": "4.0.4",
       "date": "2026-09-13",
