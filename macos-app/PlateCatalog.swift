@@ -3,6 +3,7 @@ import Foundation
 enum PlateCatalog {
     static let ids = [
         "rice", "tamago", "hibachi",
+        "csai4air",
         "wagyua1", "wagyua2", "wagyua3", "wagyua4", "wagyua5",
         "chopcode", "kaji", "max", "stickercoderplus",
     ]
@@ -13,6 +14,7 @@ enum PlateCatalog {
             case "rice": return "cs.AI 3.1"
             case "tamago": return "cs.AI 3.3-Fast"
             case "hibachi": return "cs.AI 3.3-Thinking"
+            case "csai4air": return "cs.AI-4 Air"
             case "wagyua1": return "Air II"
             case "wagyua2": return "Air III"
             case "wagyua3": return "Air VI"
@@ -29,6 +31,7 @@ enum PlateCatalog {
         case "rice": return "Rice"
         case "tamago": return "Tamago"
         case "hibachi": return "Hibachi"
+        case "csai4air": return "cs.AI-4 Air"
         case "wagyua1": return "Wagyu A1"
         case "wagyua2": return "Wagyu A2"
         case "wagyua3": return "Wagyu A3"
