@@ -256,7 +256,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">3.8.7</span>
+  <span class="cursor-footer-ver">3.9.1</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -714,7 +714,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (3.8.7)';
+    if (g) g.textContent = 'Welcome to cs.AI (3.9.1)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -746,6 +746,7 @@
   var composerEl = document.getElementById('composer');
   var pendingAttach = []; 
   var MAX_BATCH = 500 * 1024 * 1024;
+  var MAX_IMAGE = 10 * 1024 * 1024;
   var TEXT_PREVIEW = 200000;
   var compact = false;
 
@@ -754,6 +755,10 @@
     if (n >= 1024 * 1024) return (n / (1024 * 1024)).toFixed(1) + ' MB';
     if (n >= 1024) return (n / 1024).toFixed(0) + ' KB';
     return n + ' B';
+  }
+  function isImageFile(f) {
+    if (/^image\//i.test(f.type || '')) return true;
+    return /\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?)$/i.test(f.name || '');
   }
   function batchBytes() {
     return pendingAttach.reduce(function (s, a) { return s + (a.size || 0); }, 0);
@@ -802,7 +807,10 @@
       return;
     }
     var add = 0;
-    for (var i = 0; i < files.length; i++) add += files[i].size || 0;
+    for (var i = 0; i < files.length; i++) {
+      if (isImageFile(files[i]) && files[i].size > MAX_IMAGE) continue;
+      add += files[i].size || 0;
+    }
     if (batchBytes() + add > MAX_BATCH) {
       status.textContent = 'Batch would exceed 500 MB — remove some files';
       return;
@@ -810,6 +818,10 @@
     for (var j = 0; j < files.length; j++) {
       var f = files[j];
       if (!f.size) continue;
+      if (isImageFile(f) && f.size > MAX_IMAGE) {
+        status.textContent = f.name + ' is over 10 MB (images max 10 MB)';
+        continue;
+      }
       if (f.size > MAX_BATCH) {
         status.textContent = f.name + ' is over 500 MB';
         continue;
@@ -1137,7 +1149,7 @@
     return info;
   }
   function showTier() {
-    var ver = '3.8.7';
+    var ver = '3.9.1';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;

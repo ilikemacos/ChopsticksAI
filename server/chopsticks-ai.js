@@ -10,6 +10,7 @@ const {
   handleAuthRefresh,
 } = require("./signup-verify.js");
 const { runChopCodeEnsemble, CHOPCODE_AGENTS } = require("./chopcode-ensemble.js");
+const { shouldRunOnlineTeam, runOnlineEnsemble } = require("./online-ensemble.js");
 const {
   analyzeRequest,
   computeBudget,
@@ -27,13 +28,14 @@ const TIERS = {
   rice: {
     label: "Rice",
     models: [
+      "openrouter/free",
+      "google/gemma-4-26b-a4b-it:free",
       "groq/llama-3.1-8b-instant",
-      "nvidia/nemotron-3-nano-30b-a3b:free",
-      "nvidia/llama-3.3-nemotron-super-49b-v1:free",
     ],
     longModels: [
+      "openrouter/free",
+      "google/gemma-4-26b-a4b-it:free",
       "groq/llama-3.1-8b-instant",
-      "nvidia/nemotron-3-nano-30b-a3b:free",
     ],
     context: 16000,
     refine: false,
@@ -723,6 +725,8 @@ function normalizeOpenRouterModelId(raw) {
   if (/^groq\/.+/i.test(id)) return id;
   if (!/^[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._:+\/-]*$/i.test(id)) return "";
   if (id === "nvidia/nemotron-3-ultra:free") return "nvidia/nemotron-3-ultra-550b-a55b:free";
+  if (id === "nvidia/nemotron-3-super:free") return "nvidia/nemotron-3-super-120b-a12b:free";
+  if (id === "z-ai/glm-4.7-flash" || id === "glm-4.7-flash:free") return "z-ai/glm-4.7-flash:free";
   return id;
 }
 
@@ -745,7 +749,9 @@ function isGroqModelId(id) {
 /** HQ OpenRouter key: only :free. Groq/Claude use their own keys. */
 function isHqOpenRouterAllowed(id) {
   if (isGroqModelId(id) || isClaudeModelId(id)) return true;
-  return String(id || "").toLowerCase().endsWith(":free");
+  const s = String(id || "").toLowerCase();
+  if (s === "openrouter/free") return true;
+  return s.endsWith(":free");
 }
 
 function groqNativeModelId(id) {
@@ -780,6 +786,15 @@ function resolveGroqKey(payload, account, tier) {
 
 function resolveOpenRouterKey(payload) {
   return normalizeUserOpenRouterKey(payload && payload.openRouterKey) || env("OPENROUTER_API_KEY") || "";
+}
+
+function resolveOfoxKey() {
+  return String(env("OFOXAI_API") || env("OFOX_API_KEY") || env("OFOXAI_API_KEY") || "").trim();
+}
+
+function isOfoxGlmFlashFree(id) {
+  const s = String(id || "").toLowerCase();
+  return s === "z-ai/glm-4.7-flash:free" || s === "glm-4.7-flash:free";
 }
 
 function resolveAnthropicKey(payload) {
@@ -1033,6 +1048,7 @@ const CHOPCODE_PAIR_SYSTEM = [
   "Never mention drafts, reviews, pipelines, model names, vendors, or that two models ran.",
 ].join("");
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const OFOX_URL = "https://api.ofox.ai/v1/chat/completions";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_TIMEOUT_MS || 18000);
 const REFINE_MIN_MS = 5000;
@@ -1054,8 +1070,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "3.8.7";
-const PREVIEW_APP_VERSION = "3.8.7";
+const APP_VERSION = "3.9.1";
+const PREVIEW_APP_VERSION = "3.9.1";
 const STACK_NAME = "cs.AI-3.7";
 
 function appVersionFor(account) {
@@ -2943,6 +2959,30 @@ async function callChatModel({
   tools,
   toolChoice,
 }) {
+  model = normalizeOpenRouterModelId(model) || model;
+  if (isOfoxGlmFlashFree(model)) {
+    const ofox = resolveOfoxKey();
+    if (!ofox) {
+      return { ok: false, status: 503, detail: "Ofox API key not configured" };
+    }
+    const clock = clockNow();
+    const dateGuard = [
+      `CURRENT DATE (authoritative for this reply): ${clock.human} (${clock.isoDay} UTC).`,
+      "Treat this calendar day as now. Prefer live research over a training cutoff.",
+      "Be non-partisan: neither politically left nor right. Describe facts and tradeoffs without advocacy.",
+    ].join(" ");
+    return callModel({
+      model: "z-ai/glm-4.7-flash:free",
+      messages: [{ role: "system", content: dateGuard }].concat(Array.isArray(messages) ? messages : []),
+      key: ofox,
+      url: OFOX_URL,
+      signal,
+      maxTokens,
+      temperature,
+      tools,
+      toolChoice,
+    });
+  }
   if (isClaudeModelId(model)) {
     return callAnthropicModel({
       model,
@@ -2981,8 +3021,9 @@ async function callChatModel({
 }
 
 /** One chat completion. Supports optional OpenAI-style tools. */
-async function callModel({ model, messages, key, signal, maxTokens, temperature, tools, toolChoice }) {
+async function callModel({ model, messages, key, signal, maxTokens, temperature, tools, toolChoice, url }) {
   const asked = maxTokens ?? MAX_REPLY_TOKENS;
+  const endpoint = url || OPENROUTER_URL;
   const body = {
     model,
     messages,
@@ -2995,7 +3036,7 @@ async function callModel({ model, messages, key, signal, maxTokens, temperature,
   }
   let res;
   try {
-    res = await fetch(OPENROUTER_URL, {
+    res = await fetch(endpoint, {
     method: "POST",
     signal,
     headers: {
@@ -3026,7 +3067,7 @@ async function callModel({ model, messages, key, signal, maxTokens, temperature,
           temperature: body.temperature,
           max_tokens: Math.min(Math.max(asked * 3, 900), 2000),
         };
-        const res2 = await fetch(OPENROUTER_URL, {
+        const res2 = await fetch(endpoint, {
           method: "POST",
           signal,
           headers: {
@@ -3423,14 +3464,6 @@ async function handler(event, context) {
     return json(200, { ok: true });
   }
 
-  if (!account) {
-    return json(401, {
-      error: "sign in required",
-      mode: "auth_required",
-      tier: tier.label,
-    });
-  }
-
   if (AUTH_REQUIRED_TIERS.has(tierId) && !account) {
     return json(403, {
       error: "sign in required for this tier",
@@ -3810,7 +3843,7 @@ async function handler(event, context) {
     }))
       .filter((m) => !isGroqModelId(m) || groqKey)
       .filter((m) => customModel || isHqOpenRouterAllowed(m))
-      .slice(0, customModel || kajiResume ? 1 : (intel.trivial ? 1 : (tier.chopCode || tier.kaji ? 4 : 3)));
+      .slice(0, customModel || kajiResume ? 1 : (tier.chopCode || tier.kaji ? 4 : 3));
 
     const slimFast = fitContext(
       {
@@ -3825,11 +3858,18 @@ async function handler(event, context) {
     );
     const fastModels = [
       ...(groqKey ? ["groq/llama-3.1-8b-instant"] : []),
-      "nvidia/nemotron-3-nano-30b-a3b:free",
-      "openai/gpt-oss-20b:free",
+      "openrouter/free",
+      "google/gemma-4-26b-a4b-it:free",
     ];
+    const runTeam = shouldRunOnlineTeam({
+      customModel,
+      kajiResume,
+      isWidget,
+      intel,
+      tier,
+    });
     const fastPromise = (async () => {
-      if (budget.skipFastRace || tier.kaji) return null;
+      if (runTeam || budget.skipFastRace || tier.kaji) return null;
       for (const m of fastModels) {
         if (deadline - Date.now() < 1400) return null;
         const g = withTimeout(Math.min(4200, deadline - Date.now() - 200));
@@ -3856,6 +3896,25 @@ async function handler(event, context) {
 
     let agentsTrace = null;
     let conversationTrace = null;
+    let onlineTeamUsed = false;
+    if (runTeam && !draft) {
+      const team = await runOnlineEnsemble({
+        callChatModel,
+        messages,
+        openRouterKey: apiKey,
+        groqKey,
+        anthropicKey,
+        maxTokens: replyTokens,
+        deadlineMs: Math.min(deadline, modelDeadline + 1500),
+        clockHuman: clock.human,
+        isoDay: clock.isoDay,
+      });
+      if (team && team.reply) {
+        draft = { ok: true, text: team.reply, tokens: team.tokens || 0, toolCalls: [] };
+        draftModel = team.leadModel || "z-ai/glm-5.2:free";
+        onlineTeamUsed = true;
+      }
+    }
     if (tier.chopCode && !customModel) {
       const ensDeadline = Date.now() + Math.min(4500, Math.max(2500, modelDeadline - Date.now()));
       const ens = await runChopCodeEnsemble({
@@ -4010,8 +4069,8 @@ async function handler(event, context) {
         ? []
         : [
           ...(groqKey ? ["groq/llama-3.1-8b-instant"] : []),
-          "nvidia/nemotron-3-nano-30b-a3b:free",
-          "openai/gpt-oss-20b:free",
+          "openrouter/free",
+          "google/gemma-4-26b-a4b-it:free",
         ];
       for (const rescue of rescues) {
         const left = deadline - Date.now() - 200;
@@ -4055,7 +4114,7 @@ async function handler(event, context) {
         const gP = withTimeout(panicLeft - 300);
         try {
           const r = await callChatModel({
-            model: groqKey ? "groq/llama-3.1-8b-instant" : "nvidia/nemotron-3-nano-30b-a3b:free",
+            model: groqKey ? "groq/llama-3.1-8b-instant" : "openrouter/free",
             messages: fitContext(
               {
                 role: "system",
@@ -4076,7 +4135,7 @@ async function handler(event, context) {
           });
           if (r.ok && r.text) {
             draft = r;
-            draftModel = groqKey ? "groq/llama-3.1-8b-instant" : "nvidia/nemotron-3-nano-30b-a3b:free";
+            draftModel = groqKey ? "groq/llama-3.1-8b-instant" : "openrouter/free";
           }
         } catch (e) {
           lastDetail = String(e && e.name) + " [panic]";
@@ -4097,14 +4156,6 @@ async function handler(event, context) {
     if (!draft) {
       return json(200, {
         ...answerWhenModelsFail(turns, lastUser, webBundle, payload),
-        ...(DEBUG_ENABLED && payload.debug ? {
-          diag: {
-            status: lastStatus,
-            detail: String(lastDetail || "").slice(0, 400),
-            replyTokens,
-            msLeft: deadline - Date.now(),
-          },
-        } : {}),
       });
     }
 
@@ -4134,7 +4185,7 @@ async function handler(event, context) {
       reply = ensureFileFences(reply, producedFiles);
     }
 
-    const refineOn = REFINE_ENABLED && !isWidget && !agentsTrace && !draft.pendingLocal
+    const refineOn = REFINE_ENABLED && !isWidget && !agentsTrace && !onlineTeamUsed && !draft.pendingLocal
       && !intel.trivial && !intel.hqOnly
       && (budget.critics > 0 || (tier.refine !== false && intel.complexity >= 0.45));
     const refineQueue = (Array.isArray(tier.refineModels) && tier.refineModels.length

@@ -1,7 +1,27 @@
 {
   "product": "cs.AI",
-  "latest": "3.8.7",
+  "latest": "3.9.1",
   "entries": [
+    {
+      "version": "3.9.1",
+      "date": "2026-09-13",
+      "title": "Online team answers",
+      "changes": [
+        "Substantial Online chats draft, review in parallel, verify, then synthesize into one reply",
+        "Ship 3.9.1 — stack is still cs.AI-3.7"
+      ]
+    },
+    {
+      "version": "3.9.0",
+      "date": "2026-09-10",
+      "title": "Live models again · 10 MB images",
+      "changes": [
+        "Guest chat on Sky plates works without a forced sign-in",
+        "HQ live stack uses OpenRouter’s free pool when a :free slug goes paid",
+        "Images attach up to 10 MB each (other files stay 500 MB per batch)",
+        "Ship 3.9.0 — stack is still cs.AI-3.7"
+      ]
+    },
     {
       "version": "3.8.7",
       "date": "2026-09-02",
