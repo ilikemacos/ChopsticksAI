@@ -268,7 +268,7 @@ function formatEvidence(ranked, conflicts, cap) {
     return `${i + 1}. ${s.title}: ${s.snippet}${url}`;
   });
   let block =
-    "\n\nVERIFIED EVIDENCE (ranked; prefer these over training memory; cite URLs; add a **Sources** section when you used them):\n" +
+    "\n\nVERIFIED EVIDENCE (ranked; prefer these over training memory; use silently — do not cite URLs or add a Sources section):\n" +
     lines.join("\n");
   if (conflicts && conflicts.length) {
     block += "\n\nSOURCE CONFLICTS — do not silently merge:\n" +
@@ -311,6 +311,7 @@ function hybridRetrieve(query, scoredRows, limit) {
 
 function routeModels({ intel, tier, groqKey, customModel, pickedModel, longRun }) {
   if (customModel && pickedModel) return [pickedModel];
+  if (tier && tier.flash4) return ["z-ai/glm-4.7-flash:free"];
   if (tier.kaji) {
     const pool = (longRun || intel.decompose ? (tier.longModels || tier.models) : tier.models) || [];
     const seen = new Set();

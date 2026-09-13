@@ -237,6 +237,7 @@
             <option value="rice">Rice</option>
             <option value="tamago" selected>Tamago</option>
             <option value="hibachi">Hibachi</option>
+            <option value="csai4flash">cs.AI-4-Flash</option>
             <option value="csai4air">cs.AI-4.0-Air</option>
             <option value="chopcode">csCode-Pro</option>
             <option value="wagyua1">Wagyu A1</option>
@@ -257,7 +258,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">4.0.4</span>
+  <span class="cursor-footer-ver">4.0.6</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -280,6 +281,7 @@
     rice: { label: 'Rice', maxTokens: 800 },
     tamago: { label: 'Tamago', maxTokens: 2000 },
     hibachi: { label: 'Hibachi', maxTokens: 4000 },
+    csai4flash: { label: 'cs.AI-4-Flash', maxTokens: 1800 },
     wagyu: { label: 'Wagyu A5', maxTokens: 8000 },
     wagyua1: { label: 'Wagyu A1', maxTokens: 2500 },
     wagyua2: { label: 'Wagyu A2', maxTokens: 4000 },
@@ -317,7 +319,9 @@
     max: 'max', maxmode: 'max', csmax: 'max',
     csai4air: 'csai4air', air4: 'csai4air', '4-air': 'csai4air', '4air': 'csai4air',
     'csai-4-air': 'csai4air', 'cs.ai-4-air': 'csai4air', 'cs.ai-4.0-air': 'csai4air',
-    'csai-4.0-air': 'csai4air', '4.0-air': 'csai4air', csai40air: 'csai4air'
+    'csai-4.0-air': 'csai4air', '4.0-air': 'csai4air', csai40air: 'csai4air',
+    csai4flash: 'csai4flash', 'csai-4-flash': 'csai4flash', 'cs.ai-4-flash': 'csai4flash',
+    '4-flash': 'csai4flash', flash4: 'csai4flash', '4flash': 'csai4flash'
   };
   function normalizeTier(id) {
     var key = String(id || '').toLowerCase();
@@ -719,7 +723,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (4.0.4)';
+    if (g) g.textContent = 'Welcome to cs.AI (4.0.6)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -976,12 +980,12 @@
   var SKY_NAMES = {
     rice: 'cs.AI 3.1', tamago: 'cs.AI 3.3-Fast', hibachi: 'cs.AI 3.3-Thinking',
     wagyua1: 'Air II', wagyua2: 'Air III', wagyua3: 'Air VI', wagyua4: 'Air V',
-    wagyua5: 'cs.AI 3.5-Air', csai4air: 'cs.AI-4.0-Air', chopcode: 'csCode-Pro', kaji: 'Kaji', max: 'Max'
+    wagyua5: 'cs.AI 3.5-Air', csai4flash: 'cs.AI-4-Flash', csai4air: 'cs.AI-4.0-Air', chopcode: 'csCode-Pro', kaji: 'Kaji', max: 'Max'
   };
   var SUSHI_NAMES = {
     rice: 'Rice', tamago: 'Tamago', hibachi: 'Hibachi',
     wagyua1: 'Wagyu A1', wagyua2: 'Wagyu A2', wagyua3: 'Wagyu A3', wagyua4: 'Wagyu A4',
-    wagyua5: 'Wagyu A5', csai4air: 'cs.AI-4.0-Air', chopcode: 'ChopCode', kaji: 'Kaji', max: 'Max'
+    wagyua5: 'Wagyu A5', csai4flash: 'cs.AI-4-Flash', csai4air: 'cs.AI-4.0-Air', chopcode: 'ChopCode', kaji: 'Kaji', max: 'Max'
   };
   function plateSkyOn() {
     try {
@@ -1002,6 +1006,7 @@
     { id: 'rice', tag: 'Fast', group: 'Everyday' },
     { id: 'tamago', tag: 'Default', group: 'Everyday' },
     { id: 'hibachi', tag: 'Flagship', group: 'Everyday' },
+    { id: 'csai4flash', tag: 'Flash', group: 'Everyday' },
     { id: 'csai4air', tag: 'Best', group: 'PRO' },
     { id: 'chopcode', tag: 'Code', group: 'PRO' },
     { id: 'wagyua1', tag: 'A1', group: 'Wagyu' },
@@ -1015,13 +1020,13 @@
   function plateGroups() {
     return plateSkyOn()
       ? [
-          { label: 'cs.AI', ids: ['rice', 'tamago', 'hibachi'] },
+          { label: 'cs.AI', ids: ['rice', 'tamago', 'hibachi', 'csai4flash'] },
           { label: 'PRO', ids: ['csai4air', 'chopcode'] },
           { label: 'Air', ids: ['wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
           { label: 'Apps', ids: ['kaji', 'max'] }
         ]
       : [
-          { label: 'Everyday', ids: ['rice', 'tamago', 'hibachi'] },
+          { label: 'Everyday', ids: ['rice', 'tamago', 'hibachi', 'csai4flash'] },
           { label: 'PRO', ids: ['csai4air', 'chopcode'] },
           { label: 'Wagyu', ids: ['wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
           { label: 'Apps', ids: ['kaji', 'max'] }
@@ -1175,7 +1180,7 @@
     return info;
   }
   function showTier() {
-    var ver = '4.0.4';
+    var ver = '4.0.6';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
@@ -1903,7 +1908,6 @@
     }
 
     if (!wrap.childNodes.length) wrap.textContent = text;
-    appendSources(wrap, sources);
     return wrap;
   }
 

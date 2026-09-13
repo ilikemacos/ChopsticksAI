@@ -1,11 +1,11 @@
 {
-  "latest": "4.0.4",
+  "latest": "4.0.6",
   "product": "cs.AI online",
   "edition": "online",
   "releases": {
     "stable": {
-      "zip": "chopsticksAI-v4.0.4.zip",
-      "sha256": "22edee3a227d94debb91331ab02fa5dc29e2fcd93d28138531950bf6b2318d9e"
+      "zip": "chopsticksAI-v4.0.6.zip",
+      "sha256": "438b396a34fa37220d207ecabc735ef9021e8c112738b185a9b81b49fcba2060"
     }
   }
 }
