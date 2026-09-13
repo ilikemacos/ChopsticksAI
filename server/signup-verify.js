@@ -12,7 +12,12 @@ function env(name) {
 }
 
 function signupSecret() {
-  return env("CHOPSTICKS_AI_SIGNUP_HMAC_SECRET") || env("FATHOM_PRO_HMAC_SECRET") || null;
+  return (
+    env("CHOPSTICKS_AI_SIGNUP_HMAC_SECRET") ||
+    env("FATHOM_PRO_HMAC_SECRET") ||
+    env("SUPABASE_ANON_KEY") ||
+    null
+  );
 }
 
 function loginSecret() {
@@ -277,6 +282,9 @@ async function handleSignupSendCode(event, payload, rateLimited) {
   if (!signupSecret()) {
     return json(503, { error: "account backend not configured" });
   }
+  if (!env("RESEND_API_KEY")) {
+    return completeSignup(email, password);
+  }
   if (signupSendRateLimited(email)) {
     return json(429, { error: "Wait a minute before requesting another code.", retryInMs: SIGNUP_RESEND_MS });
   }
@@ -297,12 +305,44 @@ async function handleSignupSendCode(event, payload, rateLimited) {
   }
 }
 
+async function publicSignup(email, password) {
+  const url = env("SUPABASE_URL");
+  const anon = env("SUPABASE_ANON_KEY");
+  if (!url || !anon) throw new Error("Account signup is not configured on this host.");
+  const res = await fetch(`${url}/auth/v1/signup`, {
+    method: "POST",
+    headers: {
+      apikey: anon,
+      authorization: `Bearer ${anon}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      email: normalizeEmail(email),
+      password,
+    }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const raw = body.msg || body.message || body.error_description || body.error || "Could not create account";
+    const msg = typeof raw === "string" ? raw : JSON.stringify(raw);
+    if (/already|exists|registered/i.test(msg)) {
+      throw new Error(GENERIC_AUTH);
+    }
+    throw new Error(GENERIC_AUTH);
+  }
+  return body;
+}
+
 async function completeSignup(email, password) {
-  if (!env("SUPABASE_URL") || !env("SUPABASE_SERVICE_ROLE_KEY")) {
+  if (!env("SUPABASE_URL") || !(env("SUPABASE_SERVICE_ROLE_KEY") || env("SUPABASE_ANON_KEY"))) {
     return json(503, { error: "account backend not configured" });
   }
   try {
-    await adminCreateUser(email, password);
+    if (env("SUPABASE_SERVICE_ROLE_KEY")) {
+      await adminCreateUser(email, password);
+    } else {
+      await publicSignup(email, password);
+    }
   } catch {
     return json(400, { error: GENERIC_AUTH });
   }
