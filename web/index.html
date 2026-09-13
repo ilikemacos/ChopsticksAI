@@ -105,19 +105,18 @@
   <div class="auth-card">
     <h2 id="auth-title">cs.AI account</h2>
     <div id="auth-guest">
-    <p>Sign in with email. Syncs chats and allowance across devices.</p>
+    <p>Sign in with email and password. Create account with email, username, and password.</p>
     <p class="auth-hint">Need more tokens? <a href="/chopsticks-ai/web/upgrades/">Open upgrades</a> to redeem Fathom Pro keys or talk to sales.</p>
     <label for="auth-email">Email</label>
-    <input id="auth-email" type="email" autocomplete="username" placeholder="you@example.com">
+    <input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com">
+    <label for="auth-username">Username</label>
+    <input id="auth-username" type="text" autocomplete="username" placeholder="yourname" maxlength="24">
     <label for="auth-password">Password</label>
     <div class="auth-pass-row">
       <input id="auth-password" type="password" autocomplete="current-password" placeholder="••••••••" minlength="6">
       <button type="button" class="auth-pass-toggle" id="auth-pass-toggle">Show</button>
     </div>
-    <p class="auth-hint">Create account sends a 6-digit code to your email (expires in 10 minutes). Sign in is email and password.</p>
     <p class="auth-hint">Forgot password? Email <a href="mailto:chopstickshq@lam.ws?subject=Forgot%20cs.AI%20password">chopstickshq@lam.ws</a> — we don’t send reset links yet.</p>
-    <label for="auth-code" id="auth-code-label" hidden>Verification code</label>
-    <input id="auth-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code" hidden>
     </div>
     <div id="auth-member" hidden>
       <p id="auth-member-email">Signed in</p>
@@ -258,7 +257,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">4.0.6</span>
+  <span class="cursor-footer-ver">4.0.7</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -272,7 +271,7 @@
 <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js" defer></script>
 <script src="/js/theme.js"></script>
 <script src="/js/chopsticks-ai-kb.js" defer></script>
-<script src="/js/chopsticks-ai-cloud.js?v=20260828-375b"></script>
+<script src="/js/chopsticks-ai-cloud.js?v=20260913-signup"></script>
 <script>
 (function () {
   'use strict';
@@ -723,7 +722,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (4.0.6)';
+    if (g) g.textContent = 'Welcome to cs.AI (4.0.7)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -1180,7 +1179,7 @@
     return info;
   }
   function showTier() {
-    var ver = '4.0.6';
+    var ver = '4.0.7';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
@@ -2357,21 +2356,12 @@
     var err = document.getElementById('auth-err');
     var ok = document.getElementById('auth-ok');
     var email = document.getElementById('auth-email');
+    var user = document.getElementById('auth-username');
     var pass = document.getElementById('auth-password');
-    var code = document.getElementById('auth-code');
-    var codeLabel = document.getElementById('auth-code-label');
-    var signupToken = '';
-    function showCodeField(on) {
-      if (code) code.hidden = !on;
-      if (codeLabel) codeLabel.hidden = !on;
-      if (on && code) code.focus();
-    }
     function open() {
       if (!modal) return;
       err.textContent = '';
       ok.textContent = '';
-      showCodeField(false);
-      signupToken = '';
       updateAccountUI();
       modal.classList.add('is-open');
       email && email.focus();
@@ -2427,34 +2417,28 @@
       ok.textContent = '';
       var emailVal = email.value.trim();
       var passVal = pass.value;
-      var codeVal = code ? String(code.value || '').trim() : '';
-      if (signupToken && codeVal) {
-        Cloud.verifySignup(emailVal, passVal, codeVal, signupToken)
-          .then(function (r) {
-            if (r && r.needsConfirm) {
-              ok.textContent = r.message || 'Account created. Sign in.';
-              return;
-            }
-            ok.textContent = 'Account created. Loading…';
-            updateAccountUI();
-            return loadAccountChats(true);
-          })
-          .then(function () {
-            if (ok.textContent.indexOf('Loading') >= 0) {
-              ok.textContent = 'Account ready.';
-              setTimeout(close, 700);
-            }
-          })
-          .catch(function (e) { err.textContent = e.message || 'Sign up failed'; });
+      var userVal = user ? String(user.value || '').trim() : '';
+      if (!userVal) {
+        err.textContent = 'Choose a username.';
         return;
       }
-      Cloud.sendSignupCode(emailVal, passVal)
+      Cloud.signUp(emailVal, passVal, userVal)
         .then(function (r) {
-          signupToken = (r && r.signupToken) || '';
-          showCodeField(true);
-          ok.textContent = 'Check your email for a 6-digit code (and spam). It expires in 10 minutes.';
+          if (r && r.needsConfirm) {
+            ok.textContent = r.message || 'Account created. Sign in.';
+            return;
+          }
+          ok.textContent = 'Account created. Loading…';
+          updateAccountUI();
+          return loadAccountChats(true);
         })
-        .catch(function (e) { err.textContent = e.message || 'Could not send code'; });
+        .then(function () {
+          if (ok.textContent.indexOf('Loading') >= 0) {
+            ok.textContent = 'Account ready.';
+            setTimeout(close, 700);
+          }
+        })
+        .catch(function (e) { err.textContent = e.message || 'Sign up failed'; });
     });
     document.getElementById('auth-signout').addEventListener('click', function () {
       Cloud.signOut().then(function () {

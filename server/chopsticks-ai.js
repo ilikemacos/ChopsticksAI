@@ -204,7 +204,7 @@ TIERS.csai4flash = {
   maxReply: 1800,
   grounding: 4,
   searchMax: 4,
-  timeoutMs: 16000,
+  timeoutMs: 24000,
   temperature: 0.18,
 };
 const TIER_ALIASES = {
@@ -1060,7 +1060,7 @@ const CHOPCODE_PAIR_SYSTEM = [
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const OFOX_URL = "https://api.ofox.ai/v1/chat/completions";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_TIMEOUT_MS || 18000);
+const TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_TIMEOUT_MS || 24000);
 const REFINE_MIN_MS = 5000;
 const LONG_REPLY_TOKENS = 800;
 const REFINE_RESERVE_MS = 6000;
@@ -1080,8 +1080,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "4.0.6";
-const PREVIEW_APP_VERSION = "4.0.6";
+const APP_VERSION = "4.0.7";
+const PREVIEW_APP_VERSION = "4.0.7";
 const STACK_NAME = "cs.AI-4";
 
 function appVersionFor(account) {
@@ -1544,14 +1544,10 @@ function isCodingTask(text) {
 }
 
 function answerWhenModelsFail(turns, lastUser, webBundle, payload) {
-  const liveOnly = payload ? clientWantsLiveOnly(payload) : false;
-  const coding = isCodingTask((lastUser && lastUser.content) || retrievalQuery(turns));
-  if (!liveOnly && !coding) {
-    const kbQuery = retrievalQuery(turns) || (lastUser && lastUser.content);
-    const kbAnswer = kbFallbackAnswer(kbQuery) || kbBestEffortAnswer(kbQuery);
-    if (kbAnswer) {
-      return { reply: kbAnswer, mode: "live" };
-    }
+  const kbQuery = retrievalQuery(turns) || (lastUser && lastUser.content);
+  const kbAnswer = kbFallbackAnswer(kbQuery) || kbBestEffortAnswer(kbQuery);
+  if (kbAnswer) {
+    return { reply: kbAnswer, mode: "live" };
   }
 
   const follow = String((lastUser && lastUser.content) || "").trim();
@@ -1560,20 +1556,18 @@ function answerWhenModelsFail(turns, lastUser, webBundle, payload) {
   const names = namesFromSearchContext(context);
   const priorAssistant = [...(turns || [])].reverse().find((m) => m.role === "assistant");
 
-  const bits = [];
   if (wantNames && names.length) {
-    bits.push("Names that show up in this thread:\n\n" + names.map((n) => "• " + n).join("\n"));
-  } else if (priorAssistant && priorAssistant.content && isThinFollowUp(follow)) {
-    bits.push(stripSourcesFromReply(String(priorAssistant.content).slice(0, 1800)));
-    bits.push("That’s the last pass I had. Try sending the question again.");
+    return {
+      reply: "Names in this thread:\n\n" + names.map((n) => "• " + n).join("\n"),
+      mode: "live",
+    };
   }
-
-  if (bits.length) {
-    return { reply: stripSourcesFromReply(bits.join("\n\n")), mode: "live" };
+  if (priorAssistant && priorAssistant.content && isThinFollowUp(follow)) {
+    return { reply: stripSourcesFromReply(String(priorAssistant.content).slice(0, 1800)), mode: "live" };
   }
 
   return {
-    reply: "The live model dropped on that turn. Ask once more in this same thread — I’ll keep the topic and go specific (names, numbers, steps).",
+    reply: "Send that again and I’ll continue from here.",
     mode: "live",
   };
 }
@@ -2205,7 +2199,7 @@ function selfFacts(tier, appVersion) {
     "- You answer general questions on any topic, and are the in-house expert on Chopsticks HQ software.",
     "- You need no OpenRouter API key from the user; Fathom Pro unlock keys can be redeemed as usage credits in the Usage tab.",
     "- cs.AI Enterprise is for large companies: custom usage, seats, invoice/PO, SSO reviewed on request. There is no public price. Direct orgs to https://chopstickshq.com/chopsticks-ai/enterprise/ and chopstickshq@lam.ws (subject: cs.AI Enterprise). Do not invent certifications or a checkout URL.",
-    "- Email sign-in is password. Create account emails a 6-digit code (10 minutes) from chopstickshq@lam.ws to the address they typed.",
+    "- Email sign-in is email and password. Create account is email, username, and password — no email code.",
     "- You are available on every page of chopstickshq.com, in ChopsticksAI at /chopailab, and inside MacBar's Chat tab.",
     "- Retrieval is hybrid keyword + BM25 + entity matching on HQ knowledge, plus ranked live web evidence. There is no vector index.",
     "- Do not name or speculate about any underlying model, provider or vendor.",
@@ -3011,7 +3005,16 @@ async function callAnthropicModel({ model, messages, key, signal, maxTokens, tem
   }
 }
 
-async function callChatModel({
+function isRetryableModelFail(r, signal) {
+  if (signal && signal.aborted) return false;
+  if (!r || r.ok) return false;
+  const st = Number(r.status) || 0;
+  if (st === 400 || st === 401 || st === 402 || st === 403 || st === 404) return false;
+  if (/not configured/i.test(String((r && r.detail) || ""))) return false;
+  return true;
+}
+
+async function callChatModelOnce({
   model,
   messages,
   openRouterKey,
@@ -3076,6 +3079,50 @@ async function callChatModel({
     temperature,
     tools,
     toolChoice,
+  });
+}
+
+async function callChatModel(opts) {
+  const signal = opts && opts.signal;
+  let last = await callChatModelOnce(opts);
+  for (let i = 0; i < 2 && isRetryableModelFail(last, signal); i++) {
+    const wait = last.status === 429 ? 420 + i * 220 : 130 + i * 140;
+    await new Promise((resolve) => setTimeout(resolve, wait));
+    if (signal && signal.aborted) break;
+    last = await callChatModelOnce(opts);
+  }
+  return last;
+}
+
+const DURABLE_FALLBACKS = (groqKey) => [
+  GLM_FLASH,
+  GLM52,
+  ...(groqKey ? ["groq/llama-3.1-8b-instant", "groq/llama-3.3-70b-versatile"] : []),
+  "openrouter/free",
+  "google/gemma-4-26b-a4b-it:free",
+  "nvidia/nemotron-3-nano-30b-a3b:free",
+];
+
+async function firstOkChat(calls) {
+  if (!calls.length) return null;
+  return await new Promise((resolve) => {
+    let pending = calls.length;
+    let settled = false;
+    for (const run of calls) {
+      Promise.resolve()
+        .then(run)
+        .then((r) => {
+          if (!settled && r && r.ok && r.text) {
+            settled = true;
+            resolve(r);
+          }
+        })
+        .catch(() => {})
+        .finally(() => {
+          pending -= 1;
+          if (!pending && !settled) resolve(null);
+        });
+    }
   });
 }
 
@@ -3863,13 +3910,13 @@ async function handler(event, context) {
     }
   }
 
-  const RESCUE_RESERVE_MS = 7000;
+  const RESCUE_RESERVE_MS = 2800;
   const PAIR_RESERVE_MS = 0;
-  const platformLeft = Math.max(8000, (tier.timeoutMs || TIMEOUT_MS) - searchMs);
-  const modelWindow = Math.min(tier.timeoutMs || TIMEOUT_MS, platformLeft, 22000);
+  const platformLeft = Math.max(10000, (tier.timeoutMs || TIMEOUT_MS) - searchMs);
+  const modelWindow = Math.min(tier.timeoutMs || TIMEOUT_MS, platformLeft, 25000);
   const deadline = Date.now() + modelWindow;
   const modelDeadline = deadline - RESCUE_RESERVE_MS - PAIR_RESERVE_MS;
-  const ATTEMPT_CAP_MS = Math.min(12000, Math.max(6500, tier.timeoutMs || TIMEOUT_MS));
+  const ATTEMPT_CAP_MS = Math.min(9000, Math.max(5500, Math.floor((tier.timeoutMs || TIMEOUT_MS) * 0.4)));
   const withTimeout = (ms) => {
     const c = new AbortController();
     const t = setTimeout(() => c.abort(), Math.max(500, ms));
@@ -3911,7 +3958,7 @@ async function handler(event, context) {
       });
     }
     const chain = (hasImageInput && !customModel
-      ? [IMAGE_INPUT_MODEL]
+      ? [IMAGE_INPUT_MODEL, GLM_FLASH, GLM52, "openrouter/free"]
       : (kajiResume && kajiResume.model && isHqOpenRouterAllowed(kajiResume.model)
       ? [kajiResume.model]
       : routeModels({
@@ -3924,7 +3971,7 @@ async function handler(event, context) {
     })))
       .filter((m) => !isGroqModelId(m) || groqKey)
       .filter((m) => customModel || isHqOpenRouterAllowed(m))
-      .slice(0, customModel || kajiResume || hasImageInput ? 1 : (tier.chopCode || tier.kaji ? 4 : 3));
+      .slice(0, kajiResume ? 1 : (hasImageInput ? 4 : (customModel ? 2 : 8)));
 
     const slimFast = fitContext(
       {
@@ -3951,7 +3998,7 @@ async function handler(event, context) {
       maxMode: maxModeOn,
     });
     const fastPromise = (async () => {
-      if (hasImageInput || runTeam || budget.skipFastRace || tier.kaji || tier.flash4) return null;
+      if (hasImageInput || runTeam || budget.skipFastRace || tier.kaji) return null;
       for (const m of fastModels) {
         if (deadline - Date.now() < 1400) return null;
         const g = withTimeout(Math.min(4200, deadline - Date.now() - 200));
@@ -3987,7 +4034,7 @@ async function handler(event, context) {
         groqKey,
         anthropicKey,
         maxTokens: replyTokens,
-        deadlineMs: Math.min(deadline, modelDeadline + 1500),
+        deadlineMs: Math.min(Date.now() + 9000, deadline, modelDeadline + 1500),
         clockHuman: clock.human,
         isoDay: clock.isoDay,
       });
@@ -4025,12 +4072,12 @@ async function handler(event, context) {
         ? groqNativeModelId(candidate)
         : candidate.split("/").slice(1).join("/");
       const msLeft = modelDeadline - Date.now();
-      if (msLeft <= (tier.chopCode ? 400 : 1500)) break;
+      if (msLeft <= 700) break;
       const share = ci === 0
-        ? Math.floor(msLeft * 0.75)
-        : msLeft - 400;
-      const reserveRetry = useTools ? Math.min(3500, Math.floor(share * 0.35)) : 0;
-      const budgetMs = Math.min(ATTEMPT_CAP_MS, Math.max(2500, share - reserveRetry));
+        ? Math.floor(msLeft * (tier.flash4 ? 0.55 : 0.62))
+        : Math.max(1600, Math.floor(msLeft / Math.max(1, chain.length - ci)) - 200);
+      const reserveRetry = useTools ? Math.min(2200, Math.floor(share * 0.28)) : 0;
+      const budgetMs = Math.min(ATTEMPT_CAP_MS, Math.max(1600, share - reserveRetry));
       let r;
       const attemptStart = Date.now();
       const tryCall = async (ms, withTools) => {
@@ -4062,11 +4109,11 @@ async function handler(event, context) {
           r = await tryCall(Math.min(left, Math.max(reserveRetry, 3500)), false);
         }
       }
-      if (!r.ok && (r.status === 429 || r.status === 503)) {
-        const left = modelDeadline - Date.now() - 300;
-        if (left > 2500) {
-          await sleep(300);
-          r = await tryCall(Math.min(left, 7000), false);
+      if (!r.ok && (r.status === 429 || r.status === 503 || r.status === 502 || r.status === 504 || !r.status)) {
+        const left = modelDeadline - Date.now() - 200;
+        if (left > 1400) {
+          await sleep(r.status === 429 ? 450 : 180);
+          r = await tryCall(Math.min(left, 6500), false);
         }
       }
       if (r.ok && (r.text || (r.toolCalls && r.toolCalls.length))) {
@@ -4147,38 +4194,32 @@ async function handler(event, context) {
         ),
       };
       const slimMessages = fitContext(slimSystem, modelTurns, 12000);
-      const rescues = customModel
-        ? []
-        : [
-          ...(groqKey ? ["groq/llama-3.1-8b-instant"] : []),
-          "openrouter/free",
-          "google/gemma-4-26b-a4b-it:free",
-        ];
-      for (const rescue of rescues) {
-        const left = deadline - Date.now() - 200;
-        if (left < 2000) break;
-        const slice = Math.min(4500, left);
+      const left = deadline - Date.now() - 150;
+      if (left > 900) {
+        const slice = Math.min(4200, left);
         const gR = withTimeout(slice);
         try {
-          const r = await callChatModel({
-            model: rescue,
-            messages: slimMessages,
-            openRouterKey: apiKey,
-            groqKey,
-            anthropicKey,
-            signal: gR.signal,
-            maxTokens: Math.min(350, replyTokens),
-            temperature: 0.3,
-          });
-          if (r.ok && r.text) {
-            draft = r;
-            draftModel = rescue;
-            break;
+          const raced = await firstOkChat(
+            DURABLE_FALLBACKS(groqKey).map((rescue) => async () => {
+              const r = await callChatModelOnce({
+                model: rescue,
+                messages: slimMessages,
+                openRouterKey: apiKey,
+                groqKey,
+                anthropicKey,
+                signal: gR.signal,
+                maxTokens: Math.min(500, replyTokens),
+                temperature: 0.3,
+              });
+              return r && r.ok && r.text ? { ...r, model: rescue } : r;
+            })
+          );
+          if (raced && raced.text) {
+            draft = raced;
+            draftModel = raced.model;
           }
-          lastStatus = r.status || lastStatus;
-          lastDetail = (r.detail || lastDetail || "") + ` [rescue:${rescue.split("/")[1]}]`;
         } catch (e) {
-          lastDetail = String(e && e.name) + ` [rescue:${rescue.split("/")[1]}]`;
+          lastDetail = String(e && e.name) + " [rescue-race]";
         } finally {
           gR.done();
         }
@@ -4192,32 +4233,38 @@ async function handler(event, context) {
         replyTokens, msLeft: deadline - Date.now(),
       });
       const panicLeft = deadline - Date.now();
-      if (!customModel && panicLeft > 1800 && !tier.groqOnly) {
-        const gP = withTimeout(panicLeft - 300);
-        try {
-          const r = await callChatModel({
-            model: groqKey ? "groq/llama-3.1-8b-instant" : "openrouter/free",
-            messages: fitContext(
-              {
-                role: "system",
-                content: systemPrompt(
-                  kbFacts(2),
-                  payload.mode, "", tier, language, appVer, maxModeOn
-                ),
-              },
-              modelTurns,
-              10000
+      if (panicLeft > 500) {
+        const gP = withTimeout(panicLeft - 80);
+        const panicMessages = fitContext(
+          {
+            role: "system",
+            content: systemPrompt(
+              kbFacts(2),
+              payload.mode, "", tier, language, appVer, maxModeOn
             ),
-            openRouterKey: apiKey,
-            groqKey,
-            anthropicKey,
-            signal: gP.signal,
-            maxTokens: Math.min(320, replyTokens),
-            temperature: 0.35,
-          });
-          if (r.ok && r.text) {
-            draft = r;
-            draftModel = groqKey ? "groq/llama-3.1-8b-instant" : "openrouter/free";
+          },
+          modelTurns,
+          8000
+        );
+        try {
+          const raced = await firstOkChat(
+            DURABLE_FALLBACKS(groqKey).map((m) => async () => {
+              const r = await callChatModelOnce({
+                model: m,
+                messages: panicMessages,
+                openRouterKey: apiKey,
+                groqKey,
+                anthropicKey,
+                signal: gP.signal,
+                maxTokens: Math.min(400, replyTokens),
+                temperature: 0.25,
+              });
+              return r && r.ok && r.text ? { ...r, model: m } : r;
+            })
+          );
+          if (raced && raced.text) {
+            draft = raced;
+            draftModel = raced.model;
           }
         } catch (e) {
           lastDetail = String(e && e.name) + " [panic]";
@@ -4339,7 +4386,7 @@ async function handler(event, context) {
     queueUsageEmail(plan, spentResult, account);
 
     if (!reply && !producedFiles.length) {
-      return json(200, { reply: "I didn't get a usable answer back — try rephrasing?", mode: "empty" });
+      return json(200, { reply: "Send that again and I’ll continue from here.", mode: "empty" });
     }
     if (!reply && producedFiles.length) {
       reply = ensureFileFences("Created " + producedFiles.length + " file(s).", producedFiles);

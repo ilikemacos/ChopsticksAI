@@ -87,46 +87,19 @@ final class AuthStore: ObservableObject {
         }
     }
 
-    func sendSignupCode(email: String, password: String) async throws -> String {
-        busy = true
-        defer { busy = false }
-        let obj = try await apiRequest(action: "signupSendCode", body: [
-            "email": email,
-            "password": password,
-        ])
-        guard let token = obj["signupToken"] as? String, !token.isEmpty else {
-            throw NSError(
-                domain: "cs.AIAuth",
-                code: 400,
-                userInfo: [NSLocalizedDescriptionKey: obj["error"] as? String ?? "Could not send verification email."]
-            )
-        }
-        UserDefaults.standard.set(token, forKey: "chopsticksAI.pendingSignupToken")
-        UserDefaults.standard.set(email, forKey: "chopsticksAI.pendingSignupEmail")
-        statusMessage = "Check your email for a 6-digit code (and spam). It expires in 10 minutes."
-        return token
+    func sendSignupCode(email: String, password: String, username: String = "") async throws -> String {
+        try await signUp(email: email, password: password, username: username)
+        return ""
     }
 
-    func signUp(email: String, password: String, code: String? = nil, signupToken: String? = nil) async throws {
+    func signUp(email: String, password: String, username: String, code: String? = nil, signupToken: String? = nil) async throws {
         busy = true
         defer { busy = false }
         if session != nil { await signOut() }
-        let token = signupToken
-            ?? UserDefaults.standard.string(forKey: "chopsticksAI.pendingSignupToken")
-            ?? ""
-        let digits = (code ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !digits.isEmpty, !token.isEmpty else {
-            throw NSError(
-                domain: "cs.AIAuth",
-                code: 400,
-                userInfo: [NSLocalizedDescriptionKey: "Enter the 6-digit code from your email."]
-            )
-        }
-        let obj = try await apiRequest(action: "signupVerify", body: [
+        let obj = try await apiRequest(action: "signupSendCode", body: [
             "email": email,
             "password": password,
-            "code": digits,
-            "signupToken": token,
+            "username": username,
         ])
         if let access = obj["access_token"] as? String {
             try applyTokenResponse(obj, access: access)
@@ -139,7 +112,11 @@ final class AuthStore: ObservableObject {
             statusMessage = obj["message"] as? String ?? "Account created. Sign in."
             return
         }
-        throw URLError(.userAuthenticationRequired)
+        throw NSError(
+            domain: "cs.AIAuth",
+            code: 400,
+            userInfo: [NSLocalizedDescriptionKey: obj["error"] as? String ?? "Could not create account."]
+        )
     }
 
     func signIn(email: String, password: String, code: String? = nil, loginToken: String? = nil) async throws {
