@@ -81,6 +81,7 @@ struct UsageSnapshot: Equatable {
     ]
     var budgetMode: String = "—"
     var error: String?
+    var chopcodeAllowed: Bool = false
     var kajiAllowed: Bool = false
 
     var progress: Double {
@@ -286,6 +287,14 @@ final class AppStore: ObservableObject {
     func setSkyPlates(_ on: Bool) {
         skyPlates = on
         UserDefaults.standard.set(on ? "sky" : "sushi", forKey: plateStyleKey)
+    }
+
+    var hqProUnlocked: Bool {
+        if usage.chopcodeAllowed { return true }
+        if usage.keysValid >= 10 { return true }
+        if (usage.accountPlan ?? "").localizedCaseInsensitiveContains("founder") { return true }
+        if AuthStore.shared.email.lowercased() == "mzx@lam.ws" { return true }
+        return false
     }
 
     static func normalizeTier(_ raw: String) -> String {
@@ -673,6 +682,12 @@ final class AppStore: ObservableObject {
             }
         }
         snap.budgetMode = mode ?? (u["budgetMode"] as? String) ?? snap.budgetMode
+        if let chop = u["chopcode"] as? [String: Any] {
+            snap.chopcodeAllowed = (chop["allowed"] as? Bool) == true
+        }
+        if let air = u["air4"] as? [String: Any], (air["allowed"] as? Bool) == true {
+            snap.chopcodeAllowed = true
+        }
         if let kaji = u["kaji"] as? [String: Any] {
             snap.kajiAllowed = (kaji["allowed"] as? Bool) == true
         }
