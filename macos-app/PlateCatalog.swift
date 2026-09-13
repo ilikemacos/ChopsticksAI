@@ -3,10 +3,14 @@ import Foundation
 enum PlateCatalog {
     static let ids = [
         "rice", "tamago", "hibachi",
-        "csai4air",
+        "csai4air", "chopcode",
         "wagyua1", "wagyua2", "wagyua3", "wagyua4", "wagyua5",
-        "chopcode", "kaji", "max", "stickercoderplus",
+        "kaji", "max", "stickercoderplus",
     ]
+
+    static func isHqPro(_ id: String) -> Bool {
+        id == "csai4air" || id == "chopcode"
+    }
 
     static func label(_ id: String, sky: Bool) -> String {
         if sky {
@@ -37,7 +41,7 @@ enum PlateCatalog {
         case "wagyua3": return "Wagyu A3"
         case "wagyua4": return "Wagyu A4"
         case "wagyua5": return "Wagyu A5"
-        case "chopcode": return "ChopCode"
+        case "chopcode": return "csCode-Pro"
         case "kaji": return "Kaji"
         case "max": return "Max"
         case "stickercoderplus": return "StickerCoder+"

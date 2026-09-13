@@ -1087,20 +1087,23 @@ struct SettingsView: View {
                         SettingsToggleRow(
                             title: "Sky mode",
                             subtitle: store.skyPlates
-                                ? "On — cs.AI 3.1, 3.3-Fast, 3.3-Thinking, cs.AI-4.0-Air, Air II–VI, 3.5-Air, csCode-Pro."
+                                ? "On — cs.AI 3.1, 3.3-Fast, 3.3-Thinking, PRO (cs.AI-4.0-Air, csCode-Pro), Air II–VI, 3.5-Air."
                                 : "Off — Sushi names (Rice, Tamago, Hibachi, Wagyu).",
                             isOn: Binding(get: { store.skyPlates }, set: { store.setSkyPlates($0) })
                         )
                     }
-                    SettingsCard(title: "Plate", subtitle: "Everyday, then Air/Wagyu, then Apps. ChopCode / csCode-Pro and Kaji are Pro. Kaji is alpha.") {
+                    SettingsCard(title: "Plate", subtitle: "PRO is cs.AI-4.0-Air and csCode-Pro (10 Fathom Pro keys or Founder). Then Air/Wagyu, then Apps. Kaji is alpha (5 keys).") {
                         Group {
                             Text(store.skyPlates ? "cs.AI" : "Everyday").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
                             plateSetting("rice")
                             plateSetting("tamago")
                             plateSetting("hibachi")
                             Divider().overlay(Cursor.hairline)
-                            Text(store.skyPlates ? "Air" : "Wagyu").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
+                            Text("PRO").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
                             plateSetting("csai4air")
+                            plateSetting("chopcode")
+                            Divider().overlay(Cursor.hairline)
+                            Text(store.skyPlates ? "Air" : "Wagyu").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
                             plateSetting("wagyua1")
                             plateSetting("wagyua2")
                             plateSetting("wagyua3")
@@ -1108,7 +1111,6 @@ struct SettingsView: View {
                             plateSetting("wagyua5")
                             Divider().overlay(Cursor.hairline)
                             Text("Apps").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
-                            plateSetting("chopcode")
                             plateSetting("kaji")
                             plateSetting("max")
                             plateSetting("stickercoderplus")
@@ -1318,14 +1320,22 @@ struct SettingsView: View {
 
     @ViewBuilder
     private func plateSetting(_ id: String) -> some View {
+        let locked = PlateCatalog.isHqPro(id) && !store.hqProUnlocked
         Button {
+            if locked { return }
             store.setTier(id)
         } label: {
             HStack {
                 Text(PlateCatalog.label(id, sky: store.skyPlates))
                     .foregroundStyle(Cursor.text)
                 Spacer()
-                if store.tier == id {
+                if locked {
+                    Text("10 keys")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Cursor.muted)
+                    Image(systemName: "lock.fill")
+                        .foregroundStyle(Cursor.muted)
+                } else if store.tier == id {
                     Image(systemName: "checkmark")
                         .foregroundStyle(Cursor.blue)
                 }

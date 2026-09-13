@@ -600,6 +600,16 @@ final class ChatModel: ObservableObject {
             draft = ""
             return
         }
+        if PlateCatalog.isHqPro(store.tier) && !store.hqProUnlocked {
+            mutateActive {
+                $0.lines.append(ChatLine(
+                    role: "assistant",
+                    text: "PRO plates (cs.AI-4.0-Air and csCode-Pro) need 10 Fathom Pro keys in Usage, or a Founder account."
+                ))
+            }
+            draft = ""
+            return
+        }
         let ready = attach.ready
         guard !text.isEmpty || !ready.isEmpty else { return }
         ensureSession()
@@ -2175,13 +2185,18 @@ struct AgentChatView: View {
                                 plateMenuRow(t)
                             }
                         }
+                        Section("PRO") {
+                            ForEach(plates.filter { PlateCatalog.isHqPro($0.id) }, id: \.id) { t in
+                                plateMenuRow(t)
+                            }
+                        }
                         Section(store.skyPlates ? "Air" : "Wagyu") {
-                            ForEach(plates.filter { $0.id == "csai4air" || $0.id.hasPrefix("wagyu") }, id: \.id) { t in
+                            ForEach(plates.filter { $0.id.hasPrefix("wagyu") }, id: \.id) { t in
                                 plateMenuRow(t)
                             }
                         }
                         Section("Apps") {
-                            ForEach(plates.filter { ["chopcode", "kaji", "max"].contains($0.id) }, id: \.id) { t in
+                            ForEach(plates.filter { ["kaji", "max"].contains($0.id) }, id: \.id) { t in
                                 plateMenuRow(t)
                             }
                         }
@@ -2250,12 +2265,16 @@ struct AgentChatView: View {
     }
 
     private func plateMenuRow(_ t: (id: String, label: String)) -> some View {
-        Button {
+        let locked = PlateCatalog.isHqPro(t.id) && !store.hqProUnlocked
+        return Button {
+            if locked { return }
             store.setTier(t.id)
             if t.id == "max" { store.setMaxMode(true) }
         } label: {
             if t.id == store.tier {
                 Label(t.label, systemImage: "checkmark")
+            } else if locked {
+                Label(t.label + " · 10 keys", systemImage: "lock.fill")
             } else {
                 Text(t.label)
             }

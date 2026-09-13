@@ -1,7 +1,16 @@
 {
   "product": "cs.AI",
-  "latest": "4.0.1",
+  "latest": "4.0.2",
   "entries": [
+    {
+      "version": "4.0.2",
+      "date": "2026-09-13",
+      "title": "PRO plates",
+      "changes": [
+        "PRO column: cs.AI-4.0-Air (best) and csCode-Pro — 10 Fathom Pro keys or Founder",
+        "Ship 4.0.2 — stack is cs.AI-4"
+      ]
+    },
     {
       "version": "4.0.1",
       "date": "2026-09-13",

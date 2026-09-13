@@ -237,13 +237,13 @@
             <option value="rice">Rice</option>
             <option value="tamago" selected>Tamago</option>
             <option value="hibachi">Hibachi</option>
+            <option value="csai4air">cs.AI-4.0-Air</option>
+            <option value="chopcode">csCode-Pro</option>
             <option value="wagyua1">Wagyu A1</option>
             <option value="wagyua2">Wagyu A2</option>
             <option value="wagyua3">Wagyu A3</option>
             <option value="wagyua4">Wagyu A4</option>
             <option value="wagyua5">Wagyu A5</option>
-            <option value="csai4air">cs.AI-4.0-Air</option>
-            <option value="chopcode">ChopCode</option>
             <option value="kaji">Kaji</option>
             <option value="max">Max</option>
           </select>
@@ -257,7 +257,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">4.0.1</span>
+  <span class="cursor-footer-ver">4.0.2</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -719,7 +719,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (4.0.1)';
+    if (g) g.textContent = 'Welcome to cs.AI (4.0.2)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -730,7 +730,7 @@
       badge.classList.toggle('offline', offline);
     }
     if (lead) lead.textContent = offline
-      ? 'Ask about MacBar, Fathom, CSR, Doomlike-FPS, or anything else in the bundled product docs.'
+      ? 'Ask about MacBar, Fathom, CSR, or anything else in the bundled product docs.'
       : (plateSkyOn()
         ? 'cs.AI 3.1 is fastest. 3.3-Fast is the default. 3.3-Thinking is the flagship. Air grades need an account. csCode-Pro is the coding plate.'
         : 'Rice is fastest. Tamago is the default. Hibachi is the flagship. Wagyu A1–A5 need an account. ChopCode is the coding plate.');
@@ -991,13 +991,13 @@
     { id: 'rice', tag: 'Fast', group: 'Everyday' },
     { id: 'tamago', tag: 'Default', group: 'Everyday' },
     { id: 'hibachi', tag: 'Flagship', group: 'Everyday' },
+    { id: 'csai4air', tag: 'Best', group: 'PRO' },
+    { id: 'chopcode', tag: 'Code', group: 'PRO' },
     { id: 'wagyua1', tag: 'A1', group: 'Wagyu' },
     { id: 'wagyua2', tag: 'A2', group: 'Wagyu' },
     { id: 'wagyua3', tag: 'A3', group: 'Wagyu' },
     { id: 'wagyua4', tag: 'A4', group: 'Wagyu' },
     { id: 'wagyua5', tag: 'A5', group: 'Wagyu' },
-    { id: 'csai4air', tag: '4.0-Air', group: 'Air' },
-    { id: 'chopcode', tag: 'Code', group: 'Apps' },
     { id: 'kaji', tag: 'Alpha', group: 'Apps' },
     { id: 'max', tag: 'Think', group: 'Apps' }
   ];
@@ -1005,13 +1005,15 @@
     return plateSkyOn()
       ? [
           { label: 'cs.AI', ids: ['rice', 'tamago', 'hibachi'] },
-          { label: 'Air', ids: ['csai4air', 'wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
-          { label: 'Apps', ids: ['chopcode', 'kaji', 'max'] }
+          { label: 'PRO', ids: ['csai4air', 'chopcode'] },
+          { label: 'Air', ids: ['wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
+          { label: 'Apps', ids: ['kaji', 'max'] }
         ]
       : [
           { label: 'Everyday', ids: ['rice', 'tamago', 'hibachi'] },
-          { label: 'Wagyu', ids: ['csai4air', 'wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
-          { label: 'Apps', ids: ['chopcode', 'kaji', 'max'] }
+          { label: 'PRO', ids: ['csai4air', 'chopcode'] },
+          { label: 'Wagyu', ids: ['wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
+          { label: 'Apps', ids: ['kaji', 'max'] }
         ];
   }
   var plateBtn = document.getElementById('plate-btn');
@@ -1025,16 +1027,23 @@
   }
   var chopcodeAllowed = false;
   var kajiAllowed = false;
+  function isHqPro(id) {
+    var t = normalizeTier(id);
+    return t === 'csai4air' || t === 'chopcode';
+  }
   function isWagyu(id) {
     var t = normalizeTier(id);
-    return t === 'wagyu' || t === 'csai4air' || /^wagyua[1-5]$/.test(t);
+    return t === 'wagyu' || /^wagyua[1-5]$/.test(t);
   }
   function wagyuLocked() {
     return !(Cloud && Cloud.isSignedIn && Cloud.isSignedIn());
   }
-  function chopcodeLocked() {
+  function hqProLocked() {
     if (!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn())) return true;
     return !chopcodeAllowed;
+  }
+  function chopcodeLocked() {
+    return hqProLocked();
   }
   function kajiLocked() {
     if (!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn())) return true;
@@ -1045,6 +1054,15 @@
     var prev = normalizeTier(tierSel.value);
     if (isWagyu(id) && wagyuLocked()) {
       if (window.openCsAuth) window.openCsAuth();
+      closePlateMenu();
+      return false;
+    }
+    if (isHqPro(id) && hqProLocked()) {
+      if (!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn()) && window.openCsAuth) window.openCsAuth();
+      if (status) {
+        status.hidden = false;
+        status.textContent = 'PRO plates need 10 Fathom Pro keys in Usage, or a Founder account';
+      }
       closePlateMenu();
       return false;
     }
@@ -1060,15 +1078,6 @@
     if (id === 'kaji') {
       location.href = '/chopsticks-ai/web/kaji/' + (cloudChatId ? ('?chat=' + encodeURIComponent(cloudChatId)) : '');
       return true;
-    }
-    if (id === 'chopcode' && chopcodeLocked()) {
-      if (!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn()) && window.openCsAuth) window.openCsAuth();
-      if (status) {
-        status.hidden = false;
-        status.textContent = chopcodeAllowed
-          ? 'Sign in to use ChopCode'
-          : 'ChopCode needs 5 Fathom Pro keys in Usage (founder rank already has it)';
-      }
     }
     if (!EFFORT[id]) id = 'tamago';
     tierSel.value = id;
@@ -1087,14 +1096,14 @@
   }
   function plateLocked(row) {
     if (isWagyu(row.id)) return wagyuLocked();
-    if (row.id === 'chopcode') return chopcodeLocked();
+    if (isHqPro(row.id)) return hqProLocked();
     if (row.id === 'kaji') return kajiLocked();
     return false;
   }
   function plateLockLabel(row) {
     if (isWagyu(row.id)) return 'Sign in';
-    if (row.id === 'chopcode') return Cloud && Cloud.isSignedIn && Cloud.isSignedIn() ? '5 keys' : 'Sign in';
-    if (row.id === 'kaji') return Cloud && Cloud.isSignedIn && Cloud.isSignedIn() ? 'Pro' : 'Sign in';
+    if (isHqPro(row.id)) return Cloud && Cloud.isSignedIn && Cloud.isSignedIn() ? '10 keys' : 'Sign in';
+    if (row.id === 'kaji') return Cloud && Cloud.isSignedIn && Cloud.isSignedIn() ? '5 keys' : 'Sign in';
     return '';
   }
   function plateRowHtml(row, onId) {
@@ -1129,10 +1138,10 @@
         return '<div class="plate-group">' + g.label + '</div>' +
           rows.map(function (row) { return plateRowHtml(row, p.id); }).join('');
       }).join('') +
-        (isWagyu(p.id) && !wagyuLocked()
+        (isHqPro(p.id)
+          ? '<div class="plate-menu-foot">PRO · cs.AI-4.0-Air is the top plate. Needs 10 Fathom Pro keys or Founder.</div>'
+          : isWagyu(p.id) && !wagyuLocked()
           ? '<div class="plate-menu-foot">' + (sky ? 'Air II–VI and 3.5-Air. Same allowance, more context on higher Air grades.' : 'Wagyu A1–A5 · A5 is the highest grade. Same allowance, more context on higher grades.') + '</div>'
-          : p.id === 'chopcode'
-            ? '<div class="plate-menu-foot">Attach files in the composer. Same chat as the other plates.</div>'
             : p.id === 'kaji'
               ? '<div class="plate-menu-foot">Kaji is a dedicated room. Same signed-in chats as Agents.</div>'
               : '');
@@ -1142,11 +1151,11 @@
       tiles.hidden = true;
     }
     if (plateHint) {
-      plateHint.textContent = (isWagyu(p.id) && !wagyuLocked())
+      plateHint.textContent = isHqPro(p.id)
+        ? (p.name + ' — PRO. 10 Fathom Pro keys or Founder. cs.AI can make mistakes.')
+        : (isWagyu(p.id) && !wagyuLocked())
         ? (p.name + ' — A5 is the highest Wagyu grade. cs.AI can make mistakes.')
-        : (p.id === 'chopcode'
-          ? (plateDisplayName('chopcode') + ' — attach files in the composer. Verify code before you run it.')
-          : 'cs.AI can make mistakes. Verify important info.');
+          : 'cs.AI can make mistakes. Verify important info.';
     }
   }
   function effortInfo() {
@@ -1155,7 +1164,7 @@
     return info;
   }
   function showTier() {
-    var ver = '4.0.1';
+    var ver = '4.0.2';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
@@ -1428,7 +1437,7 @@
   function showUsage(d) {
     if (!usageEl) return;
     lastUsageData = d;
-    var nextAllowed = !!(d && d.usage && d.usage.chopcode && d.usage.chopcode.allowed);
+    var nextAllowed = !!(d && d.usage && ((d.usage.air4 && d.usage.air4.allowed) || (d.usage.chopcode && d.usage.chopcode.allowed)));
     var nextKaji = !!(d && d.usage && d.usage.kaji && d.usage.kaji.allowed);
     if (nextAllowed !== chopcodeAllowed || nextKaji !== kajiAllowed) {
       chopcodeAllowed = nextAllowed;
@@ -1996,9 +2005,9 @@
       if (status) { status.hidden = false; status.textContent = 'Sign in to use Wagyu'; }
       return;
     }
-    if (normalizeTier(tierSel.value) === 'chopcode' && chopcodeLocked()) {
+    if (isHqPro(tierSel.value) && hqProLocked()) {
       if (!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn()) && window.openCsAuth) window.openCsAuth();
-      status.textContent = 'ChopCode needs sign-in and Pro';
+      if (status) { status.hidden = false; status.textContent = 'PRO needs 10 Fathom Pro keys or Founder'; }
       return;
     }
     if (handleSlash(text)) {
