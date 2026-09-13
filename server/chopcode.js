@@ -85,7 +85,7 @@ function friendlyError(status, fallback) {
   }
   if (status === 401) return "Sign in to use ChopCode.";
   if (status === 403) {
-    return `ChopCode is included with Pro. Redeem ${CHOPCODE_PRO_KEYS} Fathom Pro API keys in Usage, then try again.`;
+    return `ChopCode is Pro. Redeem ${CHOPCODE_PRO_KEYS} Fathom Pro API keys in Usage, or use a Founder account.`;
   }
   if (status === 413) {
     return "This request is too large for ChopCode. Shorten the prompt or the code context.";

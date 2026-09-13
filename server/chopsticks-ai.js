@@ -189,7 +189,7 @@ TIERS.csai4air = glmUltraPlate({
   searchMax: 16,
   timeoutMs: 26000,
   temperature: 0.2,
-  extra: { air4: true, team: true },
+  extra: { air4: true, team: true, hqPro: true },
 });
 const TIER_ALIASES = {
   rice: "rice",
@@ -623,18 +623,31 @@ function userBucketId(account) {
   return "user-" + String(account.id).replace(/-/g, "").slice(0, 12);
 }
 
-const CHOPCODE_PRO_KEYS = 5;
+const HQ_PRO_KEYS = 10;
+const CHOPCODE_PRO_KEYS = HQ_PRO_KEYS;
+const KAJI_PRO_KEYS = 5;
 
-function canUseChopCode(account, plan) {
-  if (!account || !account.id) return false;
+function isFounderPlan(account, plan) {
+  if (!account) return false;
   if (account.email === FOUNDER_EMAIL) return true;
   const label = String((account.entitlement && account.entitlement.label) || (plan && plan.account && plan.account.plan) || "").toLowerCase();
-  if (label === "founder") return true;
-  return Number((plan && plan.keysValid) || 0) >= CHOPCODE_PRO_KEYS;
+  return label === "founder";
+}
+
+function canUseHqPro(account, plan) {
+  if (!account || !account.id) return false;
+  if (isFounderPlan(account, plan)) return true;
+  return Number((plan && plan.keysValid) || 0) >= HQ_PRO_KEYS;
+}
+
+function canUseChopCode(account, plan) {
+  return canUseHqPro(account, plan);
 }
 
 function canUseKaji(account, plan) {
-  return canUseChopCode(account, plan);
+  if (!account || !account.id) return false;
+  if (isFounderPlan(account, plan)) return true;
+  return Number((plan && plan.keysValid) || 0) >= KAJI_PRO_KEYS;
 }
 
 function resolvePlan(rawKeys, account, clientId) {
@@ -1045,8 +1058,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "4.0.1";
-const PREVIEW_APP_VERSION = "4.0.1";
+const APP_VERSION = "4.0.2";
+const PREVIEW_APP_VERSION = "4.0.2";
 const STACK_NAME = "cs.AI-4";
 
 function appVersionFor(account) {
@@ -3145,11 +3158,15 @@ function usagePayload(plan, state) {
     version: "2.0",
     chopcode: {
       allowed: canUseChopCode(accountFromPlan(plan), plan),
-      requiresKeys: CHOPCODE_PRO_KEYS,
+      requiresKeys: HQ_PRO_KEYS,
+    },
+    air4: {
+      allowed: canUseHqPro(accountFromPlan(plan), plan),
+      requiresKeys: HQ_PRO_KEYS,
     },
     kaji: {
       allowed: canUseKaji(accountFromPlan(plan), plan),
-      requiresKeys: CHOPCODE_PRO_KEYS,
+      requiresKeys: KAJI_PRO_KEYS,
     },
   };
 }
@@ -3450,11 +3467,12 @@ async function handler(event, context) {
   }
 
   const plan = resolvePlan(unlockKeys, account, who);
-  if (tier.chopCode && !canUseChopCode(account, plan)) {
+  if ((tier.chopCode || tier.air4 || tier.hqPro) && !canUseHqPro(account, plan)) {
     return json(403, {
-      error: "ChopCode is included with Pro. Redeem 5 Fathom Pro API keys in Usage, then try again.",
-      mode: "chopcode_pro",
+      error: `${tier.label} is Pro. Redeem 10 Fathom Pro API keys in Usage, or use a Founder account.`,
+      mode: "hq_pro",
       tier: tier.label,
+      requiresKeys: HQ_PRO_KEYS,
     });
   }
   if (tier.kaji && !canUseKaji(account, plan)) {
@@ -4283,7 +4301,7 @@ module.exports = {
   wantsSearch, parseSearchRequest, webSearch, selfFacts, verifyFathomProUnlock,
   mintFathomProUnlockKey, handleMintUnlockKey,
   resolveCredits, resolvePlan, resolveAccount, usagePayload,
-  canUseChopCode, CHOPCODE_PRO_KEYS, extractAccessToken, clientWho,
+  canUseChopCode, canUseHqPro, CHOPCODE_PRO_KEYS, HQ_PRO_KEYS, extractAccessToken, clientWho,
   budgetPeek, budgetSpend, budgetState, spend,
   callChatModel, clockNow,
   _budget: budget, budgetMode, MAX_CONTEXT_TOKENS, TOKEN_BUDGET, COOLDOWN_MS,
