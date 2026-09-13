@@ -2039,6 +2039,13 @@ struct AgentChatView: View {
                 }
                 .padding(.horizontal, 4)
             }
+            if attachments.hasImage {
+                Text("Image output is unavailable")
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(Cursor.muted)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 4)
+            }
             if !attachments.status.isEmpty {
                 Text(attachments.status)
                     .font(.system(size: 10.5, design: .monospaced))

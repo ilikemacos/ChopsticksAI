@@ -26,6 +26,7 @@ const {
 
 const GLM52 = "z-ai/glm-5.2:free";
 const NEMO_ULTRA = "nvidia/nemotron-3-ultra-550b-a55b:free";
+const IMAGE_INPUT_MODEL = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free";
 
 function glmUltraPlate({
   label, effort, context, maxReply, grounding, searchMax, timeoutMs, temperature, extra,
@@ -1058,8 +1059,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "4.0.3";
-const PREVIEW_APP_VERSION = "4.0.3";
+const APP_VERSION = "4.0.4";
+const PREVIEW_APP_VERSION = "4.0.4";
 const STACK_NAME = "cs.AI-4";
 
 function appVersionFor(account) {
@@ -1134,7 +1135,44 @@ const DEBUG_ENABLED = (process.env.CHOPSTICKS_AI_DEBUG || "0") === "1";
 
 /** ~4 chars per token, deliberately an over-estimate so trimming fires early
  *  rather than letting OpenRouter reject an oversized request. */
-const estimateTokens = (text) => Math.max(1, Math.ceil(String(text || "").length / 4));
+const estimateTokens = (text) => {
+  if (Array.isArray(text)) {
+    let n = 0;
+    for (const part of text) {
+      if (part && (part.type === "image_url" || part.image_url)) n += 800;
+      else n += Math.ceil(String((part && part.text) || "").length / 4);
+    }
+    return Math.max(1, n);
+  }
+  return Math.max(1, Math.ceil(String(text || "").length / 4));
+};
+
+function imageInputAttachments(attachments) {
+  return (attachments || [])
+    .filter((a) => /^image\//i.test(String(a.mime || "")) && /^https?:\/\//i.test(String(a.url || "")))
+    .slice(0, 8);
+}
+
+function wantsImageOutput(text) {
+  return /\b(generate|create|draw|make|render|imagine|paint|design|output)\b[\s\S]{0,80}\b(image|picture|photo|illustration|logo|icon|artwork|png|jpe?g|webp)\b|\b(text[- ]to[- ]image|image gen(eration)?)\b/i.test(String(text || ""));
+}
+
+function applyImageInputToMessages(messages, imageAtts) {
+  if (!imageAtts.length) return;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (!messages[i] || messages[i].role !== "user") continue;
+    const raw = messages[i].content;
+    const text = typeof raw === "string" ? raw : messageText({ content: raw });
+    messages[i] = {
+      ...messages[i],
+      content: [
+        { type: "text", text: text || "Look at the attached image(s)." },
+        ...imageAtts.map((a) => ({ type: "image_url", image_url: { url: a.url } })),
+      ],
+    };
+    break;
+  }
+}
 const messageTokens = (m) => estimateTokens(m.content) + 4;
 
 /** Drops the oldest turns until system prompt + history fits the window. The
@@ -2128,6 +2166,7 @@ function selfFacts(tier, appVersion) {
     `- Free usage allowance: ${TOKEN_BUDGET.toLocaleString()} tokens, then a ${Math.round(COOLDOWN_MS / 3600000)}-hour cooldown.`,
     "- Upgrades: sign in and redeem Fathom Pro oi-pl2- keys at https://chopstickshq.com/chopsticks-ai/web/upgrades/ (2 keys → 800k + 2h30m; 5 keys → 900k + 2h + ChopCode + Kaji; 10 keys → 1m + 1h). Not OpenRouter keys.",
     `- Rate limit: ${RATE_MAX} requests per minute per visitor.`,
+    "- You can look at images the user attaches. Image output is unavailable: you cannot generate, edit, or return images. If they ask for a generated picture, say image output is unavailable and offer a text description instead.",
     "- You search with the Chromium engine on each question (unless the user turns search off) so answers reflect information as of the current date. Cite sources when you use them.",
     "- The macOS app and web app include a built-in Chromium browser rail whose home page is https://chopstickshq.com; standalone search is at https://chopstickshq.com/chopsticks-ai/#search. Queries mentioning chopsticks prioritize chopstickshq.com in results.",
     "- You answer general questions on any topic, and are the in-house expert on Chopsticks HQ software.",
@@ -2261,6 +2300,7 @@ function systemPrompt(grounding, mode, web, tier, language, appVersion, maxMode)
     "- For math and logic: compute carefully, then state the final result clearly. Recheck arithmetic before sending.\n",
     "- For code: complete runnable files in fenced blocks with a language tag and filename. Include imports. Do not leave TODOs or ellipses.\n",
     "- Do not refuse ordinary knowledge, coding, or analysis questions. Stay on the task.\n",
+    "- Image output is unavailable. Never claim you created, edited, or attached an image. Describe attached photos in text only.\n",
     "- You are " + STACK_NAME + " (chopsticksAI), made by Chopsticks HQ. If asked what model, ",
     "engine or company is behind you, say you are " + STACK_NAME + " by Chopsticks ",
     "HQ. Never name or speculate about any underlying model, provider or vendor.\n",
@@ -3599,6 +3639,8 @@ async function handler(event, context) {
     path: String((a && a.path) || "").slice(0, 500),
     text: typeof (a && a.text) === "string" ? String(a.text).slice(0, 200000) : "",
   })).filter((a) => a.name);
+  const imageAtts = imageInputAttachments(attachments);
+  const hasImageInput = imageAtts.length > 0;
   if (attachments.length) {
     const lines = attachments.map((a, i) => {
       const sz = a.size >= 1024 * 1024 * 1024
@@ -3613,7 +3655,7 @@ async function handler(event, context) {
       if (a.text) {
         block += `\n   --- file text preview ---\n${a.text}\n   --- end preview ---`;
       } else if (/^image\//.test(String(a.mime || ""))) {
-        block += "\n   (image attached — describe using the filename/URL; do not invent pixel details)";
+        block += "\n   (image attached — look at the pixels; image output is unavailable)";
       } else {
         block += "\n   (binary/large file — use the URL/name; contents not inlined)";
       }
@@ -3622,6 +3664,15 @@ async function handler(event, context) {
     lastUser.content = (String(lastUser.content || "") +
       "\n\nATTACHED FILES (uploaded by the user for this turn):\n" + lines.join("\n"))
       .slice(0, 220000);
+  }
+  if (wantsImageOutput(lastUser.content) && !hasImageInput) {
+    return json(200, {
+      reply: "Image output is unavailable. I can look at images you attach, but I cannot generate or edit pictures.",
+      mode: "live",
+      appVersion: appVer,
+      model: "cs.AI " + appVer,
+      tier: tier.label,
+    });
   }
 
   const now = Date.now();
@@ -3754,6 +3805,10 @@ async function handler(event, context) {
     ),
   };
   const messages = fitContext(system, modelTurns, contextFor(tier, plan));
+  if (hasImageInput) {
+    applyImageInputToMessages(messages, imageAtts);
+    applyImageInputToMessages(modelTurns, imageAtts);
+  }
   if (kajiResume && Array.isArray(kajiResume.toolCalls) && Array.isArray(kajiResume.results)) {
     messages.push({
       role: "assistant",
@@ -3826,7 +3881,9 @@ async function handler(event, context) {
         mode: "model_forbidden",
       });
     }
-    const chain = (kajiResume && kajiResume.model && isHqOpenRouterAllowed(kajiResume.model)
+    const chain = (hasImageInput && !customModel
+      ? [IMAGE_INPUT_MODEL]
+      : (kajiResume && kajiResume.model && isHqOpenRouterAllowed(kajiResume.model)
       ? [kajiResume.model]
       : routeModels({
       intel,
@@ -3835,10 +3892,10 @@ async function handler(event, context) {
       customModel,
       pickedModel,
       longRun,
-    }))
+    })))
       .filter((m) => !isGroqModelId(m) || groqKey)
       .filter((m) => customModel || isHqOpenRouterAllowed(m))
-      .slice(0, customModel || kajiResume ? 1 : (tier.chopCode || tier.kaji ? 4 : 3));
+      .slice(0, customModel || kajiResume || hasImageInput ? 1 : (tier.chopCode || tier.kaji ? 4 : 3));
 
     const slimFast = fitContext(
       {
@@ -3856,7 +3913,7 @@ async function handler(event, context) {
       "openrouter/free",
       "google/gemma-4-26b-a4b-it:free",
     ];
-    const runTeam = shouldRunOnlineTeam({
+    const runTeam = !hasImageInput && shouldRunOnlineTeam({
       customModel,
       kajiResume,
       isWidget,
@@ -3865,7 +3922,7 @@ async function handler(event, context) {
       maxMode: maxModeOn,
     });
     const fastPromise = (async () => {
-      if (runTeam || budget.skipFastRace || tier.kaji) return null;
+      if (hasImageInput || runTeam || budget.skipFastRace || tier.kaji) return null;
       for (const m of fastModels) {
         if (deadline - Date.now() < 1400) return null;
         const g = withTimeout(Math.min(4200, deadline - Date.now() - 200));
@@ -3911,7 +3968,7 @@ async function handler(event, context) {
         onlineTeamUsed = true;
       }
     }
-    if (tier.chopCode && !customModel) {
+    if (tier.chopCode && !customModel && !hasImageInput) {
       const ensDeadline = Date.now() + Math.min(4500, Math.max(2500, modelDeadline - Date.now()));
       const ens = await runChopCodeEnsemble({
         callChatModel,
@@ -4182,7 +4239,7 @@ async function handler(event, context) {
     }
 
     const refineOn = REFINE_ENABLED && !isWidget && !agentsTrace && !onlineTeamUsed && !draft.pendingLocal
-      && !intel.trivial && !intel.hqOnly
+      && !hasImageInput && !intel.trivial && !intel.hqOnly
       && (budget.critics > 0 || (tier.refine !== false && intel.complexity >= 0.45));
     const refineQueue = (Array.isArray(tier.refineModels) && tier.refineModels.length
       ? tier.refineModels
