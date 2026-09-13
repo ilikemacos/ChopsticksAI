@@ -25,6 +25,7 @@ const {
 } = require("./chopsticks-intelligence.js");
 
 const GLM52 = "z-ai/glm-5.2:free";
+const GLM_FLASH = "z-ai/glm-4.7-flash:free";
 const NEMO_ULTRA = "nvidia/nemotron-3-ultra-550b-a55b:free";
 const IMAGE_INPUT_MODEL = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free";
 
@@ -192,6 +193,20 @@ TIERS.csai4air = glmUltraPlate({
   temperature: 0.2,
   extra: { air4: true, team: true, hqPro: true },
 });
+TIERS.csai4flash = {
+  label: "cs.AI-4-Flash",
+  flash4: true,
+  models: [GLM_FLASH],
+  longModels: [GLM_FLASH],
+  refine: false,
+  refineModels: [],
+  context: 48000,
+  maxReply: 1800,
+  grounding: 4,
+  searchMax: 4,
+  timeoutMs: 16000,
+  temperature: 0.18,
+};
 const TIER_ALIASES = {
   rice: "rice",
   haiku: "rice",
@@ -233,6 +248,12 @@ const TIER_ALIASES = {
   "4-air": "csai4air",
   air4: "csai4air",
   "4air": "csai4air",
+  csai4flash: "csai4flash",
+  "csai-4-flash": "csai4flash",
+  "cs.ai-4-flash": "csai4flash",
+  "4-flash": "csai4flash",
+  flash4: "csai4flash",
+  "4flash": "csai4flash",
   wagyu: "wagyua5",
   fable: "wagyua5",
   insane: "wagyua5",
@@ -1059,8 +1080,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "4.0.4";
-const PREVIEW_APP_VERSION = "4.0.4";
+const APP_VERSION = "4.0.6";
+const PREVIEW_APP_VERSION = "4.0.6";
 const STACK_NAME = "cs.AI-4";
 
 function appVersionFor(account) {
@@ -1482,6 +1503,14 @@ function searchQueryForTurns(turns, lastContent) {
   return (prior + " " + last).replace(/\s+/g, " ").trim().slice(0, 280);
 }
 
+function stripSourcesFromReply(text) {
+  let t = String(text || "");
+  t = t.replace(/\n{0,3}(\*\*)?Sources(\*\*)?:?\s*\n(?:[-*]\s.*\n?)+\s*$/i, "");
+  t = t.replace(/\n{0,3}#{1,3}\s*Sources\b[\s\S]*$/i, "");
+  t = t.replace(/\n{0,3}\*\*Sources\*\*[\s\S]*$/i, "");
+  return t.replace(/\s+$/g, "");
+}
+
 function namesFromSearchContext(context) {
   const hits = String(context || "").match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3}\b/g) || [];
   const skip = new Set([
@@ -1527,33 +1556,20 @@ function answerWhenModelsFail(turns, lastUser, webBundle, payload) {
 
   const follow = String((lastUser && lastUser.content) || "").trim();
   const context = String((webBundle && webBundle.context) || "").trim();
-  const sources = (webBundle && Array.isArray(webBundle.sources) && webBundle.sources) || [];
   const wantNames = /\bnames?\b/i.test(follow) || /\bwho\b/i.test(follow);
   const names = namesFromSearchContext(context);
   const priorAssistant = [...(turns || [])].reverse().find((m) => m.role === "assistant");
 
   const bits = [];
   if (wantNames && names.length) {
-    bits.push("Names that show up in the sources for this thread:\n\n" + names.map((n) => "• " + n).join("\n"));
-  } else if (context) {
-    bits.push(context.slice(0, 1600));
+    bits.push("Names that show up in this thread:\n\n" + names.map((n) => "• " + n).join("\n"));
   } else if (priorAssistant && priorAssistant.content && isThinFollowUp(follow)) {
-    bits.push(String(priorAssistant.content).slice(0, 1800));
-    bits.push("That’s the last pass I had. The live model dropped before I could expand it with more names.");
-  }
-
-  if (sources.length) {
-    bits.push(
-      "**Sources**\n" +
-      sources.slice(0, 6).map((s) => {
-        const title = s.title || s.url || "source";
-        return s.url ? `- [${title}](${s.url})` : `- ${title}`;
-      }).join("\n")
-    );
+    bits.push(stripSourcesFromReply(String(priorAssistant.content).slice(0, 1800)));
+    bits.push("That’s the last pass I had. Try sending the question again.");
   }
 
   if (bits.length) {
-    return { reply: bits.join("\n\n"), mode: "live" };
+    return { reply: stripSourcesFromReply(bits.join("\n\n")), mode: "live" };
   }
 
   return {
@@ -1582,6 +1598,21 @@ const SEARCH_TIMEOUT_MS = Number(process.env.CHOPSTICKS_AI_SEARCH_TIMEOUT_MS || 
 const SEARCH_MIN_LEN = 3;
 const MAX_SOURCES = 12;
 const UA = STACK_NAME + "/" + APP_VERSION + " (+https://chopstickshq.com/chopsticks-ai/)";
+
+function knowledgeDateGuard() {
+  const clock = clockNow();
+  return [
+    `CURRENT DATE (authoritative): ${clock.human} (${clock.isoDay} UTC).`,
+    "Session knowledge is current as of 13 September 2026.",
+    "It is 2026, not 2024 or 2025. Treat this calendar day as now.",
+    "Prefer live research over a training cutoff.",
+    "Be non-partisan: neither politically left nor right.",
+  ].join(" ");
+}
+
+function withKnowledge(messages) {
+  return [{ role: "system", content: knowledgeDateGuard() }].concat(Array.isArray(messages) ? messages : []);
+}
 
 function clockNow() {
   const d = new Date();
@@ -2150,9 +2181,11 @@ function selfFacts(tier, appVersion) {
     "ABOUT YOURSELF (answer questions about your own capabilities from this):",
     `- You are ${STACK_NAME} (${ver}), built and run by Chopsticks HQ.`,
     `- You refresh live web research for each user question, dated as of today.`,
-    `- Current date for this session: ${clockNow().human} (${clockNow().isoDay} UTC).`,
+    `- Current date for this session: ${clockNow().human} (${clockNow().isoDay} UTC). Knowledge is current as of 13 September 2026.`,
     `- Current plate: ${t.label}, ${contextFor(t).toLocaleString()} token context, up to ${(t.maxReply || MAX_REPLY_TOKENS).toLocaleString()} reply tokens.`,
-    t.air4 || t.team
+    t.flash4
+      ? "- cs.AI-4-Flash is the fast plate. Knowledge for this session is current as of 13 September 2026."
+      : t.air4 || t.team
       ? "- cs.AI-4.0-Air runs a coordinated model team, then returns one answer."
       : t.stickerCoder
       ? "- StickerCoder+ mode: prioritise complete, runnable code, write_file tool use, and sharp engineering answers."
@@ -2167,7 +2200,7 @@ function selfFacts(tier, appVersion) {
     "- Upgrades: sign in and redeem Fathom Pro oi-pl2- keys at https://chopstickshq.com/chopsticks-ai/web/upgrades/ (2 keys → 800k + 2h30m; 5 keys → 900k + 2h + ChopCode + Kaji; 10 keys → 1m + 1h). Not OpenRouter keys.",
     `- Rate limit: ${RATE_MAX} requests per minute per visitor.`,
     "- You can look at images the user attaches. Image output is unavailable: you cannot generate, edit, or return images. If they ask for a generated picture, say image output is unavailable and offer a text description instead.",
-    "- You search with the Chromium engine on each question (unless the user turns search off) so answers reflect information as of the current date. Cite sources when you use them.",
+    "- You search with the Chromium engine on each question (unless the user turns search off) so answers reflect information as of the current date. Do not list sources, URLs, or a Sources section.",
     "- The macOS app and web app include a built-in Chromium browser rail whose home page is https://chopstickshq.com; standalone search is at https://chopstickshq.com/chopsticks-ai/#search. Queries mentioning chopsticks prioritize chopstickshq.com in results.",
     "- You answer general questions on any topic, and are the in-house expert on Chopsticks HQ software.",
     "- You need no OpenRouter API key from the user; Fathom Pro unlock keys can be redeemed as usage credits in the Usage tab.",
@@ -2247,12 +2280,12 @@ function systemPrompt(grounding, mode, web, tier, language, appVersion, maxMode)
 
   const clock = clockNow();
   const dateBlock = [
-    `\nCURRENT DATE (authoritative for this reply): ${clock.human} (${clock.isoDay} UTC).`,
+    `\nCURRENT DATE (authoritative for this reply): ${clock.human} (${clock.isoDay} UTC). Knowledge is current as of 13 September 2026.`,
     `The current year is ${clock.year}. It is not 2024 or 2025. Do not write as if those years are “now”.`,
     "You have been given live web research retrieved just now for this question.",
     "Prefer those results over memorized training data for anything time-sensitive",
     "(news, versions, prices, APIs, SDKs, sports, politics, product status).",
-    "If search and memory conflict, trust search and cite it. If search is empty, say the date and be clear you may be missing today's developments.\n",
+    "If search and memory conflict, trust search. If search is empty, say the date and be clear you may be missing today's developments.\n",
   ].join(" ");
   const yearKnowledge = [
     `\n\n2026 WORKING KNOWLEDGE (use with live research; do not freeze on older training cutoffs):`,
@@ -2301,6 +2334,7 @@ function systemPrompt(grounding, mode, web, tier, language, appVersion, maxMode)
     "- For code: complete runnable files in fenced blocks with a language tag and filename. Include imports. Do not leave TODOs or ellipses.\n",
     "- Do not refuse ordinary knowledge, coding, or analysis questions. Stay on the task.\n",
     "- Image output is unavailable. Never claim you created, edited, or attached an image. Describe attached photos in text only.\n",
+    "- Never add a Sources section. Never list citations, URLs, or search titles at the end of the reply. Use research silently.\n",
     "- You are " + STACK_NAME + " (chopsticksAI), made by Chopsticks HQ. If asked what model, ",
     "engine or company is behind you, say you are " + STACK_NAME + " by Chopsticks ",
     "HQ. Never name or speculate about any underlying model, provider or vendor.\n",
@@ -2990,20 +3024,15 @@ async function callChatModel({
   toolChoice,
 }) {
   model = normalizeOpenRouterModelId(model) || model;
+  messages = withKnowledge(messages);
   if (isOfoxGlmFlashFree(model)) {
     const ofox = resolveOfoxKey();
     if (!ofox) {
       return { ok: false, status: 503, detail: "Ofox API key not configured" };
     }
-    const clock = clockNow();
-    const dateGuard = [
-      `CURRENT DATE (authoritative for this reply): ${clock.human} (${clock.isoDay} UTC).`,
-      "Treat this calendar day as now. Prefer live research over a training cutoff.",
-      "Be non-partisan: neither politically left nor right. Describe facts and tradeoffs without advocacy.",
-    ].join(" ");
     return callModel({
-      model: "z-ai/glm-4.7-flash:free",
-      messages: [{ role: "system", content: dateGuard }].concat(Array.isArray(messages) ? messages : []),
+      model: GLM_FLASH,
+      messages,
       key: ofox,
       url: OFOX_URL,
       signal,
@@ -3777,7 +3806,7 @@ async function handler(event, context) {
     webSection = evidence
       ? evidence
       : (clipped
-        ? `\n\nLIVE RESEARCH as of ${clock.human} (retrieved just now — prefer this over training memory for anything current; cite URLs):\n` + clipped
+        ? `\n\nLIVE RESEARCH as of ${clock.human} (retrieved just now — prefer this over training memory for anything current; do not cite URLs or add a Sources list):\n` + clipped
         : `\n\nLIVE RESEARCH as of ${clock.human}: no snippets returned — answer from your knowledge, and say if the topic may have changed since your training data.`);
     if (intel.decompose) webSection += DECOMPOSE_HINT;
   } else {
@@ -3922,7 +3951,7 @@ async function handler(event, context) {
       maxMode: maxModeOn,
     });
     const fastPromise = (async () => {
-      if (hasImageInput || runTeam || budget.skipFastRace || tier.kaji) return null;
+      if (hasImageInput || runTeam || budget.skipFastRace || tier.kaji || tier.flash4) return null;
       for (const m of fastModels) {
         if (deadline - Date.now() < 1400) return null;
         const g = withTimeout(Math.min(4200, deadline - Date.now() - 200));
@@ -4213,7 +4242,7 @@ async function handler(event, context) {
     }
 
     let spent = draft.tokens || (messages.reduce((n, m) => n + messageTokens(m), 0) + MAX_REPLY_TOKENS);
-    let reply = draft.text || "";
+    let reply = stripSourcesFromReply(draft.text || "");
     let refinedBy = null;
 
     if (draft.pendingLocal && isMacKajiClient(payload)) {
@@ -4225,7 +4254,7 @@ async function handler(event, context) {
         model: draftModel,
         tier: tier.label,
         searched: searchOn,
-        sources: webBundle.sources || [],
+        sources: [],
         files: [],
         browser: producedPages,
       });
@@ -4304,6 +4333,8 @@ async function handler(event, context) {
       }
     }
 
+    reply = stripSourcesFromReply(reply);
+
     const spentResult = await budgetSpend(maxModeOn ? BILLABLE_MAX_MODE : BILLABLE_PER_REPLY, now, budgetOpts);
     queueUsageEmail(plan, spentResult, account);
 
@@ -4324,7 +4355,7 @@ async function handler(event, context) {
       context: ctxLimit,
       contextWindow: contextWindowUsage(messages, ctxLimit, turns.length),
       searched: searchOn,
-      sources: webBundle.sources,
+      sources: [],
       files: producedFiles.map((f) => ({
         name: f.name,
         content: f.content,

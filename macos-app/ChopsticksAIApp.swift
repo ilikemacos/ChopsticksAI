@@ -1185,6 +1185,7 @@ final class ChatModel: ObservableObject {
         case "rice": return 800
         case "tamago": return 1600
         case "hibachi": return 4000
+        case "csai4flash": return 1800
         case "wagyua1": return 2500
         case "wagyua2": return 4000
         case "wagyua3": return 5500
@@ -2188,7 +2189,7 @@ struct AgentChatView: View {
                     Menu {
                         let plates = effortTiers(sky: store.skyPlates)
                         Section(store.skyPlates ? "cs.AI" : "Everyday") {
-                            ForEach(plates.filter { ["rice", "tamago", "hibachi"].contains($0.id) }, id: \.id) { t in
+                            ForEach(plates.filter { ["rice", "tamago", "hibachi", "csai4flash"].contains($0.id) }, id: \.id) { t in
                                 plateMenuRow(t)
                             }
                         }
@@ -2393,10 +2394,6 @@ struct MessageRow: View {
                             }
                         }
                     }
-                }
-
-                if !isUser, !line.sources.isEmpty {
-                    SourcesView(sources: line.sources, compact: compact)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
