@@ -1058,8 +1058,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "4.0.2";
-const PREVIEW_APP_VERSION = "4.0.2";
+const APP_VERSION = "4.0.3";
+const PREVIEW_APP_VERSION = "4.0.3";
 const STACK_NAME = "cs.AI-4";
 
 function appVersionFor(account) {

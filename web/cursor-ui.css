@@ -691,11 +691,45 @@ a:hover { color: var(--cursor-text); }
   background: var(--cursor-selected); color: var(--cursor-text); border: 1px solid var(--cursor-border);
 }
 .composer-note { font: 11px var(--mono); color: var(--cursor-muted); }
-.cursor-workspace .sources { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--cursor-hairline); }
-.cursor-workspace .sources-label {
-  font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--cursor-muted); margin-bottom: 6px;
+.cursor-workspace .sources-bar {
+  margin-top: 10px;
+  border: 1px solid var(--cursor-hairline);
+  border-radius: 8px;
+  background: var(--cursor-panel, #161616);
 }
+.cursor-workspace .sources-bar > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 7px 10px;
+  font: 500 11.5px var(--sans);
+  color: var(--cursor-muted);
+  user-select: none;
+}
+.cursor-workspace .sources-bar > summary::-webkit-details-marker { display: none; }
+.cursor-workspace .sources-bar > summary::after {
+  content: '';
+  float: right;
+  margin-top: 5px;
+  border: 4px solid transparent;
+  border-top-color: var(--cursor-muted);
+}
+.cursor-workspace .sources-bar[open] > summary::after {
+  margin-top: 1px;
+  border-top-color: transparent;
+  border-bottom-color: var(--cursor-muted);
+}
+.cursor-workspace .sources-bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 10px 10px;
+}
+.cursor-workspace .sources-bar-list a {
+  color: var(--cursor-soft, #c6c6c6);
+  text-decoration: none;
+  font: 12px var(--sans);
+}
+.cursor-workspace .sources-bar-list a:hover { text-decoration: underline; }
 .resumed {
   display: inline-block; margin-bottom: 12px; padding: 4px 10px;
   border: 1px solid var(--cursor-border); border-radius: 999px;

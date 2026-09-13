@@ -1,7 +1,16 @@
 {
   "product": "cs.AI",
-  "latest": "4.0.2",
+  "latest": "4.0.3",
   "entries": [
+    {
+      "version": "4.0.3",
+      "date": "2026-09-13",
+      "title": "Sources bar",
+      "changes": [
+        "Search sources sit in a collapsed expandable bar instead of an open list",
+        "Ship 4.0.3 — stack is cs.AI-4"
+      ]
+    },
     {
       "version": "4.0.2",
       "date": "2026-09-13",
