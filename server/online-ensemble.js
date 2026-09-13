@@ -118,8 +118,10 @@ function shouldRunOnlineTeam({
   isWidget,
   intel,
   tier,
+  maxMode,
 }) {
   if (customModel || kajiResume || isWidget) return false;
+  if (!(maxMode || (tier && tier.max))) return false;
   if (!intel || intel.trivial || intel.hqOnly) return false;
   if (tier && (tier.chopCode || tier.kaji || tier.groqOnly)) return false;
   return true;
