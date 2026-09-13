@@ -1,7 +1,16 @@
 {
   "product": "cs.AI",
-  "latest": "3.9.1",
+  "latest": "3.9.2",
   "entries": [
+    {
+      "version": "3.9.2",
+      "date": "2026-09-13",
+      "title": "Max team only",
+      "changes": [
+        "The coordinated free-model draft, review, verify, and synthesize path runs only on Max",
+        "Ship 3.9.2 — stack is still cs.AI-3.7"
+      ]
+    },
     {
       "version": "3.9.1",
       "date": "2026-09-13",

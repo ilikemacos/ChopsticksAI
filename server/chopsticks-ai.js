@@ -1070,8 +1070,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "3.9.1";
-const PREVIEW_APP_VERSION = "3.9.1";
+const APP_VERSION = "3.9.2";
+const PREVIEW_APP_VERSION = "3.9.2";
 const STACK_NAME = "cs.AI-3.7";
 
 function appVersionFor(account) {
@@ -3867,6 +3867,7 @@ async function handler(event, context) {
       isWidget,
       intel,
       tier,
+      maxMode: maxModeOn,
     });
     const fastPromise = (async () => {
       if (runTeam || budget.skipFastRace || tier.kaji) return null;
