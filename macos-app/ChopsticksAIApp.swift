@@ -2908,27 +2908,33 @@ struct FileCardView: View {
 struct SourcesView: View {
     let sources: [SearchSource]
     var compact: Bool = false
+    @State private var expanded = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text("Sources")
-                .font(.system(size: 10.5, weight: .semibold))
-                .foregroundStyle(Cursor.muted)
-            ForEach(sources) { source in
-                if let link = URL(string: source.url), !source.url.isEmpty {
-                    Link(source.title, destination: link)
-                        .font(.system(size: compact ? 11.5 : 12))
-                        .foregroundStyle(Cursor.soft)
-                        .lineLimit(2)
-                } else {
-                    Text(source.title)
-                        .font(.system(size: compact ? 11.5 : 12))
-                        .foregroundStyle(Cursor.muted)
-                        .lineLimit(2)
+        DisclosureGroup(isExpanded: $expanded) {
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(sources) { source in
+                    if let link = URL(string: source.url), !source.url.isEmpty {
+                        Link(source.title, destination: link)
+                            .font(.system(size: compact ? 11.5 : 12))
+                            .foregroundStyle(Cursor.soft)
+                            .lineLimit(2)
+                    } else {
+                        Text(source.title)
+                            .font(.system(size: compact ? 11.5 : 12))
+                            .foregroundStyle(Cursor.muted)
+                            .lineLimit(2)
+                    }
                 }
             }
+            .padding(.top, 6)
+        } label: {
+            Text(sources.count == 1 ? "1 source" : "\(sources.count) sources")
+                .font(.system(size: 11.5, weight: .medium))
+                .foregroundStyle(Cursor.muted)
         }
-        .padding(10)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Cursor.panel))
         .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Cursor.hairline))

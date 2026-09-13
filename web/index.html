@@ -257,7 +257,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">4.0.2</span>
+  <span class="cursor-footer-ver">4.0.3</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -719,7 +719,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (4.0.2)';
+    if (g) g.textContent = 'Welcome to cs.AI (4.0.3)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -930,29 +930,38 @@
     return { query: text, hadPrefix: false, raw: text };
   }
 
-  function appendSources(node, sources) {
-    if (!sources || !sources.length) return;
-    var wrap = document.createElement('div');
-    wrap.className = 'sources';
-    var label = document.createElement('div');
-    label.className = 'sources-label';
-    label.textContent = 'Sources';
-    wrap.appendChild(label);
+  function sourcesBar(sources) {
+    if (!sources || !sources.length) return null;
+    var det = document.createElement('details');
+    det.className = 'sources-bar';
+    var sum = document.createElement('summary');
+    sum.textContent = sources.length === 1 ? '1 source' : sources.length + ' sources';
+    det.appendChild(sum);
+    var list = document.createElement('div');
+    list.className = 'sources-bar-list';
     sources.forEach(function (s) {
+      if (!s) return;
       if (s.url) {
         var a = document.createElement('a');
         a.href = s.url;
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
         a.textContent = s.title || s.url;
-        wrap.appendChild(a);
+        list.appendChild(a);
       } else if (s.title) {
         var t = document.createElement('div');
         t.textContent = s.title;
-        wrap.appendChild(t);
+        list.appendChild(t);
       }
     });
-    node.appendChild(wrap);
+    det.appendChild(list);
+    return det;
+  }
+
+  function appendSources(node, sources) {
+    if (!node || node.querySelector('.sources-bar')) return;
+    var bar = sourcesBar(sources);
+    if (bar) node.appendChild(bar);
   }
 
   try {
@@ -1164,7 +1173,7 @@
     return info;
   }
   function showTier() {
-    var ver = '4.0.2';
+    var ver = '4.0.3';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
@@ -1888,30 +1897,7 @@
     }
 
     if (!wrap.childNodes.length) wrap.textContent = text;
-    if (sources && sources.length) {
-      var box = document.createElement('div');
-      box.className = 'sources';
-      var lab = document.createElement('div');
-      lab.className = 'sources-label';
-      lab.textContent = 'Sources';
-      box.appendChild(lab);
-      sources.forEach(function (s) {
-        if (!s) return;
-        if (s.url) {
-          var a = document.createElement('a');
-          a.href = s.url;
-          a.target = '_blank';
-          a.rel = 'noopener';
-          a.textContent = s.title || s.url;
-          box.appendChild(a);
-        } else if (s.title) {
-          var span = document.createElement('div');
-          span.textContent = s.title;
-          box.appendChild(span);
-        }
-      });
-      wrap.appendChild(box);
-    }
+    appendSources(wrap, sources);
     return wrap;
   }
 
@@ -1955,7 +1941,6 @@
   
   function streamReveal(targetTurn, fullText, sources, agents, conversation, done) {
     var rendered = renderAssistant(fullText, sources, agents, conversation);
-    appendSources(rendered, sources);
     targetTurn.replaceChild(rendered, targetTurn.lastChild);
     if (done) done();
   }
