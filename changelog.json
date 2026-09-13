@@ -1,7 +1,16 @@
 {
   "product": "cs.AI",
-  "latest": "4.0.0",
+  "latest": "4.0.1",
   "entries": [
+    {
+      "version": "4.0.1",
+      "date": "2026-09-13",
+      "title": "cs.AI-4.0-Air plate",
+      "changes": [
+        "cs.AI-4.0-Air is a selectable plate in the Mac app and web (Air / Wagyu group), not only an API alias",
+        "Ship 4.0.1 — stack is cs.AI-4"
+      ]
+    },
     {
       "version": "4.0.0",
       "date": "2026-09-13",

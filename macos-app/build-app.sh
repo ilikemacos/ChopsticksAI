@@ -7,7 +7,7 @@ AI="$REPO/engine"
 SITE="${CHOPSTICKS_AI_SITE:-$REPO/../chopstickshq-site/chopsticks-ai}"
 BUNDLE="chopsticksAI.app"
 EXEC="chopsticksAI"
-VERSION="${1:-v4.0.0}"
+VERSION="${1:-v4.0.1}"
 EDITION="${2:-online}"
 BUILD="$ROOT/build"
 if [[ "$EDITION" == "offline" ]]; then

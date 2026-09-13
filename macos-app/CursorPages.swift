@@ -1083,11 +1083,11 @@ struct SettingsView: View {
                     }
 
                 case .models:
-                    SettingsCard(title: "Name mode", subtitle: "Sushi is Rice / Tamago / Wagyu. Sky is cs.AI 3.1, 3.3-Fast, 3.5-Air, csCode-Pro.") {
+                    SettingsCard(title: "Name mode", subtitle: "Sushi is Rice / Tamago / Wagyu. Sky is cs.AI 3.1, 3.3-Fast, 3.5-Air, cs.AI-4.0-Air, csCode-Pro.") {
                         SettingsToggleRow(
                             title: "Sky mode",
                             subtitle: store.skyPlates
-                                ? "On — cs.AI 3.1, 3.3-Fast, 3.3-Thinking, 3.5-Air, Air II–VI, csCode-Pro."
+                                ? "On — cs.AI 3.1, 3.3-Fast, 3.3-Thinking, cs.AI-4.0-Air, Air II–VI, 3.5-Air, csCode-Pro."
                                 : "Off — Sushi names (Rice, Tamago, Hibachi, Wagyu).",
                             isOn: Binding(get: { store.skyPlates }, set: { store.setSkyPlates($0) })
                         )
@@ -1100,6 +1100,7 @@ struct SettingsView: View {
                             plateSetting("hibachi")
                             Divider().overlay(Cursor.hairline)
                             Text(store.skyPlates ? "Air" : "Wagyu").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
+                            plateSetting("csai4air")
                             plateSetting("wagyua1")
                             plateSetting("wagyua2")
                             plateSetting("wagyua3")

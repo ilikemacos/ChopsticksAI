@@ -242,7 +242,7 @@
             <option value="wagyua3">Wagyu A3</option>
             <option value="wagyua4">Wagyu A4</option>
             <option value="wagyua5">Wagyu A5</option>
-            <option value="csai4air">cs.AI-4 Air</option>
+            <option value="csai4air">cs.AI-4.0-Air</option>
             <option value="chopcode">ChopCode</option>
             <option value="kaji">Kaji</option>
             <option value="max">Max</option>
@@ -257,7 +257,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">4.0.0</span>
+  <span class="cursor-footer-ver">4.0.1</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -289,7 +289,7 @@
     chopcode: { label: 'ChopCode', maxTokens: 4000 },
     kaji: { label: 'Kaji', maxTokens: 6000 },
     max: { label: 'Max', maxTokens: 2000 },
-    csai4air: { label: 'cs.AI-4 Air', maxTokens: 8000 },
+    csai4air: { label: 'cs.AI-4.0-Air', maxTokens: 8000 },
     low: { label: 'Rice', maxTokens: 800 },
     high: { label: 'Tamago', maxTokens: 2000 },
     pro: { label: 'Hibachi', maxTokens: 4000 },
@@ -316,7 +316,8 @@
     'cscode-pro': 'chopcode', cscodepro: 'chopcode', cscode: 'chopcode',
     max: 'max', maxmode: 'max', csmax: 'max',
     csai4air: 'csai4air', air4: 'csai4air', '4-air': 'csai4air', '4air': 'csai4air',
-    'csai-4-air': 'csai4air'
+    'csai-4-air': 'csai4air', 'cs.ai-4-air': 'csai4air', 'cs.ai-4.0-air': 'csai4air',
+    'csai-4.0-air': 'csai4air', '4.0-air': 'csai4air', csai40air: 'csai4air'
   };
   function normalizeTier(id) {
     var key = String(id || '').toLowerCase();
@@ -718,7 +719,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (4.0.0)';
+    if (g) g.textContent = 'Welcome to cs.AI (4.0.1)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -964,12 +965,12 @@
   var SKY_NAMES = {
     rice: 'cs.AI 3.1', tamago: 'cs.AI 3.3-Fast', hibachi: 'cs.AI 3.3-Thinking',
     wagyua1: 'Air II', wagyua2: 'Air III', wagyua3: 'Air VI', wagyua4: 'Air V',
-    wagyua5: 'cs.AI 3.5-Air', csai4air: 'cs.AI-4 Air', chopcode: 'csCode-Pro', kaji: 'Kaji', max: 'Max'
+    wagyua5: 'cs.AI 3.5-Air', csai4air: 'cs.AI-4.0-Air', chopcode: 'csCode-Pro', kaji: 'Kaji', max: 'Max'
   };
   var SUSHI_NAMES = {
     rice: 'Rice', tamago: 'Tamago', hibachi: 'Hibachi',
     wagyua1: 'Wagyu A1', wagyua2: 'Wagyu A2', wagyua3: 'Wagyu A3', wagyua4: 'Wagyu A4',
-    wagyua5: 'Wagyu A5', csai4air: 'cs.AI-4 Air', chopcode: 'ChopCode', kaji: 'Kaji', max: 'Max'
+    wagyua5: 'Wagyu A5', csai4air: 'cs.AI-4.0-Air', chopcode: 'ChopCode', kaji: 'Kaji', max: 'Max'
   };
   function plateSkyOn() {
     try {
@@ -995,7 +996,7 @@
     { id: 'wagyua3', tag: 'A3', group: 'Wagyu' },
     { id: 'wagyua4', tag: 'A4', group: 'Wagyu' },
     { id: 'wagyua5', tag: 'A5', group: 'Wagyu' },
-    { id: 'csai4air', tag: 'Team', group: 'Air' },
+    { id: 'csai4air', tag: '4.0-Air', group: 'Air' },
     { id: 'chopcode', tag: 'Code', group: 'Apps' },
     { id: 'kaji', tag: 'Alpha', group: 'Apps' },
     { id: 'max', tag: 'Think', group: 'Apps' }
@@ -1154,7 +1155,7 @@
     return info;
   }
   function showTier() {
-    var ver = '4.0.0';
+    var ver = '4.0.1';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;

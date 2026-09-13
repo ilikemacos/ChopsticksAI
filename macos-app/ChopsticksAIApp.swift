@@ -793,7 +793,7 @@ final class ChatModel: ObservableObject {
                     mode: mode
                 )
             }
-            if http?.statusCode == 403 {
+            if http?.statusCode == 401 || http?.statusCode == 403 {
                 let err = (obj?["error"] as? String) ?? ""
                 if mode == "kaji_pro" || err.lowercased().contains("kaji") {
                     return ReplyResult(
@@ -1179,7 +1179,7 @@ final class ChatModel: ObservableObject {
         case "wagyua2": return 4000
         case "wagyua3": return 5500
         case "wagyua4": return 7000
-        case "wagyua5", "stickercoderplus": return 8000
+        case "csai4air", "wagyua5", "stickercoderplus": return 8000
         case "chopcode": return 4096
         case "kaji": return 6000
         default: return 1600
@@ -2176,7 +2176,7 @@ struct AgentChatView: View {
                             }
                         }
                         Section(store.skyPlates ? "Air" : "Wagyu") {
-                            ForEach(plates.filter { $0.id.hasPrefix("wagyu") }, id: \.id) { t in
+                            ForEach(plates.filter { $0.id == "csai4air" || $0.id.hasPrefix("wagyu") }, id: \.id) { t in
                                 plateMenuRow(t)
                             }
                         }
