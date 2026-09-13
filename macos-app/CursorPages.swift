@@ -405,9 +405,8 @@ struct AccountView: View {
     @ObservedObject var store: AppStore
     var onSignedIn: (() -> Void)?
     @State private var email = ""
+    @State private var username = ""
     @State private var password = ""
-    @State private var code = ""
-    @State private var awaitingCode = false
     @State private var showPassword = false
     @State private var error = ""
 
@@ -439,8 +438,13 @@ struct AccountView: View {
                             }
                         }
                     } else {
-                        SettingsCard(title: "Sign in or create account", subtitle: "Sign in with email and password. Create account emails a 6-digit code.") {
+                        SettingsCard(title: "Sign in or create account", subtitle: "Email, username, and password. No email code.") {
                             TextField("Email", text: $email)
+                                .textFieldStyle(.plain)
+                                .foregroundStyle(Cursor.text)
+                                .padding(10)
+                                .background(RoundedRectangle(cornerRadius: 8).fill(Cursor.hover))
+                            TextField("Username", text: $username)
                                 .textFieldStyle(.plain)
                                 .foregroundStyle(Cursor.text)
                                 .padding(10)
@@ -461,13 +465,6 @@ struct AccountView: View {
                             Toggle("Show password", isOn: $showPassword)
                                 .toggleStyle(.checkbox)
                                 .foregroundStyle(Cursor.muted)
-                            if awaitingCode {
-                                TextField("6-digit code", text: $code)
-                                    .textFieldStyle(.plain)
-                                    .foregroundStyle(Cursor.text)
-                                    .padding(10)
-                                    .background(RoundedRectangle(cornerRadius: 8).fill(Cursor.hover))
-                            }
                             Link("Forgot password? Email chopstickshq@lam.ws", destination: URL(string: "mailto:chopstickshq@lam.ws?subject=Forgot%20cs.AI%20password")!)
                                 .font(.system(size: 12))
                                 .foregroundStyle(Cursor.blue)
@@ -485,7 +482,7 @@ struct AccountView: View {
                                 PrimaryButton(title: auth.busy ? "Working…" : "Sign in") {
                                     Task { await signIn() }
                                 }
-                                GhostButton(title: awaitingCode ? "Confirm code" : "Create account") {
+                                GhostButton(title: "Create account") {
                                     Task { await signUp() }
                                 }
                             }
@@ -523,16 +520,14 @@ struct AccountView: View {
     private func signUp() async {
         error = ""
         let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let handle = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        if handle.isEmpty {
+            error = "Choose a username."
+            return
+        }
         do {
-            if awaitingCode {
-                try await auth.signUp(email: trimmed, password: password, code: code)
-                awaitingCode = false
-                code = ""
-                if auth.isSignedIn { onSignedIn?() }
-            } else {
-                _ = try await auth.sendSignupCode(email: trimmed, password: password)
-                awaitingCode = true
-            }
+            try await auth.signUp(email: trimmed, password: password, username: handle)
+            if auth.isSignedIn { onSignedIn?() }
         } catch {
             self.error = error.localizedDescription
         }

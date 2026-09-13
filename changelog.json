@@ -1,7 +1,17 @@
 {
   "product": "cs.AI",
-  "latest": "4.0.6",
+  "latest": "4.0.7",
   "entries": [
+    {
+      "version": "4.0.7",
+      "date": "2026-09-13",
+      "title": "Accounts and live replies",
+      "changes": [
+        "Create account is email, username, and password — no 6-digit email code",
+        "Live turns retry and race fallbacks so a dropped model almost never ends the reply",
+        "Ship 4.0.7 — stack is cs.AI-4"
+      ]
+    },
     {
       "version": "4.0.6",
       "date": "2026-09-13",

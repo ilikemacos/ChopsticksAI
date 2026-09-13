@@ -311,7 +311,16 @@ function hybridRetrieve(query, scoredRows, limit) {
 
 function routeModels({ intel, tier, groqKey, customModel, pickedModel, longRun }) {
   if (customModel && pickedModel) return [pickedModel];
-  if (tier && tier.flash4) return ["z-ai/glm-4.7-flash:free"];
+  if (tier && tier.flash4) {
+    return [
+      "z-ai/glm-4.7-flash:free",
+      "z-ai/glm-5.2:free",
+      ...(groqKey ? ["groq/llama-3.1-8b-instant", "groq/llama-3.3-70b-versatile"] : []),
+      "openrouter/free",
+      "google/gemma-4-26b-a4b-it:free",
+      "nvidia/nemotron-3-nano-30b-a3b:free",
+    ];
+  }
   if (tier.kaji) {
     const pool = (longRun || intel.decompose ? (tier.longModels || tier.models) : tier.models) || [];
     const seen = new Set();

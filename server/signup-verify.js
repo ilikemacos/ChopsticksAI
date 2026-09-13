@@ -36,6 +36,44 @@ function validEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function normalizeUsername(raw) {
+  const s = String(raw || "").trim();
+  if (!/^[a-zA-Z][a-zA-Z0-9_]{2,23}$/.test(s)) return "";
+  return s;
+}
+
+function usernameFromEmail(email) {
+  const local = String(email || "").split("@")[0] || "";
+  let s = local.replace(/[^a-zA-Z0-9_]/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "");
+  if (!/^[a-zA-Z]/.test(s)) s = "u_" + s;
+  if (s.length < 3) s = (s + "user").slice(0, 24);
+  return normalizeUsername(s.slice(0, 24)) || "user";
+}
+
+function authErrorText(body) {
+  const raw = (body && (body.msg || body.message || body.error_description || body.error_code || body.error)) || "";
+  return typeof raw === "string" ? raw : JSON.stringify(raw);
+}
+
+function mapSignupError(body, status) {
+  const msg = authErrorText(body);
+  const low = msg.toLowerCase();
+  if (/already|exists|registered|duplicate|taken/i.test(low)) {
+    return "That email already has an account. Sign in instead.";
+  }
+  if (/password/i.test(low)) {
+    return "Use a stronger password (at least 8 characters).";
+  }
+  if (/invalid.*email|email.*invalid/i.test(low)) {
+    return "Enter a valid email address.";
+  }
+  if (/signup.?disabled|signups.?disabled|not allowed/i.test(low)) {
+    return "New accounts are paused. Email chopstickshq@lam.ws.";
+  }
+  console.error("chopsticksAI signup", status || 0, String(msg).slice(0, 240));
+  return GENERIC_AUTH;
+}
+
 const EMAIL_BANNED = "This email cannot be used.";
 
 async function isEmailBlacklisted(email) {
@@ -168,10 +206,11 @@ async function sendSignupCodeEmail(email, code) {
   if (!ok) throw new Error("Could not send verification email. Try again in a minute.");
 }
 
-async function adminCreateUser(email, password) {
+async function adminCreateUser(email, password, username) {
   const url = env("SUPABASE_URL");
   const key = env("SUPABASE_SERVICE_ROLE_KEY");
   if (!url || !key) throw new Error("Account signup is not configured on this host.");
+  const handle = normalizeUsername(username) || usernameFromEmail(email);
   const res = await fetch(`${url}/auth/v1/admin/users`, {
     method: "POST",
     headers: {
@@ -183,16 +222,12 @@ async function adminCreateUser(email, password) {
       email: normalizeEmail(email),
       password,
       email_confirm: true,
+      user_metadata: { username: handle, display_name: handle },
     }),
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const raw = body.msg || body.message || body.error_description || body.error || "Could not create account";
-    const msg = typeof raw === "string" ? raw : JSON.stringify(raw);
-    if (/already|exists|registered/i.test(msg)) {
-      throw new Error(GENERIC_AUTH);
-    }
-    throw new Error(GENERIC_AUTH);
+    throw new Error(mapSignupError(body, res.status));
   }
   return body;
 }
@@ -270,45 +305,31 @@ async function handleSignupSendCode(event, payload, rateLimited) {
 
   const email = normalizeEmail(payload.email);
   const password = String(payload.password || "");
+  const typed = String(payload.username || "").trim();
+  const username = typed ? normalizeUsername(typed) : usernameFromEmail(email);
   if (!validEmail(email)) {
     return json(400, { error: "Enter a valid email address." });
   }
   if (password.length < 6) {
     return json(400, { error: "Password must be at least 6 characters." });
   }
+  if (typed && !username) {
+    return json(400, { error: "Username must be 3–24 characters, start with a letter, and use only letters, numbers, or _." });
+  }
+  if (!username) {
+    return json(400, { error: "Choose a username (3–24 letters, numbers, or _)." });
+  }
   if (await isEmailBlacklisted(email)) {
     return json(403, { error: GENERIC_AUTH });
   }
-  if (!signupSecret()) {
-    return json(503, { error: "account backend not configured" });
-  }
-  if (!env("RESEND_API_KEY")) {
-    return completeSignup(email, password);
-  }
-  if (signupSendRateLimited(email)) {
-    return json(429, { error: "Wait a minute before requesting another code.", retryInMs: SIGNUP_RESEND_MS });
-  }
-
-  try {
-    const code = generateSignupCode();
-    const signupToken = mintSignupToken(email, code, "signup");
-    await sendSignupCodeEmail(email, code);
-    return json(200, {
-      mode: "signupSendCode",
-      ok: true,
-      needsCode: true,
-      signupToken,
-      expiresInMs: SIGNUP_CODE_TTL_MS,
-    });
-  } catch {
-    return json(503, { error: "Could not send verification email. Try again in a minute." });
-  }
+  return completeSignup(email, password, username);
 }
 
-async function publicSignup(email, password) {
+async function publicSignup(email, password, username) {
   const url = env("SUPABASE_URL");
   const anon = env("SUPABASE_ANON_KEY");
   if (!url || !anon) throw new Error("Account signup is not configured on this host.");
+  const handle = normalizeUsername(username) || usernameFromEmail(email);
   const res = await fetch(`${url}/auth/v1/signup`, {
     method: "POST",
     headers: {
@@ -319,90 +340,90 @@ async function publicSignup(email, password) {
     body: JSON.stringify({
       email: normalizeEmail(email),
       password,
+      data: { username: handle, display_name: handle },
     }),
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const raw = body.msg || body.message || body.error_description || body.error || "Could not create account";
-    const msg = typeof raw === "string" ? raw : JSON.stringify(raw);
-    if (/already|exists|registered/i.test(msg)) {
-      throw new Error(GENERIC_AUTH);
-    }
-    throw new Error(GENERIC_AUTH);
+    throw new Error(mapSignupError(body, res.status));
   }
   return body;
 }
 
-async function completeSignup(email, password) {
+function sessionPayload(session) {
+  return json(200, {
+    mode: "authSignUp",
+    ok: true,
+    access_token: session.access_token,
+    refresh_token: session.refresh_token,
+    expires_in: session.expires_in,
+    expires_at: session.expires_at,
+    token_type: session.token_type,
+    user: session.user,
+  });
+}
+
+async function completeSignup(email, password, username) {
   if (!env("SUPABASE_URL") || !(env("SUPABASE_SERVICE_ROLE_KEY") || env("SUPABASE_ANON_KEY"))) {
     return json(503, { error: "account backend not configured" });
   }
+  let created = false;
   try {
     if (env("SUPABASE_SERVICE_ROLE_KEY")) {
-      await adminCreateUser(email, password);
+      await adminCreateUser(email, password, username);
     } else {
-      await publicSignup(email, password);
+      await publicSignup(email, password, username);
     }
-  } catch {
-    return json(400, { error: GENERIC_AUTH });
+    created = true;
+  } catch (e) {
+    const msg = String((e && e.message) || "");
+    if (/already has an account/i.test(msg)) {
+      try {
+        const session = await passwordSignIn(email, password);
+        return sessionPayload(session);
+      } catch {
+        return json(400, { error: msg });
+      }
+    }
+    if (env("SUPABASE_SERVICE_ROLE_KEY")) {
+      try {
+        await publicSignup(email, password, username);
+        created = true;
+      } catch (e2) {
+        const msg2 = String((e2 && e2.message) || msg);
+        if (/already has an account/i.test(msg2)) {
+          try {
+            const session = await passwordSignIn(email, password);
+            return sessionPayload(session);
+          } catch {
+            return json(400, { error: msg2 });
+          }
+        }
+        return json(400, { error: msg2 || GENERIC_AUTH });
+      }
+    } else {
+      return json(400, { error: msg || GENERIC_AUTH });
+    }
   }
   try {
     const session = await passwordSignIn(email, password);
-    return json(200, {
-      mode: "authSignUp",
-      ok: true,
-      access_token: session.access_token,
-      refresh_token: session.refresh_token,
-      expires_in: session.expires_in,
-      expires_at: session.expires_at,
-      token_type: session.token_type,
-      user: session.user,
-    });
+    return sessionPayload(session);
   } catch {
     return json(200, {
       mode: "authSignUp",
       ok: true,
-      needsSignIn: true,
+      needsSignIn: created,
       message: "Account created. Sign in with your email and password.",
     });
   }
 }
 
 async function handleSignupVerify(event, payload, rateLimited) {
-  const who = clientWho(event);
-  if (rateLimited && rateLimited(who)) {
-    return json(429, { error: "rate limited", retryInMs: 60000 });
-  }
-
-  const email = normalizeEmail(payload.email);
-  const password = String(payload.password || "");
-  const code = String(payload.code || "").trim();
-  const token = String(payload.signupToken || payload.signup_token || "");
-  if (!validEmail(email)) {
-    return json(400, { error: "Enter a valid email address." });
-  }
-  if (password.length < 6) {
-    return json(400, { error: "Password must be at least 6 characters." });
-  }
-  if (!/^\d{6}$/.test(code)) {
-    return json(400, { error: "Enter the 6-digit code from your email." });
-  }
-  if (await isEmailBlacklisted(email)) {
-    return json(403, { error: GENERIC_AUTH });
-  }
-  if (!verifySignupCode(token, email, code, "signup")) {
-    return json(400, { error: "That code is invalid or expired." });
-  }
-  return completeSignup(email, password);
+  return handleSignupSendCode(event, payload, rateLimited);
 }
 
 async function handleAuthSignUp(event, payload, rateLimited) {
-  const code = String(payload.code || "").trim();
-  const token = String(payload.signupToken || payload.signup_token || "");
-  if (!code || !token) {
-    return json(400, { error: "Enter the 6-digit code from your email." });
-  }
-  return handleSignupVerify(event, payload, rateLimited);
+  return handleSignupSendCode(event, payload, rateLimited);
 }
 
 async function handleAuthSignIn(event, payload, rateLimited) {
