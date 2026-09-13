@@ -17,6 +17,7 @@ struct PendingAttachment: Identifiable, Equatable {
 
 enum AttachLimits {
     static let maxBatch: Int64 = 500 * 1024 * 1024
+    static let maxImage: Int64 = 10 * 1024 * 1024
     static let textPreview = 200_000
     static let bucket = "cs-ai-attachments"
 }
@@ -31,6 +32,7 @@ final class AttachmentStore: ObservableObject {
     var batchBytes: Int64 { items.reduce(0) { $0 + $1.size } }
     var isUploading: Bool { items.contains { $0.uploading } }
     var ready: [PendingAttachment] { items.filter { $0.url != nil && $0.error == nil } }
+    var hasImage: Bool { items.contains { $0.mime.lowercased().hasPrefix("image/") } }
 
     func clear() { items = []; status = "" }
 
@@ -62,6 +64,12 @@ final class AttachmentStore: ObservableObject {
         for url in urls {
             guard let vals = try? url.resourceValues(forKeys: [.fileSizeKey]),
                   let sz = vals.fileSize else { continue }
+            let name = url.lastPathComponent
+            let mime = Self.mime(for: url) ?? "application/octet-stream"
+            if Self.isImage(name: name, mime: mime), Int64(sz) > AttachLimits.maxImage {
+                status = "\(name) is over 10 MB (images max 10 MB)."
+                continue
+            }
             add += Int64(sz)
         }
         if batchBytes + add > AttachLimits.maxBatch {
@@ -77,6 +85,10 @@ final class AttachmentStore: ObservableObject {
             guard size > 0, size <= AttachLimits.maxBatch else { continue }
             let name = url.lastPathComponent
             let mime = Self.mime(for: url) ?? "application/octet-stream"
+            if Self.isImage(name: name, mime: mime), size > AttachLimits.maxImage {
+                status = "\(name) is over 10 MB (images max 10 MB)."
+                continue
+            }
             let item = PendingAttachment(
                 id: UUID().uuidString,
                 name: name,
@@ -123,6 +135,14 @@ final class AttachmentStore: ObservableObject {
         status = items.contains(where: { $0.error != nil })
             ? "Some uploads failed"
             : (items.isEmpty ? "" : "\(items.count) attachment(s) ready")
+    }
+
+    private static func isImage(name: String, mime: String) -> Bool {
+        if mime.lowercased().hasPrefix("image/") { return true }
+        let n = name.lowercased()
+        return n.hasSuffix(".png") || n.hasSuffix(".jpg") || n.hasSuffix(".jpeg") ||
+            n.hasSuffix(".gif") || n.hasSuffix(".webp") || n.hasSuffix(".heic") ||
+            n.hasSuffix(".heif") || n.hasSuffix(".bmp") || n.hasSuffix(".tif") || n.hasSuffix(".tiff")
     }
 
     private static func mime(for url: URL) -> String? {

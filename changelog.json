@@ -1,7 +1,16 @@
 {
   "product": "cs.AI",
-  "latest": "4.0.3",
+  "latest": "4.0.4",
   "entries": [
+    {
+      "version": "4.0.4",
+      "date": "2026-09-13",
+      "title": "Image input",
+      "changes": [
+        "Attached images are read as pictures; image output is unavailable",
+        "Ship 4.0.4 — stack is cs.AI-4"
+      ]
+    },
     {
       "version": "4.0.3",
       "date": "2026-09-13",

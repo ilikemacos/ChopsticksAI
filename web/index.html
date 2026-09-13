@@ -257,7 +257,7 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">4.0.3</span>
+  <span class="cursor-footer-ver">4.0.4</span>
   <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
@@ -719,7 +719,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (4.0.3)';
+    if (g) g.textContent = 'Welcome to cs.AI (4.0.4)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -773,6 +773,7 @@
     if (!pendingAttach.length) {
       attachRow.hidden = true;
       attachRow.innerHTML = '';
+      syncComposerChrome();
       return;
     }
     attachRow.hidden = false;
@@ -786,6 +787,7 @@
     }).join('') +
       '<span style="font-family:var(--mono);font-size:.64rem;color:var(--cursor-muted)">' +
       fmtBytes(batchBytes()) + ' / 500 MB</span>';
+    syncComposerChrome();
   }
   attachRow && attachRow.addEventListener('click', function (e) {
     var id = e.target && e.target.getAttribute('data-rm');
@@ -1173,7 +1175,7 @@
     return info;
   }
   function showTier() {
-    var ver = '4.0.3';
+    var ver = '4.0.4';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
@@ -1183,8 +1185,12 @@
   }
   function syncComposerChrome() {
     var chop = normalizeTier(tierSel.value) === 'chopcode';
+    var hasImg = pendingAttach.some(function (a) { return /^image\//i.test(a.mime || ''); });
     if (status) {
-      if (chop && !chopcodeLocked()) {
+      if (hasImg) {
+        status.hidden = false;
+        status.textContent = 'Image output is unavailable';
+      } else if (chop && !chopcodeLocked()) {
         status.hidden = false;
         status.textContent = 'ChopCode · attach files for context';
       } else if (chop && chopcodeLocked()) {
