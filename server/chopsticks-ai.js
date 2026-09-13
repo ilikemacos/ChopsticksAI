@@ -181,7 +181,7 @@ TIERS.max = glmUltraPlate({
   extra: { max: true },
 });
 TIERS.csai4air = glmUltraPlate({
-  label: "cs.AI-4 Air",
+  label: "cs.AI-4.0-Air",
   effort: 6,
   context: 160000,
   maxReply: 8000,
@@ -223,6 +223,12 @@ const TIER_ALIASES = {
   csai4air: "csai4air",
   "csai-4-air": "csai4air",
   "cs.ai-4-air": "csai4air",
+  "cs.ai-4.0-air": "csai4air",
+  "csai-4.0-air": "csai4air",
+  "csai4.0air": "csai4air",
+  csai40air: "csai4air",
+  "4.0-air": "csai4air",
+  "4.0air": "csai4air",
   "4-air": "csai4air",
   air4: "csai4air",
   "4air": "csai4air",
@@ -1039,8 +1045,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "4.0.0";
-const PREVIEW_APP_VERSION = "4.0.0";
+const APP_VERSION = "4.0.1";
+const PREVIEW_APP_VERSION = "4.0.1";
 const STACK_NAME = "cs.AI-4";
 
 function appVersionFor(account) {
@@ -2096,7 +2102,7 @@ function selfFacts(tier, appVersion) {
     `- Current date for this session: ${clockNow().human} (${clockNow().isoDay} UTC).`,
     `- Current plate: ${t.label}, ${contextFor(t).toLocaleString()} token context, up to ${(t.maxReply || MAX_REPLY_TOKENS).toLocaleString()} reply tokens.`,
     t.air4 || t.team
-      ? "- cs.AI-4 Air runs a coordinated model team, then returns one answer."
+      ? "- cs.AI-4.0-Air runs a coordinated model team, then returns one answer."
       : t.stickerCoder
       ? "- StickerCoder+ mode: prioritise complete, runnable code, write_file tool use, and sharp engineering answers."
       : t.kaji
