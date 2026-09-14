@@ -1,7 +1,16 @@
 {
   "product": "cs.AI",
-  "latest": "4.1b",
+  "latest": "4.1c",
   "entries": [
+    {
+      "version": "4.1c",
+      "date": "2026-09-14",
+      "title": "Air is GPT-OSS 120B",
+      "changes": [
+        "cs.AI-4.0-Air uses only openai/gpt-oss-120b:free on OpenRouter",
+        "Ship 4.1c — stack is cs.AI-4"
+      ]
+    },
     {
       "version": "4.1b",
       "date": "2026-09-14",
