@@ -1,24 +1,24 @@
 import SwiftUI
 
 enum Cursor {
-    static let bg = Color(red: 0.086, green: 0.086, blue: 0.086)          
-    static let sidebar = Color(red: 0.075, green: 0.075, blue: 0.075)     
-    static let rail = Color(red: 0.067, green: 0.067, blue: 0.067)        
-    static let panel = Color(red: 0.110, green: 0.110, blue: 0.110)       
-    static let composer = Color(red: 0.129, green: 0.129, blue: 0.129)    
-    static let hover = Color(red: 0.165, green: 0.165, blue: 0.165)       
-    static let selected = Color(red: 0.188, green: 0.188, blue: 0.188)    
-    static let hairline = Color.white.opacity(0.07)
-    static let border = Color.white.opacity(0.11)
-    static let muted = Color.white.opacity(0.42)
-    static let soft = Color.white.opacity(0.68)
-    static let text = Color.white.opacity(0.92)
-    static let userBubble = Color(red: 0.165, green: 0.165, blue: 0.165)
+    static let bg = Color.black
+    static let sidebar = Color.black
+    static let rail = Color.black
+    static let panel = Color(red: 0.086, green: 0.094, blue: 0.110)
+    static let composer = Color(red: 0.086, green: 0.094, blue: 0.110)
+    static let hover = Color(red: 0.118, green: 0.125, blue: 0.141)
+    static let selected = Color(red: 0.153, green: 0.165, blue: 0.180)
+    static let hairline = Color(red: 0.184, green: 0.200, blue: 0.212)
+    static let border = Color(red: 0.184, green: 0.200, blue: 0.212)
+    static let muted = Color(red: 0.443, green: 0.463, blue: 0.482)
+    static let soft = Color(red: 0.906, green: 0.914, blue: 0.918)
+    static let text = Color(red: 0.906, green: 0.914, blue: 0.918)
+    static let userBubble = Color(red: 0.086, green: 0.094, blue: 0.110)
     static let accent = Color.white
     static let accentFg = Color.black
-    static let blue = Color(red: 0.35, green: 0.55, blue: 0.98)
-    static let green = Color(red: 0.35, green: 0.72, blue: 0.48)
-    static let chromium = Color(red: 0.102, green: 0.451, blue: 0.910)
+    static let blue = Color(red: 0.114, green: 0.608, blue: 0.941)
+    static let green = Color(red: 0.000, green: 0.729, blue: 0.486)
+    static let chromium = Color(red: 0.114, green: 0.608, blue: 0.941)
     static var mozilla: Color { chromium }
 
     static let motionPanel = Animation.spring(response: 0.52, dampingFraction: 0.92)
@@ -44,7 +44,7 @@ enum AppNav: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .agents: return "Agents"
+        case .agents: return "Chats"
         case .kaji: return "Kaji"
         case .search: return "Browser"
         case .labs: return "Labs"

@@ -580,7 +580,7 @@ final class ChatModel: ObservableObject {
     private var welcomeLine: ChatLine {
         ChatLine(
             role: "assistant",
-            text: "Welcome to cs.AI (\(appMarketingVersion)).\n\nAsk anything — general questions, code, writing. Pick ChopCode for a multi-agent coding room. Sign in to sync chats."
+            text: "What’s on your mind?\n\nAsk anything. Sign in to sync chats."
         )
     }
 
@@ -1830,13 +1830,13 @@ struct AgentChatView: View {
 
     private var composerPlaceholder: String {
         if store.webSearchEnabled {
-            return "Plan, search, build, or attach files…"
+            return "Ask cs.AI"
         }
-        return "Plan, build, or attach files… (/search forces lookup)"
+        return "Ask cs.AI (search off)"
     }
 
     private var emptyTagline: String {
-        "Welcome to cs.AI (\(appMarketingVersion))"
+        "What’s on your mind?"
     }
 
     var body: some View {
@@ -1876,7 +1876,7 @@ struct AgentChatView: View {
             Image(systemName: "sparkle")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Cursor.soft)
-            Text("Agent")
+            Text("cs.AI")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(Cursor.text)
             if store.offlineChatMode || store.privacyMode {
@@ -1912,7 +1912,7 @@ struct AgentChatView: View {
                     .frame(width: 28, height: 28)
             }
             .buttonStyle(.plain)
-            .help("New Agent")
+            .help("New chat")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 11)
@@ -1935,7 +1935,7 @@ struct AgentChatView: View {
                 Text(emptyTagline)
                     .font(.system(size: 26, weight: .semibold))
                     .foregroundStyle(Cursor.text)
-                Text(store.webSearchEnabled ? "Plan, search, build anything" : "Plan and build — web search is off")
+                Text(store.webSearchEnabled ? "Ask anything. Sign in to sync chats." : "Ask anything — web search is off.")
                     .font(.system(size: 15))
                     .foregroundStyle(Cursor.muted)
                     .animation(Cursor.motionSoft, value: store.webSearchEnabled)
@@ -1952,8 +1952,8 @@ struct AgentChatView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 11)
-                            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Cursor.panel))
-                            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Cursor.border))
+                            .background(Capsule().fill(Cursor.panel))
+                            .overlay(Capsule().strokeBorder(Cursor.border))
                     }
                     .buttonStyle(.plain)
                     .disabled(model.busy)
@@ -2260,8 +2260,8 @@ struct AgentChatView: View {
                 .padding(.horizontal, 10)
                 .padding(.bottom, 10)
             }
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Cursor.composer))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Cursor.border))
+            .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Cursor.composer))
+            .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(Cursor.border))
             .shadow(color: .black.opacity(0.35), radius: 18, y: 6)
             .padding(.horizontal, store.compact ? 14 : 22)
             .padding(.bottom, 14)
