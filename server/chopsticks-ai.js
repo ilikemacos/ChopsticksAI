@@ -29,8 +29,9 @@ const GLM_FLASH = "z-ai/glm-4.7-flash:free";
 const GPT_OSS_120B_FREE = "openai/gpt-oss-120b:free";
 const DEEPSEEK_V4_FLASH_FREE = "deepseek/deepseek-v4-flash:free";
 const GEMMA4 = "google/gemma-4-26b-a4b-it:free";
+const GROK41_FAST_FREE = "x-ai/grok-4.1-fast:free";
 const NEMO_ULTRA = "nvidia/nemotron-3-ultra-550b-a55b:free";
-const IMAGE_INPUT_MODEL = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free";
+const IMAGE_INPUT_MODEL = GROK41_FAST_FREE;
 
 function glmUltraPlate({
   label, effort, context, maxReply, grounding, searchMax, timeoutMs, temperature, extra,
@@ -206,8 +207,8 @@ TIERS.csai4air = glmUltraPlate({
 TIERS.csai4flash = {
   label: "cs.AI-4-Flash",
   flash4: true,
-  models: [GLM_FLASH],
-  longModels: [GLM_FLASH],
+  models: [GROK41_FAST_FREE],
+  longModels: [GROK41_FAST_FREE],
   refine: false,
   refineModels: [],
   context: 48000,
@@ -312,7 +313,7 @@ const TIER_ALIASES = {
   cscodepro: "chopcode",
   cscode: "chopcode",
 };
-const DEFAULT_TIER = "tamago";
+const DEFAULT_TIER = "csai4flash";
 const tierOf = (name) => {
   const key = String(name || "").toLowerCase().replace(/\s+/g, "");
   const id = TIER_ALIASES[key] || key;
@@ -748,7 +749,7 @@ function normalizeOpenRouterModelId(raw) {
   if (id === "nvidia/nemotron-3-super:free") return "nvidia/nemotron-3-super-120b-a12b:free";
   if (id === "openai/gpt-oss-120b" || id === "gpt-oss-120b:free" || id === "gpt-oss-120b") return "openai/gpt-oss-120b:free";
   if (id === "deepseek/deepseek-v4-flash" || id === "deepseek-v4-flash:free") return "deepseek/deepseek-v4-flash:free";
-  if (id === "z-ai/glm-4.7-flash" || id === "glm-4.7-flash:free") return "z-ai/glm-4.7-flash:free";
+  if (id === "x-ai/grok-4.1-fast" || id === "grok-4.1-fast:free" || id === "grok-4.1-fast") return "x-ai/grok-4.1-fast:free";
   return id;
 }
 
@@ -1092,8 +1093,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "4.1e";
-const PREVIEW_APP_VERSION = "4.1e";
+const APP_VERSION = "4.1h";
+const PREVIEW_APP_VERSION = "4.1h";
 const PROCESS_STARTED_MS = Date.now();
 const STACK_NAME = "cs.AI-4";
 
@@ -1589,8 +1590,7 @@ function answerWhenModelsFail(turns, lastUser, webBundle, payload) {
     }
   }
   return {
-    reply: (follow ? ("Re: " + follow.slice(0, 160) + "\n\n") : "") +
-      "The live model did not return a completion on that pass.",
+    reply: "I didn’t get a live completion on that pass. Send it again.",
     mode: "live",
   };
 }
@@ -2201,7 +2201,7 @@ function selfFacts(tier, appVersion) {
     `- Current date for this session: ${clockNow().human} (${clockNow().isoDay} UTC). Knowledge is current as of 13 September 2026.`,
     `- Current plate: ${t.label}, ${contextFor(t).toLocaleString()} token context, up to ${(t.maxReply || MAX_REPLY_TOKENS).toLocaleString()} reply tokens.`,
     t.flash4
-      ? "- cs.AI-4-Flash is the fast plate. Knowledge for this session is current as of 13 September 2026."
+      ? "- cs.AI-4-Flash is the flagship plate (no account). It uses x-ai/grok-4.1-fast:free on OpenRouter, including attached images."
       : t.air4 || t.team
       ? "- cs.AI-4.0-Air uses GPT-OSS 120B free and DeepSeek V4 Flash free on OpenRouter. No other models."
       : t.stickerCoder
@@ -3128,9 +3128,9 @@ async function callChatModel(opts) {
 }
 
 const DURABLE_FALLBACKS = (tier) => {
-  if (tier && tier.flash4) return [GLM_FLASH];
-  if (tier && (tier.air4 || tier.team)) return [DEEPSEEK_V4_FLASH_FREE, GPT_OSS_120B_FREE];
-  return [GLM_FLASH, GLM52];
+  if (tier && tier.flash4) return [GROK41_FAST_FREE];
+  if (tier && (tier.air4 || tier.team)) return [DEEPSEEK_V4_FLASH_FREE, GPT_OSS_120B_FREE, GEMMA4];
+  return [GEMMA4, GLM_FLASH, GLM52];
 };
 
 async function firstOkChat(calls) {
@@ -3166,6 +3166,9 @@ async function callModel({ model, messages, key, signal, maxTokens, temperature,
     temperature: temperature ?? 0.3,
     max_tokens: Math.min(Math.max(asked, 256), MAX_REPLY_TOKENS_CEILING),
   };
+  if (String(model || "").includes("grok-4.1-fast")) {
+    body.reasoning = { enabled: false };
+  }
   if (String(model || "").includes("gpt-oss")) {
     body.reasoning = { effort: "low" };
     body.max_tokens = Math.min(Math.max(asked, 800), 2500);
@@ -4009,8 +4012,10 @@ async function handler(event, context) {
     }
     const chain = (hasImageInput && !customModel
       ? (tier.air4
-        ? [IMAGE_INPUT_MODEL, DEEPSEEK_V4_FLASH_FREE, GPT_OSS_120B_FREE]
-        : [IMAGE_INPUT_MODEL, GLM_FLASH, GLM52])
+        ? [GROK41_FAST_FREE, DEEPSEEK_V4_FLASH_FREE, GPT_OSS_120B_FREE]
+        : tier.flash4
+          ? [GROK41_FAST_FREE]
+          : [GROK41_FAST_FREE, GLM_FLASH, GLM52])
       : (kajiResume && kajiResume.model && isHqOpenRouterAllowed(kajiResume.model)
       ? [kajiResume.model]
       : routeModels({
@@ -4045,8 +4050,8 @@ async function handler(event, context) {
       maxMode: maxModeOn,
     });
     const fastPromise = (async () => {
-      if (hasImageInput || runTeam || budget.skipFastRace || tier.kaji || tier.air4) return null;
-      for (const m of [GLM_FLASH, GLM52]) {
+      if (hasImageInput || runTeam || budget.skipFastRace || tier.kaji || tier.air4 || tier.flash4) return null;
+      for (const m of [GEMMA4, GLM52]) {
         if (deadline - Date.now() < 1400) return null;
         const g = withTimeout(Math.min(4200, deadline - Date.now() - 200));
         try {
@@ -4119,7 +4124,7 @@ async function handler(event, context) {
       const gAir = withTimeout(Math.min(20000, Math.max(5000, left - 400)));
       try {
         const raced = await firstOkChat(
-          [DEEPSEEK_V4_FLASH_FREE, GPT_OSS_120B_FREE].map((m) => async () => {
+          [DEEPSEEK_V4_FLASH_FREE, GPT_OSS_120B_FREE, GEMMA4].map((m) => async () => {
             const r = await callChatModel({
               model: m,
               messages,

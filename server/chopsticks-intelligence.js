@@ -312,10 +312,10 @@ function hybridRetrieve(query, scoredRows, limit) {
 function routeModels({ intel, tier, groqKey, customModel, pickedModel, longRun }) {
   if (customModel && pickedModel) return [pickedModel];
   if (tier && (tier.air4 || tier.team)) {
-    return ["openai/gpt-oss-120b:free"];
+    return ["openai/gpt-oss-120b:free", "deepseek/deepseek-v4-flash:free", "google/gemma-4-26b-a4b-it:free"];
   }
   if (tier && tier.flash4) {
-    return ["z-ai/glm-4.7-flash:free"];
+    return ["x-ai/grok-4.1-fast:free"];
   }
   if (tier.kaji) {
     const pool = (longRun || intel.decompose ? (tier.longModels || tier.models) : tier.models) || [];

@@ -86,7 +86,7 @@
       <div class="grok-topbar-brand">
         <span class="grok-topbar-title" id="topbar-title">cs.AI</span>
         <span class="grok-topbar-sep">·</span>
-        <span class="grok-topbar-plate" id="topbar-plate">Tamago</span>
+        <span class="grok-topbar-plate" id="topbar-plate">cs.AI-4-Flash</span>
         <span class="grok-topbar-badge" id="topbar-online">Online</span>
       </div>
       <div class="grok-topbar-actions" id="topbar-guest">
@@ -223,13 +223,13 @@
         <button type="button" class="tool-btn" id="or-groq-filter" hidden title="Groq models">Groq</button>
         <select class="mode-select" id="or-model" hidden aria-label="Model"><option value="">Model…</option></select>
         <div class="plate-wrap" id="plate-wrap">
-          <button type="button" class="chip plate-btn" id="plate-btn" aria-haspopup="listbox" aria-expanded="false" title="Choose model">Tamago</button>
+          <button type="button" class="chip plate-btn" id="plate-btn" aria-haspopup="listbox" aria-expanded="false" title="Choose model">cs.AI-4-Flash</button>
           <div class="plate-menu" id="plate-menu" hidden role="listbox" aria-label="Plates"></div>
           <select class="mode-select" id="tier" hidden aria-label="Plate">
+            <option value="csai4flash" selected>cs.AI-4-Flash</option>
             <option value="rice">Rice</option>
-            <option value="tamago" selected>Tamago</option>
+            <option value="tamago">Tamago</option>
             <option value="hibachi">Hibachi</option>
-            <option value="csai4flash">cs.AI-4-Flash</option>
             <option value="csai4air">cs.AI-4.0-Air</option>
             <option value="chopcode">csCode-Pro</option>
             <option value="wagyua1">Wagyu A1</option>
@@ -728,8 +728,8 @@
     if (lead) lead.textContent = offline
       ? 'Ask about MacBar, Fathom, CSR, or anything else in the bundled product docs.'
       : (plateSkyOn()
-        ? 'cs.AI 3.1 is fastest. 3.3-Fast is the default. 3.3-Thinking is the flagship. Air grades need an account. csCode-Pro is the coding plate.'
-        : 'Rice is fastest. Tamago is the default. Hibachi is the flagship. Wagyu A1–A5 need an account. ChopCode is the coding plate.');
+        ? 'cs.AI-4-Flash is the flagship (no account). 3.1 is fastest. 3.3-Fast and 3.3-Thinking are still there. Air grades need an account. csCode-Pro is the coding plate.'
+        : 'cs.AI-4-Flash is the flagship (no account). Rice is fastest. Tamago and Hibachi are still there. Wagyu A1–A5 need an account. ChopCode is the coding plate.');
     if (dl) dl.href = offline ? '/chopsticks-ai/offline/' : '/chopsticks-ai/online/';
     var up = document.getElementById('rail-upgrades');
     if (up) up.href = '/chopsticks-ai/web/upgrades/?edition=' + (offline ? 'offline' : 'online');
@@ -964,7 +964,7 @@
 
   try {
     var savedTier = normalizeTier(localStorage.getItem('chq.aiTier'));
-    if (savedTier && isWagyu(savedTier) && !(Cloud && Cloud.isSignedIn && Cloud.isSignedIn())) savedTier = 'tamago';
+    if (savedTier && isWagyu(savedTier) && !(Cloud && Cloud.isSignedIn && Cloud.isSignedIn())) savedTier = 'csai4flash';
     if (savedTier && EFFORT[savedTier]) tierSel.value = savedTier;
     var savedLang = localStorage.getItem(LANG_KEY);
     if (savedLang && langSel.querySelector('option[value="' + savedLang + '"]')) langSel.value = savedLang;
@@ -995,10 +995,10 @@
     return map[t] || t;
   }
   var PLATES = [
+    { id: 'csai4flash', tag: 'Flagship', group: 'Everyday' },
     { id: 'rice', tag: 'Fast', group: 'Everyday' },
-    { id: 'tamago', tag: 'Default', group: 'Everyday' },
-    { id: 'hibachi', tag: 'Flagship', group: 'Everyday' },
-    { id: 'csai4flash', tag: 'Flash', group: 'Everyday' },
+    { id: 'tamago', tag: 'Balanced', group: 'Everyday' },
+    { id: 'hibachi', tag: 'Thinking', group: 'Everyday' },
     { id: 'csai4air', tag: 'Best', group: 'PRO' },
     { id: 'chopcode', tag: 'Code', group: 'PRO' },
     { id: 'wagyua1', tag: 'A1', group: 'Wagyu' },
@@ -1012,13 +1012,13 @@
   function plateGroups() {
     return plateSkyOn()
       ? [
-          { label: 'cs.AI', ids: ['rice', 'tamago', 'hibachi', 'csai4flash'] },
+          { label: 'cs.AI', ids: ['csai4flash', 'rice', 'tamago', 'hibachi'] },
           { label: 'PRO', ids: ['csai4air', 'chopcode'] },
           { label: 'Air', ids: ['wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
           { label: 'Apps', ids: ['kaji', 'max'] }
         ]
       : [
-          { label: 'Everyday', ids: ['rice', 'tamago', 'hibachi', 'csai4flash'] },
+          { label: 'Everyday', ids: ['csai4flash', 'rice', 'tamago', 'hibachi'] },
           { label: 'PRO', ids: ['csai4air', 'chopcode'] },
           { label: 'Wagyu', ids: ['wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
           { label: 'Apps', ids: ['kaji', 'max'] }
@@ -1087,7 +1087,7 @@
       location.href = '/chopsticks-ai/web/kaji/' + (cloudChatId ? ('?chat=' + encodeURIComponent(cloudChatId)) : '');
       return true;
     }
-    if (!EFFORT[id]) id = 'tamago';
+    if (!EFFORT[id]) id = 'csai4flash';
     tierSel.value = id;
     try { localStorage.setItem('chq.aiTier', id); } catch (e) {}
     if (id === 'max') setMaxMode(true);
@@ -1167,12 +1167,12 @@
     }
   }
   function effortInfo() {
-    var info = EFFORT[tierSel.value] || EFFORT.tamago;
+    var info = EFFORT[tierSel.value] || EFFORT.csai4flash;
     if (maxModeOn() || tierSel.value === 'max') return { label: info.label, maxTokens: 1000 };
     return info;
   }
   function showTier() {
-    var ver = '4.1e';
+    var ver = '4.1h';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
@@ -2098,8 +2098,8 @@
       .then(function (r) { return r.json(); })
       .then(function (d) {
         var liveMiss = d && d.mode === 'error' && /didn.t return an answer/.test(String(d.reply || ''));
-        if (liveMiss && payload.tier !== 'tamago') {
-          payload.tier = 'tamago';
+        if (liveMiss && payload.tier !== 'csai4flash') {
+          payload.tier = 'csai4flash';
           payload.disableSearch = true;
           return fetch(API, { method: 'POST', headers: headers, body: JSON.stringify(payload) }).then(function (r) { return r.json(); });
         }

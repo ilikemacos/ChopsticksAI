@@ -2189,7 +2189,7 @@ struct AgentChatView: View {
                     Menu {
                         let plates = effortTiers(sky: store.skyPlates)
                         Section(store.skyPlates ? "cs.AI" : "Everyday") {
-                            ForEach(plates.filter { ["rice", "tamago", "hibachi", "csai4flash"].contains($0.id) }, id: \.id) { t in
+                            ForEach(plates.filter { ["csai4flash", "rice", "tamago", "hibachi"].contains($0.id) }, id: \.id) { t in
                                 plateMenuRow(t)
                             }
                         }

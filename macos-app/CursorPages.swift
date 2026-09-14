@@ -1129,10 +1129,10 @@ struct SettingsView: View {
                     SettingsCard(title: "Plate", subtitle: "PRO is cs.AI-4.0-Air and csCode-Pro (10 Fathom Pro keys or Founder). Then Air/Wagyu, then Apps. Kaji is alpha (5 keys).") {
                         Group {
                             Text(store.skyPlates ? "cs.AI" : "Everyday").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
+                            plateSetting("csai4flash")
                             plateSetting("rice")
                             plateSetting("tamago")
                             plateSetting("hibachi")
-                            plateSetting("csai4flash")
                             Divider().overlay(Cursor.hairline)
                             Text("PRO").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
                             plateSetting("csai4air")
