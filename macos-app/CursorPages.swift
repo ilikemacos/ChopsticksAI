@@ -536,6 +536,7 @@ struct AccountView: View {
 
 struct UsageView: View {
     @ObservedObject var store: AppStore
+    @ObservedObject private var network = NetworkStatus.shared
     @State private var redeemError: String?
     @State private var cooldownEndsAt: Date?
 
@@ -561,6 +562,7 @@ struct UsageView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     usageCard
+                    uptimeCard
                     upgradesCard
                     redeemCard
                     keysCard
@@ -575,7 +577,10 @@ struct UsageView: View {
             .background(Cursor.bg)
         }
         .background(Cursor.bg)
-        .task { await store.refreshUsage() }
+        .task {
+            await store.refreshUsage()
+            await NetworkStatus.shared.pingApi()
+        }
         .onChange(of: store.usage.blocked) { _, blocked in
             if blocked, store.usage.retryInMs > 0 {
                 cooldownEndsAt = Date().addingTimeInterval(Double(store.usage.retryInMs) / 1000)
@@ -586,6 +591,25 @@ struct UsageView: View {
         .onChange(of: store.usage.retryInMs) { _, ms in
             if store.usage.blocked, ms > 0 {
                 cooldownEndsAt = Date().addingTimeInterval(Double(ms) / 1000)
+            }
+        }
+    }
+
+    private var uptimeCard: some View {
+        SettingsCard(title: "Uptime", subtitle: "Live ping of chopstickshq.com") {
+            HStack {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(network.apiUptimeLabel)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(network.apiUp == false ? Color.red.opacity(0.85) : Cursor.text)
+                    Text(network.statusLabel)
+                        .font(.system(size: 12))
+                        .foregroundStyle(network.isOnline ? Cursor.green : Cursor.soft)
+                }
+                Spacer()
+                GhostButton(title: "Refresh") {
+                    Task { await network.pingApi() }
+                }
             }
         }
     }
@@ -1034,6 +1058,21 @@ struct SettingsView: View {
                             Spacer()
                             Image(systemName: network.isOnline ? "wifi" : "wifi.slash")
                                 .foregroundStyle(network.isOnline ? Cursor.green : Cursor.soft)
+                        }
+                        Divider().overlay(Cursor.hairline)
+                        HStack {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("cs.AI uptime")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(Cursor.text)
+                                Text(network.apiUptimeLabel)
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(network.apiUp == false ? Color.red.opacity(0.85) : Cursor.green)
+                            }
+                            Spacer()
+                            GhostButton(title: "Check") {
+                                Task { await network.pingApi() }
+                            }
                         }
                         Divider().overlay(Cursor.hairline)
                         Text(CSAIEdition.current.isOffline

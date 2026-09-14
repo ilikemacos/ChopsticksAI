@@ -1,7 +1,17 @@
 {
   "product": "cs.AI",
-  "latest": "4.0.7",
+  "latest": "4.0.8",
   "entries": [
+    {
+      "version": "4.0.8",
+      "date": "2026-09-13",
+      "title": "Uptime",
+      "changes": [
+        "Public uptime page at /chopsticks-ai/uptime/ pings the live API",
+        "Web and Mac show whether chopstickshq.com is up",
+        "Ship 4.0.8 — stack is cs.AI-4"
+      ]
+    },
     {
       "version": "4.0.7",
       "date": "2026-09-13",
