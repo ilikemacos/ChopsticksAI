@@ -26,6 +26,7 @@ const {
 
 const GLM52 = "z-ai/glm-5.2:free";
 const GLM_FLASH = "z-ai/glm-4.7-flash:free";
+const GEMMA4 = "google/gemma-4-26b-a4b-it:free";
 const NEMO_ULTRA = "nvidia/nemotron-3-ultra-550b-a55b:free";
 const IMAGE_INPUT_MODEL = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free";
 
@@ -190,7 +191,15 @@ TIERS.csai4air = glmUltraPlate({
   searchMax: 16,
   timeoutMs: 26000,
   temperature: 0.2,
-  extra: { air4: true, team: true, hqPro: true, refine: false, refineModels: [GLM52] },
+  extra: {
+    air4: true,
+    team: true,
+    hqPro: true,
+    refine: false,
+    refineModels: [],
+    models: [GLM52, GEMMA4],
+    longModels: [GLM52, GEMMA4],
+  },
 });
 TIERS.csai4flash = {
   label: "cs.AI-4-Flash",
@@ -1079,8 +1088,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "4.1.0";
-const PREVIEW_APP_VERSION = "4.1.0";
+const APP_VERSION = "4.1a";
+const PREVIEW_APP_VERSION = "4.1a";
 const PROCESS_STARTED_MS = Date.now();
 const STACK_NAME = "cs.AI-4";
 
@@ -1570,19 +1579,13 @@ function answerWhenModelsFail(turns, lastUser, webBundle, payload) {
       .split(/\n+/)
       .map((s) => s.replace(/^\s*[-*]\s*/, "").trim())
       .filter((s) => s.length > 24)
-      .slice(0, 8);
+      .slice(0, 10);
     if (lines.length) {
       return { reply: lines.join("\n\n").slice(0, 2400), mode: "live" };
     }
   }
-  if (follow) {
-    return {
-      reply: "I still have your question. The live pass ran out of time — I did not drop the thread. Ask it again in one message and I will answer it.",
-      mode: "live",
-    };
-  }
   return {
-    reply: "The live pass ran out of time. Send the question in one message and I will answer it.",
+    reply: "I could not finish a live model pass on that turn. The question is still here — I will take it on the next send.",
     mode: "live",
   };
 }
@@ -2195,7 +2198,7 @@ function selfFacts(tier, appVersion) {
     t.flash4
       ? "- cs.AI-4-Flash is the fast plate. Knowledge for this session is current as of 13 September 2026."
       : t.air4 || t.team
-      ? "- cs.AI-4.0-Air drafts on GLM 4.7 Flash free, then GLM 5.2 free writes the final reply. No other models."
+      ? "- cs.AI-4.0-Air uses only GLM 5.2 free and Gemma 4 free. No GLM 4.7 Flash."
       : t.stickerCoder
       ? "- StickerCoder+ mode: prioritise complete, runnable code, write_file tool use, and sharp engineering answers."
       : t.kaji
@@ -3111,7 +3114,7 @@ async function callChatModel(opts) {
 
 const DURABLE_FALLBACKS = (tier) => {
   if (tier && tier.flash4) return [GLM_FLASH];
-  if (tier && (tier.air4 || tier.team)) return [GLM52, GLM_FLASH];
+  if (tier && (tier.air4 || tier.team)) return [GLM52, GEMMA4];
   return [GLM_FLASH, GLM52];
 };
 
@@ -3803,9 +3806,12 @@ async function handler(event, context) {
   const tierCap = maxModeOn
     ? BILLABLE_MAX_MODE
     : (tier.maxReply || MAX_REPLY_TOKENS_CEILING);
-  const replyTokens = Number.isFinite(wanted)
+  const replyTokensRaw = Number.isFinite(wanted)
     ? Math.max(100, Math.min(tierCap, MAX_REPLY_TOKENS_CEILING, Math.round(wanted)))
     : (payload.mode === "agent" ? tierCap : MAX_REPLY_TOKENS);
+  const replyTokens = (tier.air4 || tier.team)
+    ? Math.min(replyTokensRaw, 1600)
+    : (tier.flash4 ? Math.min(replyTokensRaw, 1200) : replyTokensRaw);
 
   const { query: parsedSearch, hadPrefix } = parseSearchRequest(lastUser.content);
   const searchQuery = searchQueryForTurns(turns, parsedSearch) || parsedSearch;
@@ -3955,12 +3961,14 @@ async function handler(event, context) {
 
     const ask = String(lastUser.content || "");
     const wantsFiles = /\b(write|create|generate|make|build|scaffold|implement|export|download)\b[\s\S]{0,80}\b(file|files|script|code|program|function|class|module|component|app|html|markdown|md|zip|archive|pdf|csv|json)\b|\.\w{1,8}\b|```|write_file/i.test(ask);
-    const useTools = budget.skipTools
+    const useTools = (tier.air4 || tier.team)
+      ? false
+      : (budget.skipTools
       ? false
       : (
         (tier.kaji && (intel.toolsRequired || wantsFiles))
         || (!tier.kaji && payload.enableTools !== false && (payload.tools === true || wantsFiles))
-      );
+      ));
     const activeTools = tier.kaji
       ? (isMacKajiClient(payload)
         ? KAJI_TOOLS
@@ -3982,7 +3990,7 @@ async function handler(event, context) {
     }
     const chain = (hasImageInput && !customModel
       ? (tier.air4
-        ? [IMAGE_INPUT_MODEL, GLM52]
+        ? [IMAGE_INPUT_MODEL, GLM52, GEMMA4]
         : [IMAGE_INPUT_MODEL, GLM_FLASH, GLM52])
       : (kajiResume && kajiResume.model && isHqOpenRouterAllowed(kajiResume.model)
       ? [kajiResume.model]
@@ -4087,21 +4095,49 @@ async function handler(event, context) {
     let conversationTrace = null;
     let onlineTeamUsed = false;
     if (runTeam && !draft) {
-      const team = await runOnlineEnsemble({
-        callChatModel,
-        messages,
-        openRouterKey: apiKey,
-        groqKey,
-        anthropicKey,
-        maxTokens: replyTokens,
-        deadlineMs: Math.min(Date.now() + 20000, deadline - 200),
-        clockHuman: clock.human,
-        isoDay: clock.isoDay,
-      });
-      if (team && team.reply) {
-        draft = { ok: true, text: team.reply, tokens: team.tokens || 0, toolCalls: [] };
-        draftModel = team.leadModel || "z-ai/glm-5.2:free";
-        onlineTeamUsed = true;
+      const airTok = Math.min(1600, replyTokens);
+      const airPair = [GEMMA4, GLM52];
+      for (let i = 0; i < airPair.length; i++) {
+        const m = airPair[i];
+        const left = deadline - Date.now();
+        if (left < 1600) break;
+        const slice = i === 0
+          ? Math.min(10000, Math.max(4000, left - 9000))
+          : Math.min(14000, left - 400);
+        const g = withTimeout(slice);
+        try {
+          const r = await callChatModel({
+            model: m,
+            messages: (i === 1 && draft && draft.text)
+              ? [
+                { role: "system", content: "Write the only reply the user will see. Use the draft as notes. Do not mention a draft or model names. Never add a Sources section." },
+                {
+                  role: "user",
+                  content:
+                    String((messages.find((x) => x.role === "system") || {}).content || "").slice(0, 3500) +
+                    "\n\nUSER REQUEST:\n" + String(lastUser.content || "") +
+                    "\n\nDRAFT:\n" + String(draft.text).slice(0, 3200) +
+                    "\n\nWrite the final answer now.",
+                },
+              ]
+              : messages,
+            openRouterKey: apiKey,
+            groqKey,
+            anthropicKey,
+            signal: g.signal,
+            maxTokens: airTok,
+            temperature: i === 0 ? 0.22 : 0.18,
+          });
+          if (r && r.ok && r.text) {
+            draft = { ok: true, text: r.text, tokens: (draft && draft.tokens || 0) + (r.tokens || 0), toolCalls: [] };
+            draftModel = m;
+            onlineTeamUsed = true;
+          }
+        } catch (e) {
+          lastDetail = String(e && e.name) + " [air-" + m + "]";
+        } finally {
+          g.done();
+        }
       }
     }
     if (tier.chopCode && !customModel && !hasImageInput) {
