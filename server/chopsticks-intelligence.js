@@ -312,7 +312,7 @@ function hybridRetrieve(query, scoredRows, limit) {
 function routeModels({ intel, tier, groqKey, customModel, pickedModel, longRun }) {
   if (customModel && pickedModel) return [pickedModel];
   if (tier && (tier.air4 || tier.team)) {
-    return ["z-ai/glm-4.7-flash:free"];
+    return ["openai/gpt-oss-120b:free"];
   }
   if (tier && tier.flash4) {
     return ["z-ai/glm-4.7-flash:free"];
