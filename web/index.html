@@ -21,53 +21,52 @@
 <link rel="apple-touch-icon" href="/chopsticks-ai/web/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/chopsticks-ai/web/grok-ui.css?v=20260914chat">
 <link rel="stylesheet" href="/chopsticks-ai/web/cursor-ui.css?v=20260913c4">
-<style>
-  .attach-chip.busy { color: var(--cursor-muted); }
-  .search-toggle.off { color: var(--cursor-muted); }
-  .max-toggle.off { color: var(--cursor-muted); }
-  .auth-hint { color: var(--cursor-muted); font-size: 12px; margin: 6px 0 0; line-height: 1.35; }
-</style>
+<link rel="stylesheet" href="/chopsticks-ai/web/grok-chat-extras.css?v=20260914chat">
 </head>
-<body class="cursor-app has-intro">
-<div class="cursor-shell">
-  <aside class="cursor-rail" aria-label="Activity bar">
-    <button type="button" class="rail-btn active" id="sidebar-toggle" title="Agents" aria-label="Agents">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M8 10h8M8 14h5"/><rect x="4" y="5" width="16" height="14" rx="2"/></svg>
+<body class="grok-app has-intro">
+<div class="grok-shell">
+  <aside class="grok-rail" aria-label="cs.AI">
+    <a class="grok-rail-home" href="/chopsticks-ai/web/" title="cs.AI">
+      <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><rect x="14.15" y="3.2" width="3.7" height="25.6" rx="1.85" transform="rotate(-20 16 16)"/><rect x="14.15" y="3.2" width="3.7" height="25.6" rx="1.85" transform="rotate(20 16 16)"/></svg>
+    </a>
+    <button type="button" class="grok-rail-btn active" id="sidebar-toggle" title="Chats" aria-label="Chats">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M8 7h8M8 12h8M8 17h5"/></svg>
     </button>
-    <button type="button" class="rail-btn" id="rail-new-chat" title="New Agent" aria-label="New chat">
+    <button type="button" class="grok-rail-btn" id="rail-new-chat" title="New chat" aria-label="New chat">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
     </button>
-    <a class="rail-btn rail-chopcode" href="/chopsticks-ai/web/?edition=online&plate=chopcode" title="ChopCode" aria-label="ChopCode">
+    <a class="grok-rail-btn" href="/chopsticks-ai/web/?edition=online&plate=chopcode" title="ChopCode" aria-label="ChopCode">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M8 7h8M8 12h5M7 17h10"/><path d="M5 5v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H6a1 1 0 0 0-1 1z"/></svg>
     </a>
-    <a class="rail-btn" id="rail-kaji" href="/chopsticks-ai/web/kaji/" title="Kaji" aria-label="Kaji">
+    <a class="grok-rail-btn" id="rail-kaji" href="/chopsticks-ai/web/kaji/" title="Kaji" aria-label="Kaji">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M12 3l2.2 6.4L21 12l-6.8 2.6L12 21l-2.2-6.4L3 12l6.8-2.6L12 3z"/></svg>
     </a>
-    <button type="button" class="rail-btn" id="rail-more-models" title="More models" aria-label="More models">
+    <button type="button" class="grok-rail-btn" id="rail-more-models" title="More models" aria-label="More models">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6L12 3z"/></svg>
     </button>
-    <a class="rail-btn" id="rail-upgrades" href="/chopsticks-ai/web/upgrades/" title="Upgrades" aria-label="Upgrades">
+    <a class="grok-rail-btn" id="rail-upgrades" href="/chopsticks-ai/web/upgrades/" title="Upgrades" aria-label="Upgrades">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M12 3l2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4L12 3z"/></svg>
     </a>
-    <span class="rail-spacer"></span>
-    <button type="button" class="rail-btn" id="account-btn" title="Account" aria-label="Account"><span id="account-label">◉</span></button>
+    <span class="grok-rail-spacer"></span>
+    <button type="button" class="grok-rail-btn" id="account-btn" title="Account" aria-label="Account"><span id="account-label">◉</span></button>
   </aside>
 
-  <aside class="cursor-sidebar" id="cursor-sidebar" aria-label="Agents">
-    <div class="sidebar-head">
-      <button type="button" class="new-agent-btn" id="drawer-new-chat" title="New Agent">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-        New Agent
-      </button>
+  <div class="grok-scrim" id="chat-scrim"></div>
+  <aside class="grok-drawer" id="cursor-sidebar" aria-label="Chats">
+    <div class="grok-drawer-head">
+      Chats
+      <button type="button" class="grok-drawer-close" id="drawer-close" aria-label="Close">×</button>
     </div>
-    <div class="sidebar-chats chat-list-panel" id="chat-list-panel">
+    <button type="button" class="grok-auth-btn grok-auth-btn-fill" id="drawer-new-chat" style="margin:0 16px 12px" title="New chat">New chat</button>
+    <div class="chat-list-panel" id="chat-list-panel">
       <div class="chat-list-empty">Sign in to sync chats.</div>
     </div>
     <select id="chat-list" aria-label="Saved chats" hidden><option value="">Local chat</option></select>
-    <div class="sidebar-foot">
-      <button type="button" class="sbar-link" id="sidebar-signin">Sign in</button>
+    <div class="grok-drawer-foot">
+      <button type="button" id="sidebar-signin">Sign in</button>
       <select id="lang" aria-label="Reply language">
         <option value="en">English</option>
         <option value="zh">中文</option>
@@ -76,28 +75,27 @@
         <option value="ko">한국어</option>
         <option value="ja">日本語</option>
       </select>
-      <a class="sbar-link" href="/chopsticks-ai/web/upgrades/">Upgrades</a>
-      <a class="sbar-link" id="sidebar-download" href="/chopsticks-ai/online/">Mac app</a>
-      <button type="button" class="sbar-link" id="drawer-browser">Browser</button>
+      <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
+      <a id="sidebar-download" href="/chopsticks-ai/online/">Mac app</a>
+      <button type="button" id="drawer-browser">Browser</button>
     </div>
   </aside>
 
-  <div class="cursor-workspace">
-    <header class="cursor-topbar">
-      <div class="cursor-topbar-brand">
-        <svg class="csai-mark" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><rect x="14.15" y="3.2" width="3.7" height="25.6" rx="1.85" transform="rotate(-20 16 16)"/><rect x="14.15" y="3.2" width="3.7" height="25.6" rx="1.85" transform="rotate(20 16 16)"/></svg>
-        <span class="cursor-topbar-title" id="topbar-title">Agent</span>
-        <span class="topbar-sep">·</span>
-        <span class="topbar-plate" id="topbar-plate">Tamago</span>
-        <span class="topbar-badge" id="topbar-online">Online</span>
+  <div class="grok-main">
+    <header class="grok-topbar">
+      <div class="grok-topbar-brand">
+        <span class="grok-topbar-title" id="topbar-title">cs.AI</span>
+        <span class="grok-topbar-sep">·</span>
+        <span class="grok-topbar-plate" id="topbar-plate">Tamago</span>
+        <span class="grok-topbar-badge" id="topbar-online">Online</span>
       </div>
-      <div class="cursor-topbar-actions" id="topbar-guest">
-        <button type="button" class="cursor-auth-btn cursor-auth-btn-fill" id="top-signin">Sign in</button>
+      <div class="grok-topbar-actions" id="topbar-guest">
+        <button type="button" class="grok-auth-btn grok-auth-btn-fill" id="top-signin">Sign in</button>
       </div>
-      <div class="cursor-topbar-user" id="topbar-user" hidden>
-        <span class="cursor-topbar-email" id="topbar-email"></span>
-        <button type="button" class="icon-btn" id="rail-new-chat-dup" title="New Agent" hidden></button>
-        <button type="button" class="cursor-auth-btn" id="top-account">Account</button>
+      <div class="grok-topbar-user" id="topbar-user" hidden>
+        <span class="grok-topbar-email" id="topbar-email"></span>
+        <button type="button" class="icon-btn" id="rail-new-chat-dup" title="New chat" hidden></button>
+        <button type="button" class="grok-auth-btn" id="top-account">Account</button>
       </div>
     </header>
 
@@ -185,47 +183,42 @@
     </div>
   </div>
 </aside>
-<div class="main-col">
+<div class="grok-chat-col">
 <div class="stage" id="stage">
   <div class="inner" id="log">
-    <div class="intro" id="intro">
-      <div class="intro-mark" aria-hidden="true">
+    <div class="intro grok-home" id="intro">
+      <div class="grok-logo" aria-hidden="true">
         <svg viewBox="0 0 32 32" fill="currentColor"><rect x="14.15" y="3.2" width="3.7" height="25.6" rx="1.85" transform="rotate(-20 16 16)"/><rect x="14.15" y="3.2" width="3.7" height="25.6" rx="1.85" transform="rotate(20 16 16)"/></svg>
       </div>
-      <h1 id="intro-greeting">Welcome to cs.AI</h1>
-      <p class="intro-sub" id="intro-sub">What do you want to know?</p>
+      <h1 id="intro-greeting">What’s on your mind?</h1>
+      <p class="grok-intro-sub" id="intro-sub">cs.AI — ask anything. Sign in to sync chats.</p>
       <p class="intro-lead" id="intro-lead" hidden></p>
       <div class="plate-tiles" id="plate-tiles" hidden></div>
-      <div class="intro-actions" id="intro-actions">
-        <button type="button" class="intro-starter" data-suggest="What is ChopsticksAI?">What is ChopsticksAI?</button>
-        <button type="button" class="intro-starter" data-suggest="How do I install rNitro?">How do I install rNitro?</button>
-        <button type="button" class="intro-starter" data-suggest="macOS says it can't be opened">macOS says it can't be opened</button>
-        <button type="button" class="intro-starter" data-suggest="Write me a haiku about Mondays">Write me a haiku about Mondays</button>
-      </div>
+      <div class="intro-actions grok-pills" id="intro-actions"></div>
     </div>
   </div>
 </div>
 
-<div class="composer" id="composer">
-  <div class="composer-meta">
+<div class="grok-composer" id="composer">
+  <div class="grok-composer-meta">
     <div class="hint">
-      <span>Enter to send · Shift+Enter for newline</span>
       <span id="status" class="composer-note" hidden></span>
     </div>
     <div class="usage" id="usage" aria-live="polite"></div>
     <div class="attach-row" id="attach-row" hidden></div>
   </div>
-  <div class="composer-inner">
-    <textarea id="input" rows="1" placeholder="Plan, search, build…" aria-label="Message"></textarea>
+  <div class="grok-composer-box">
+    <textarea id="input" rows="1" placeholder="Ask cs.AI" aria-label="Message"></textarea>
     <input type="file" id="file-input" multiple hidden>
-    <div class="composer-toolbar">
+    <div class="grok-composer-tools">
+      <div class="grok-composer-tools-left">
       <button type="button" class="chip attach-btn" id="attach-btn" title="Attach files" aria-label="Attach">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M8 12v-2a4 4 0 0 1 8 0v8a4 4 0 0 1-8 0v-4"/><path d="M12 14V6"/></svg>
         Attach
       </button>
       <button type="button" class="chip search-toggle on" id="search-toggle" title="Web search">Search</button>
       <button type="button" class="chip max-toggle" id="max-toggle" title="Max mode">Max off</button>
-      <div class="composer-toolbar-right">
+      </div>
+      <div class="grok-composer-tools-right">
         <input type="text" id="or-model-filter" class="model-filter" hidden placeholder="Filter…" aria-label="Filter models">
         <button type="button" class="tool-btn" id="or-groq-filter" hidden title="Groq models">Groq</button>
         <select class="mode-select" id="or-model" hidden aria-label="Model"><option value="">Model…</option></select>
@@ -248,21 +241,20 @@
             <option value="max">Max</option>
           </select>
         </div>
-        <button type="button" class="send" id="send" title="Send" aria-label="Send" disabled>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 19V5M7 10l5-5 5 5"/></svg>
+        <button type="button" class="grok-send" id="send" title="Send" aria-label="Send" disabled>
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.4 20.6 21 12 3.4 3.4l.1 7.1L15 12l-11.5 1.5z"/></svg>
         </button>
       </div>
     </div>
   </div>
-  <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
+  <p class="grok-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
-<footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">4.1d</span>
-  <span class="cursor-footer-up" id="csai-uptime">API …</span>
-  <a href="/chopsticks-ai/uptime/">Uptime</a>
-  <a href="/chopsticks-ai/enterprise/">Enterprise</a>
-  <a href="/chopsticks-ai/">cs.AI</a>
-  <a href="/">Chopsticks HQ</a>
+<footer class="grok-footer">
+  <span id="csai-uptime">API …</span>
+  · <a href="/chopsticks-ai/uptime/">Uptime</a>
+  · <a href="/chopsticks-ai/web/upgrades/">Pro</a>
+  · <a href="/chopsticks-ai/online/">Mac</a>
+  · <a href="/">HQ</a>
 </footer>
 </div>
 </div>
@@ -723,11 +715,11 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (4.1d)';
-    if (title) title.textContent = 'Agent';
+    if (g) g.textContent = 'What’s on your mind?';
+    if (title) title.textContent = 'cs.AI';
     if (sub) sub.textContent = offline
-      ? 'Ask the on-device Chopsticks HQ knowledge base'
-      : 'Plan, search, build anything';
+      ? 'Ask the on-device Chopsticks HQ knowledge base.'
+      : 'Ask anything. Sign in to sync chats.';
     var badge = document.getElementById('topbar-online');
     if (badge) {
       badge.textContent = offline ? 'Offline' : 'Online';
@@ -1180,7 +1172,7 @@
     return info;
   }
   function showTier() {
-    var ver = '4.1d';
+    var ver = '4.1e';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
@@ -1211,8 +1203,8 @@
     }
     if (input) {
       if (chop) input.placeholder = 'Paste an error, or attach a file…';
-      else if (webSearchOn()) input.placeholder = 'Plan, search, build…';
-      else input.placeholder = 'Ask anything (search off · /search forces lookup)…';
+      else if (webSearchOn()) input.placeholder = 'Ask cs.AI';
+      else input.placeholder = 'Ask cs.AI (search off)';
     }
     updateSearchToggleUI();
   }
@@ -1598,7 +1590,7 @@
     SUGGESTIONS.forEach(function (s) {
       var b = document.createElement('button');
       b.type = 'button';
-      b.className = 'intro-starter';
+      b.className = 'intro-starter grok-pill';
       b.textContent = s.label;
       b.addEventListener('click', function () {
         if (s.plate) setPlate(s.plate);
@@ -2540,21 +2532,29 @@
   (function wireCursorChrome() {
     var sidebar = document.getElementById('cursor-sidebar');
     var toggle = document.getElementById('sidebar-toggle');
+    var scrim = document.getElementById('chat-scrim');
+    var drawerClose = document.getElementById('drawer-close');
     var SIDEBAR_KEY = 'chq.web.sidebarOpen';
     function setSidebar(open) {
-      if (sidebar) sidebar.classList.toggle('collapsed', !open);
-      if (toggle) toggle.classList.toggle('active', open);
+      if (sidebar) {
+        sidebar.classList.toggle('open', !!open);
+        sidebar.classList.toggle('collapsed', !open);
+      }
+      if (toggle) toggle.classList.toggle('active', !!open);
+      if (scrim) scrim.classList.toggle('open', !!open);
       try { localStorage.setItem(SIDEBAR_KEY, open ? '1' : '0'); } catch (e) {}
     }
-    var defaultOpen = true;
+    var defaultOpen = false;
     try {
       if (window.matchMedia && matchMedia('(max-width: 768px)').matches) defaultOpen = false;
       else if (localStorage.getItem(SIDEBAR_KEY) === '0') defaultOpen = false;
     } catch (e) {}
     setSidebar(defaultOpen);
     if (toggle) toggle.addEventListener('click', function () {
-      setSidebar(sidebar && sidebar.classList.contains('collapsed'));
+      setSidebar(sidebar && !sidebar.classList.contains('open'));
     });
+    if (drawerClose) drawerClose.addEventListener('click', function () { setSidebar(false); });
+    if (scrim) scrim.addEventListener('click', function () { setSidebar(false); });
     var drawerNew = document.getElementById('drawer-new-chat');
     var railNew = document.getElementById('rail-new-chat');
     function onNewChat() { startNewChat(); }
