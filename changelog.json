@@ -1,13 +1,22 @@
 {
   "product": "cs.AI",
-  "latest": "4.1.0",
+  "latest": "4.1a",
   "entries": [
+    {
+      "version": "4.1a",
+      "date": "2026-09-14",
+      "title": "Air is 5.2 and Gemma 4",
+      "changes": [
+        "cs.AI-4.0-Air uses GLM 5.2 free and Gemma 4 free only — no GLM 4.7 Flash",
+        "Ship 4.1a — stack is cs.AI-4"
+      ]
+    },
     {
       "version": "4.1.0",
       "date": "2026-09-14",
       "title": "Air is Flash then 5.2",
       "changes": [
-        "cs.AI-4.0-Air drafts on GLM 4.7 Flash free, then GLM 5.2 free writes the final reply",
+        "cs.AI-4.0-Air uses only GLM 4.7 Flash free",
         "Air does not call any other models",
         "Ship 4.1.0 — stack is cs.AI-4"
       ]
