@@ -1,7 +1,16 @@
 {
   "product": "cs.AI",
-  "latest": "4.1d",
+  "latest": "4.1e",
   "entries": [
+    {
+      "version": "4.1e",
+      "date": "2026-09-14",
+      "title": "Chat is the product",
+      "changes": [
+        "Web and Mac empty state match Grok/ChatGPT — What’s on your mind?",
+        "Ship 4.1e — stack is cs.AI-4"
+      ]
+    },
     {
       "version": "4.1d",
       "date": "2026-09-14",
