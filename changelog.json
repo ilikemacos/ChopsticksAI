@@ -1,7 +1,33 @@
 {
   "product": "cs.AI",
-  "latest": "4.1e",
+  "latest": "4.1h",
   "entries": [
+    {
+      "version": "4.1h",
+      "date": "2026-09-14",
+      "title": "Flash is the default",
+      "changes": [
+        "Web and Mac default to cs.AI-4-Flash (flagship, no account)",
+        "Flash still uses x-ai/grok-4.1-fast:free"
+      ]
+    },
+    {
+      "version": "4.1g",
+      "date": "2026-09-14",
+      "title": "Flash is Grok 4.1 Fast",
+      "changes": [
+        "cs.AI-4-Flash (flagship, no account) uses x-ai/grok-4.1-fast:free on OpenRouter"
+      ]
+    },
+    {
+      "version": "4.1f",
+      "date": "2026-09-14",
+      "title": "Flash is Gemma 4",
+      "changes": [
+        "cs.AI-4-Flash uses google/gemma-4-26b-a4b-it:free on OpenRouter, including attached images",
+        "Empty live-model fallback copy is gone"
+      ]
+    },
     {
       "version": "4.1e",
       "date": "2026-09-14",

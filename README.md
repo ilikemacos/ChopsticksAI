@@ -3,11 +3,11 @@
 **Free Mac, web, and Terminal AI agent** — no OpenRouter API key on your side.  
 Built-in Chromium browser · Cursor-style Agents window · MIT licensed.
 
-Latest release: **cs.AI Online 4.1e** (Offline remains 3.6.10).
+Latest release: **cs.AI Online 4.1h** (Offline remains 3.6.10).
 
 chopsticksAI (cs.AI) is the free AI assistant from Chopsticks HQ. Use it in the macOS app, in your browser, or from Terminal with `csai`. Live chat runs through chopstickshq.com — you never paste an OpenRouter or OpenAI key.
 
-[![Download cs.AI 4.1e](https://img.shields.io/badge/download-cs.AI%204.1e-00ff80)](https://chopstickshq.com/chopsticks-ai/online/)
+[![Download cs.AI 4.1h](https://img.shields.io/badge/download-cs.AI%204.1h-00ff80)](https://chopstickshq.com/chopsticks-ai/online/)
 [![Product Hunt](https://img.shields.io/badge/Product%20Hunt-cs.AI-da552f)](https://www.producthunt.com/products/cs-ai)
 [![AlternativeTo](https://img.shields.io/badge/AlternativeTo-listing-0f766e)](https://alternativeto.net/software/chopsticks-ai/about/)
 [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-111111)](https://chopstickshq.com/chopsticks-ai/)
@@ -20,10 +20,10 @@ chopsticksAI (cs.AI) is the free AI assistant from Chopsticks HQ. Use it in the 
 
 ---
 
-## What's new in 4.1e
+## What's new in 4.1h
 
+- **cs.AI-4-Flash** is the flagship default on Mac and web (no account). Uses `x-ai/grok-4.1-fast:free`.
 - **Chat UI** — Mac and web match Grok/ChatGPT: “What’s on your mind?”, rounded composer.
-- **cs.AI-4.0-Air** still uses GPT-OSS 120B free and DeepSeek V4 Flash free on OpenRouter.
 
 ## What's new in 4.1d
 
@@ -105,7 +105,7 @@ curl -fsSL https://chopstickshq.com/chopsticks-ai/install-chopsticks-ai.sh | bas
 curl -fsSL https://chopstickshq.com/chopsticks-ai/install-chopsticks-ai-offline.sh | bash
 ```
 
-Or download **chopsticksAI-v4.1e.zip** / **chopsticksAI-offline-v3.6.10.zip** from the product pages or [Releases](https://github.com/ilikemacos/ChopsticksAI/releases).
+Or download **chopsticksAI-v4.1h.zip** / **chopsticksAI-offline-v3.6.10.zip** from the product pages or [Releases](https://github.com/ilikemacos/ChopsticksAI/releases).
 
 ---
 
@@ -137,7 +137,7 @@ From repo: `cli/install.sh`
 Requires macOS 14+ and Swift (`swiftc`). From `macos-app/`:
 
 ```bash
-./build-app.sh v4.1e online
+./build-app.sh v4.1h online
 ./build-app.sh v3.6.10 offline
 ```
 

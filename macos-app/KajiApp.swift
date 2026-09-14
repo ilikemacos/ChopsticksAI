@@ -15,7 +15,7 @@ struct KajiAppView: View {
     @ObservedObject private var attachments = AttachmentStore.shared
     @ObservedObject private var commandGate = KajiCommandGate.shared
     @FocusState private var focused: Bool
-    @State private var previousTier = "tamago"
+    @State private var previousTier = "csai4flash"
 
     private var showEmpty: Bool { model.lines.count <= 1 && !model.busy }
     private var kajiUnlocked: Bool {
@@ -71,7 +71,7 @@ struct KajiAppView: View {
         .onDisappear {
             commandGate.cancelPending()
             guard store.tier == "kaji" else { return }
-            let restore = previousTier == "kaji" ? "tamago" : previousTier
+            let restore = previousTier == "kaji" ? "csai4flash" : previousTier
             store.setTier(restore, syncNav: false)
         }
     }

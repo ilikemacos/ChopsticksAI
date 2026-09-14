@@ -2,7 +2,7 @@ import Foundation
 
 enum PlateCatalog {
     static let ids = [
-        "rice", "tamago", "hibachi", "csai4flash",
+        "csai4flash", "rice", "tamago", "hibachi",
         "csai4air", "chopcode",
         "wagyua1", "wagyua2", "wagyua3", "wagyua4", "wagyua5",
         "kaji", "max", "stickercoderplus",
