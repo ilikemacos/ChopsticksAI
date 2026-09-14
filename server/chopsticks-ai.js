@@ -32,14 +32,13 @@ const IMAGE_INPUT_MODEL = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free";
 function glmUltraPlate({
   label, effort, context, maxReply, grounding, searchMax, timeoutMs, temperature, extra,
 }) {
-  const ultraLead = effort >= 3;
-  const models = ultraLead ? [NEMO_ULTRA, GLM52] : [GLM52, NEMO_ULTRA];
+  const models = [GLM_FLASH, GLM52];
   return {
     label,
     models,
-    longModels: [NEMO_ULTRA, GLM52],
+    longModels: [GLM52, GLM_FLASH],
     refine: effort >= 3,
-    refineModels: effort >= 4 ? [NEMO_ULTRA, GLM52] : [GLM52],
+    refineModels: [GLM52],
     context,
     maxReply,
     grounding,
@@ -191,7 +190,7 @@ TIERS.csai4air = glmUltraPlate({
   searchMax: 16,
   timeoutMs: 26000,
   temperature: 0.2,
-  extra: { air4: true, team: true, hqPro: true },
+  extra: { air4: true, team: true, hqPro: true, refine: false, refineModels: [GLM52] },
 });
 TIERS.csai4flash = {
   label: "cs.AI-4-Flash",
@@ -1080,8 +1079,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "4.0.8";
-const PREVIEW_APP_VERSION = "4.0.8";
+const APP_VERSION = "4.1.0";
+const PREVIEW_APP_VERSION = "4.1.0";
 const PROCESS_STARTED_MS = Date.now();
 const STACK_NAME = "cs.AI-4";
 
@@ -1566,9 +1565,24 @@ function answerWhenModelsFail(turns, lastUser, webBundle, payload) {
   if (priorAssistant && priorAssistant.content && isThinFollowUp(follow)) {
     return { reply: stripSourcesFromReply(String(priorAssistant.content).slice(0, 1800)), mode: "live" };
   }
-
+  if (context) {
+    const lines = context
+      .split(/\n+/)
+      .map((s) => s.replace(/^\s*[-*]\s*/, "").trim())
+      .filter((s) => s.length > 24)
+      .slice(0, 8);
+    if (lines.length) {
+      return { reply: lines.join("\n\n").slice(0, 2400), mode: "live" };
+    }
+  }
+  if (follow) {
+    return {
+      reply: "I still have your question. The live pass ran out of time — I did not drop the thread. Ask it again in one message and I will answer it.",
+      mode: "live",
+    };
+  }
   return {
-    reply: "Send that again and I’ll continue from here.",
+    reply: "The live pass ran out of time. Send the question in one message and I will answer it.",
     mode: "live",
   };
 }
@@ -2181,7 +2195,7 @@ function selfFacts(tier, appVersion) {
     t.flash4
       ? "- cs.AI-4-Flash is the fast plate. Knowledge for this session is current as of 13 September 2026."
       : t.air4 || t.team
-      ? "- cs.AI-4.0-Air runs a coordinated model team, then returns one answer."
+      ? "- cs.AI-4.0-Air drafts on GLM 4.7 Flash free, then GLM 5.2 free writes the final reply. No other models."
       : t.stickerCoder
       ? "- StickerCoder+ mode: prioritise complete, runnable code, write_file tool use, and sharp engineering answers."
       : t.kaji
@@ -3095,14 +3109,11 @@ async function callChatModel(opts) {
   return last;
 }
 
-const DURABLE_FALLBACKS = (groqKey) => [
-  GLM_FLASH,
-  GLM52,
-  ...(groqKey ? ["groq/llama-3.1-8b-instant", "groq/llama-3.3-70b-versatile"] : []),
-  "openrouter/free",
-  "google/gemma-4-26b-a4b-it:free",
-  "nvidia/nemotron-3-nano-30b-a3b:free",
-];
+const DURABLE_FALLBACKS = (tier) => {
+  if (tier && tier.flash4) return [GLM_FLASH];
+  if (tier && (tier.air4 || tier.team)) return [GLM52, GLM_FLASH];
+  return [GLM_FLASH, GLM52];
+};
 
 async function firstOkChat(calls) {
   if (!calls.length) return null;
@@ -3970,7 +3981,9 @@ async function handler(event, context) {
       });
     }
     const chain = (hasImageInput && !customModel
-      ? [IMAGE_INPUT_MODEL, GLM_FLASH, GLM52, "openrouter/free"]
+      ? (tier.air4
+        ? [IMAGE_INPUT_MODEL, GLM52]
+        : [IMAGE_INPUT_MODEL, GLM_FLASH, GLM52])
       : (kajiResume && kajiResume.model && isHqOpenRouterAllowed(kajiResume.model)
       ? [kajiResume.model]
       : routeModels({
@@ -3996,11 +4009,6 @@ async function handler(event, context) {
       modelTurns,
       10000
     );
-    const fastModels = [
-      ...(groqKey ? ["groq/llama-3.1-8b-instant"] : []),
-      "openrouter/free",
-      "google/gemma-4-26b-a4b-it:free",
-    ];
     const runTeam = !hasImageInput && shouldRunOnlineTeam({
       customModel,
       kajiResume,
@@ -4010,8 +4018,8 @@ async function handler(event, context) {
       maxMode: maxModeOn,
     });
     const fastPromise = (async () => {
-      if (hasImageInput || runTeam || budget.skipFastRace || tier.kaji) return null;
-      for (const m of fastModels) {
+      if (hasImageInput || runTeam || budget.skipFastRace || tier.kaji || tier.air4) return null;
+      for (const m of [GLM_FLASH, GLM52]) {
         if (deadline - Date.now() < 1400) return null;
         const g = withTimeout(Math.min(4200, deadline - Date.now() - 200));
         try {
@@ -4035,6 +4043,46 @@ async function handler(event, context) {
       return null;
     })();
 
+    const raceLiveAnswer = async (ms, maxTok) => {
+      const slimSystem = {
+        role: "system",
+        content: systemPrompt(
+          kbFacts(Math.min(3, tier.grounding || 3)),
+          payload.mode,
+          String(webSection || "").slice(0, 1800),
+          tier,
+          language,
+          appVer,
+          maxModeOn
+        ),
+      };
+      const slimMessages = fitContext(slimSystem, modelTurns, 12000);
+      const gR = withTimeout(Math.max(800, ms));
+      try {
+        const raced = await firstOkChat(
+          DURABLE_FALLBACKS(tier).map((rescue) => async () => {
+            const r = await callChatModelOnce({
+              model: rescue,
+              messages: slimMessages,
+              openRouterKey: apiKey,
+              groqKey,
+              anthropicKey,
+              signal: gR.signal,
+              maxTokens: Math.min(maxTok, replyTokens),
+              temperature: 0.3,
+            });
+            return r && r.ok && r.text ? { ...r, model: rescue } : r;
+          })
+        );
+        return raced;
+      } catch (e) {
+        lastDetail = String(e && e.name) + " [live-race]";
+        return null;
+      } finally {
+        gR.done();
+      }
+    };
+
     let agentsTrace = null;
     let conversationTrace = null;
     let onlineTeamUsed = false;
@@ -4046,7 +4094,7 @@ async function handler(event, context) {
         groqKey,
         anthropicKey,
         maxTokens: replyTokens,
-        deadlineMs: Math.min(Date.now() + 9000, deadline, modelDeadline + 1500),
+        deadlineMs: Math.min(Date.now() + 20000, deadline - 200),
         clockHuman: clock.human,
         isoDay: clock.isoDay,
       });
@@ -4198,42 +4246,16 @@ async function handler(event, context) {
     }
 
     if (!draft && !tier.groqOnly) {
-      const slimSystem = {
-        role: "system",
-        content: systemPrompt(
-          kbFacts(Math.min(3, tier.grounding || 3)),
-          payload.mode, "", tier, language, appVer, maxModeOn
-        ),
-      };
-      const slimMessages = fitContext(slimSystem, modelTurns, 12000);
       const left = deadline - Date.now() - 150;
       if (left > 900) {
-        const slice = Math.min(4200, left);
-        const gR = withTimeout(slice);
         try {
-          const raced = await firstOkChat(
-            DURABLE_FALLBACKS(groqKey).map((rescue) => async () => {
-              const r = await callChatModelOnce({
-                model: rescue,
-                messages: slimMessages,
-                openRouterKey: apiKey,
-                groqKey,
-                anthropicKey,
-                signal: gR.signal,
-                maxTokens: Math.min(500, replyTokens),
-                temperature: 0.3,
-              });
-              return r && r.ok && r.text ? { ...r, model: rescue } : r;
-            })
-          );
+          const raced = await raceLiveAnswer(Math.min(5200, left), 700);
           if (raced && raced.text) {
             draft = raced;
             draftModel = raced.model;
           }
         } catch (e) {
           lastDetail = String(e && e.name) + " [rescue-race]";
-        } finally {
-          gR.done();
         }
       }
     }
@@ -4260,7 +4282,7 @@ async function handler(event, context) {
         );
         try {
           const raced = await firstOkChat(
-            DURABLE_FALLBACKS(groqKey).map((m) => async () => {
+            DURABLE_FALLBACKS(tier).map((m) => async () => {
               const r = await callChatModelOnce({
                 model: m,
                 messages: panicMessages,
@@ -4398,7 +4420,9 @@ async function handler(event, context) {
     queueUsageEmail(plan, spentResult, account);
 
     if (!reply && !producedFiles.length) {
-      return json(200, { reply: "Send that again and I’ll continue from here.", mode: "empty" });
+      return json(200, {
+        ...answerWhenModelsFail(turns, lastUser, webBundle, payload),
+      });
     }
     if (!reply && producedFiles.length) {
       reply = ensureFileFences("Created " + producedFiles.length + " file(s).", producedFiles);

@@ -311,15 +311,11 @@ function hybridRetrieve(query, scoredRows, limit) {
 
 function routeModels({ intel, tier, groqKey, customModel, pickedModel, longRun }) {
   if (customModel && pickedModel) return [pickedModel];
+  if (tier && (tier.air4 || tier.team)) {
+    return ["z-ai/glm-5.2:free", "z-ai/glm-4.7-flash:free"];
+  }
   if (tier && tier.flash4) {
-    return [
-      "z-ai/glm-4.7-flash:free",
-      "z-ai/glm-5.2:free",
-      ...(groqKey ? ["groq/llama-3.1-8b-instant", "groq/llama-3.3-70b-versatile"] : []),
-      "openrouter/free",
-      "google/gemma-4-26b-a4b-it:free",
-      "nvidia/nemotron-3-nano-30b-a3b:free",
-    ];
+    return ["z-ai/glm-4.7-flash:free"];
   }
   if (tier.kaji) {
     const pool = (longRun || intel.decompose ? (tier.longModels || tier.models) : tier.models) || [];
@@ -332,23 +328,10 @@ function routeModels({ intel, tier, groqKey, customModel, pickedModel, longRun }
     }
     return out;
   }
-  const coding = intel.category === "CODING" || intel.category === "DEBUGGING" || tier.chopCode;
   const useLong = longRun || intel.decompose || (intel.complexity >= 0.55);
   let pool = useLong ? (tier.longModels || tier.models) : tier.models;
-  if (coding && !tier.chopCode) {
-    const specialists = [
-      ...(groqKey ? ["groq/llama-3.3-70b-versatile", "groq/openai/gpt-oss-120b"] : []),
-      "qwen/qwen3-coder:free",
-      "nvidia/nemotron-3-super-120b-a12b:free",
-    ];
-    pool = specialists.concat(pool);
-  }
   if (intel.trivial) {
-    const fast = [
-      ...(groqKey ? ["groq/llama-3.1-8b-instant"] : []),
-      "nvidia/nemotron-3-nano-30b-a3b:free",
-    ];
-    pool = fast.concat(pool);
+    pool = ["z-ai/glm-4.7-flash:free"].concat(pool || []);
   }
   const seen = new Set();
   const out = [];
