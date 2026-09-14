@@ -147,7 +147,7 @@ final class AppStore: ObservableObject {
     @Published var sidebarExpanded: Bool = UserDefaults.standard.object(forKey: sidebarExpandedKey) as? Bool ?? true
     
     @Published var railLabels: Bool = UserDefaults.standard.object(forKey: railLabelsKey) as? Bool ?? true
-    @Published var tier: String = AppStore.normalizeTier(UserDefaults.standard.string(forKey: tierKey) ?? "tamago")
+    @Published var tier: String = AppStore.normalizeTier(UserDefaults.standard.string(forKey: tierKey) ?? "csai4flash")
     @Published var userRules: String = UserDefaults.standard.string(forKey: rulesKey) ?? ""
     @Published var privacyMode = UserDefaults.standard.bool(forKey: privacyModeKey)
     @Published var offlineChatMode = UserDefaults.standard.bool(forKey: offlineChatModeKey)
