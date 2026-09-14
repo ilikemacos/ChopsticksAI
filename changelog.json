@@ -1,7 +1,16 @@
 {
   "product": "cs.AI",
-  "latest": "4.1a",
+  "latest": "4.1b",
   "entries": [
+    {
+      "version": "4.1b",
+      "date": "2026-09-14",
+      "title": "Air is Ofox Flash",
+      "changes": [
+        "cs.AI-4.0-Air uses only GLM 4.7 Flash free via Ofox — no other models",
+        "Ship 4.1b — stack is cs.AI-4"
+      ]
+    },
     {
       "version": "4.1a",
       "date": "2026-09-14",
