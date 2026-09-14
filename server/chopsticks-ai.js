@@ -197,8 +197,8 @@ TIERS.csai4air = glmUltraPlate({
     hqPro: true,
     refine: false,
     refineModels: [],
-    models: [GLM52, GEMMA4],
-    longModels: [GLM52, GEMMA4],
+    models: [GLM_FLASH],
+    longModels: [GLM_FLASH],
   },
 });
 TIERS.csai4flash = {
@@ -1088,8 +1088,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "4.1a";
-const PREVIEW_APP_VERSION = "4.1a";
+const APP_VERSION = "4.1b";
+const PREVIEW_APP_VERSION = "4.1b";
 const PROCESS_STARTED_MS = Date.now();
 const STACK_NAME = "cs.AI-4";
 
@@ -1585,7 +1585,8 @@ function answerWhenModelsFail(turns, lastUser, webBundle, payload) {
     }
   }
   return {
-    reply: "I could not finish a live model pass on that turn. The question is still here — I will take it on the next send.",
+    reply: (follow ? ("Re: " + follow.slice(0, 160) + "\n\n") : "") +
+      "Flash did not return a completion on that pass.",
     mode: "live",
   };
 }
@@ -2198,7 +2199,7 @@ function selfFacts(tier, appVersion) {
     t.flash4
       ? "- cs.AI-4-Flash is the fast plate. Knowledge for this session is current as of 13 September 2026."
       : t.air4 || t.team
-      ? "- cs.AI-4.0-Air uses only GLM 5.2 free and Gemma 4 free. No GLM 4.7 Flash."
+      ? "- cs.AI-4.0-Air uses only GLM 4.7 Flash free (Ofox). No other models."
       : t.stickerCoder
       ? "- StickerCoder+ mode: prioritise complete, runnable code, write_file tool use, and sharp engineering answers."
       : t.kaji
@@ -3114,7 +3115,7 @@ async function callChatModel(opts) {
 
 const DURABLE_FALLBACKS = (tier) => {
   if (tier && tier.flash4) return [GLM_FLASH];
-  if (tier && (tier.air4 || tier.team)) return [GLM52, GEMMA4];
+  if (tier && (tier.air4 || tier.team)) return [GLM_FLASH];
   return [GLM_FLASH, GLM52];
 };
 
@@ -3990,7 +3991,7 @@ async function handler(event, context) {
     }
     const chain = (hasImageInput && !customModel
       ? (tier.air4
-        ? [IMAGE_INPUT_MODEL, GLM52, GEMMA4]
+        ? [IMAGE_INPUT_MODEL, GLM_FLASH]
         : [IMAGE_INPUT_MODEL, GLM_FLASH, GLM52])
       : (kajiResume && kajiResume.model && isHqOpenRouterAllowed(kajiResume.model)
       ? [kajiResume.model]
@@ -4095,49 +4096,46 @@ async function handler(event, context) {
     let conversationTrace = null;
     let onlineTeamUsed = false;
     if (runTeam && !draft) {
-      const airTok = Math.min(1600, replyTokens);
-      const airPair = [GEMMA4, GLM52];
-      for (let i = 0; i < airPair.length; i++) {
-        const m = airPair[i];
-        const left = deadline - Date.now();
-        if (left < 1600) break;
-        const slice = i === 0
-          ? Math.min(10000, Math.max(4000, left - 9000))
-          : Math.min(14000, left - 400);
-        const g = withTimeout(slice);
-        try {
-          const r = await callChatModel({
-            model: m,
-            messages: (i === 1 && draft && draft.text)
-              ? [
-                { role: "system", content: "Write the only reply the user will see. Use the draft as notes. Do not mention a draft or model names. Never add a Sources section." },
-                {
-                  role: "user",
-                  content:
-                    String((messages.find((x) => x.role === "system") || {}).content || "").slice(0, 3500) +
-                    "\n\nUSER REQUEST:\n" + String(lastUser.content || "") +
-                    "\n\nDRAFT:\n" + String(draft.text).slice(0, 3200) +
-                    "\n\nWrite the final answer now.",
-                },
-              ]
-              : messages,
+      const airTok = Math.min(1200, replyTokens);
+      const left = deadline - Date.now();
+      const gAir = withTimeout(Math.min(22000, Math.max(5000, left - 400)));
+      try {
+        let flash = await callChatModel({
+          model: GLM_FLASH,
+          messages,
+          openRouterKey: apiKey,
+          groqKey,
+          anthropicKey,
+          signal: gAir.signal,
+          maxTokens: airTok,
+          temperature: 0.2,
+        });
+        if (!(flash && flash.ok && flash.text) && deadline - Date.now() > 2500) {
+          const slim = fitContext(
+            { role: "system", content: systemPrompt(kbFacts(2), payload.mode, String(webSection || "").slice(0, 1200), tier, language, appVer, maxModeOn) },
+            modelTurns,
+            8000
+          );
+          flash = await callChatModel({
+            model: GLM_FLASH,
+            messages: slim,
             openRouterKey: apiKey,
             groqKey,
             anthropicKey,
-            signal: g.signal,
-            maxTokens: airTok,
-            temperature: i === 0 ? 0.22 : 0.18,
+            signal: gAir.signal,
+            maxTokens: Math.min(800, airTok),
+            temperature: 0.25,
           });
-          if (r && r.ok && r.text) {
-            draft = { ok: true, text: r.text, tokens: (draft && draft.tokens || 0) + (r.tokens || 0), toolCalls: [] };
-            draftModel = m;
-            onlineTeamUsed = true;
-          }
-        } catch (e) {
-          lastDetail = String(e && e.name) + " [air-" + m + "]";
-        } finally {
-          g.done();
         }
+        if (flash && flash.ok && flash.text) {
+          draft = { ok: true, text: flash.text, tokens: flash.tokens || 0, toolCalls: [] };
+          draftModel = GLM_FLASH;
+          onlineTeamUsed = true;
+        }
+      } catch (e) {
+        lastDetail = String(e && e.name) + " [air-ofox-flash]";
+      } finally {
+        gAir.done();
       }
     }
     if (tier.chopCode && !customModel && !hasImageInput) {
