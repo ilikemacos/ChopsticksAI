@@ -26,6 +26,7 @@ const {
 
 const GLM52 = "z-ai/glm-5.2:free";
 const GLM_FLASH = "z-ai/glm-4.7-flash:free";
+const GPT_OSS_120B_FREE = "openai/gpt-oss-120b:free";
 const GEMMA4 = "google/gemma-4-26b-a4b-it:free";
 const NEMO_ULTRA = "nvidia/nemotron-3-ultra-550b-a55b:free";
 const IMAGE_INPUT_MODEL = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free";
@@ -197,8 +198,8 @@ TIERS.csai4air = glmUltraPlate({
     hqPro: true,
     refine: false,
     refineModels: [],
-    models: [GLM_FLASH],
-    longModels: [GLM_FLASH],
+    models: [GPT_OSS_120B_FREE],
+    longModels: [GPT_OSS_120B_FREE],
   },
 });
 TIERS.csai4flash = {
@@ -744,6 +745,7 @@ function normalizeOpenRouterModelId(raw) {
   if (!/^[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._:+\/-]*$/i.test(id)) return "";
   if (id === "nvidia/nemotron-3-ultra:free") return "nvidia/nemotron-3-ultra-550b-a55b:free";
   if (id === "nvidia/nemotron-3-super:free") return "nvidia/nemotron-3-super-120b-a12b:free";
+  if (id === "openai/gpt-oss-120b" || id === "gpt-oss-120b:free") return "openai/gpt-oss-120b:free";
   if (id === "z-ai/glm-4.7-flash" || id === "glm-4.7-flash:free") return "z-ai/glm-4.7-flash:free";
   return id;
 }
@@ -1088,8 +1090,8 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "4.1b";
-const PREVIEW_APP_VERSION = "4.1b";
+const APP_VERSION = "4.1c";
+const PREVIEW_APP_VERSION = "4.1c";
 const PROCESS_STARTED_MS = Date.now();
 const STACK_NAME = "cs.AI-4";
 
@@ -1586,7 +1588,7 @@ function answerWhenModelsFail(turns, lastUser, webBundle, payload) {
   }
   return {
     reply: (follow ? ("Re: " + follow.slice(0, 160) + "\n\n") : "") +
-      "Flash did not return a completion on that pass.",
+      "The live model did not return a completion on that pass.",
     mode: "live",
   };
 }
@@ -2199,7 +2201,7 @@ function selfFacts(tier, appVersion) {
     t.flash4
       ? "- cs.AI-4-Flash is the fast plate. Knowledge for this session is current as of 13 September 2026."
       : t.air4 || t.team
-      ? "- cs.AI-4.0-Air uses only GLM 4.7 Flash free (Ofox). No other models."
+      ? "- cs.AI-4.0-Air uses only GPT-OSS 120B free on OpenRouter. No other models."
       : t.stickerCoder
       ? "- StickerCoder+ mode: prioritise complete, runnable code, write_file tool use, and sharp engineering answers."
       : t.kaji
@@ -3115,7 +3117,7 @@ async function callChatModel(opts) {
 
 const DURABLE_FALLBACKS = (tier) => {
   if (tier && tier.flash4) return [GLM_FLASH];
-  if (tier && (tier.air4 || tier.team)) return [GLM_FLASH];
+  if (tier && (tier.air4 || tier.team)) return [GPT_OSS_120B_FREE];
   return [GLM_FLASH, GLM52];
 };
 
@@ -3991,7 +3993,7 @@ async function handler(event, context) {
     }
     const chain = (hasImageInput && !customModel
       ? (tier.air4
-        ? [IMAGE_INPUT_MODEL, GLM_FLASH]
+        ? [IMAGE_INPUT_MODEL, GPT_OSS_120B_FREE]
         : [IMAGE_INPUT_MODEL, GLM_FLASH, GLM52])
       : (kajiResume && kajiResume.model && isHqOpenRouterAllowed(kajiResume.model)
       ? [kajiResume.model]
@@ -4101,7 +4103,7 @@ async function handler(event, context) {
       const gAir = withTimeout(Math.min(22000, Math.max(5000, left - 400)));
       try {
         let flash = await callChatModel({
-          model: GLM_FLASH,
+          model: GPT_OSS_120B_FREE,
           messages,
           openRouterKey: apiKey,
           groqKey,
@@ -4117,7 +4119,7 @@ async function handler(event, context) {
             8000
           );
           flash = await callChatModel({
-            model: GLM_FLASH,
+            model: GPT_OSS_120B_FREE,
             messages: slim,
             openRouterKey: apiKey,
             groqKey,
@@ -4129,11 +4131,11 @@ async function handler(event, context) {
         }
         if (flash && flash.ok && flash.text) {
           draft = { ok: true, text: flash.text, tokens: flash.tokens || 0, toolCalls: [] };
-          draftModel = GLM_FLASH;
+          draftModel = GPT_OSS_120B_FREE;
           onlineTeamUsed = true;
         }
       } catch (e) {
-        lastDetail = String(e && e.name) + " [air-ofox-flash]";
+        lastDetail = String(e && e.name) + " [air-oss-120b]";
       } finally {
         gAir.done();
       }
