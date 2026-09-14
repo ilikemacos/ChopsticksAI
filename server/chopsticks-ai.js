@@ -1080,8 +1080,9 @@ const MAX_REPLY_TOKENS_CEILING = 8000;
 const BILLABLE_PER_REPLY = Number(process.env.CHOPSTICKS_AI_BILLABLE || 8500);
 const BILLABLE_MAX_MODE = 1000;
 
-const APP_VERSION = "4.0.7";
-const PREVIEW_APP_VERSION = "4.0.7";
+const APP_VERSION = "4.0.8";
+const PREVIEW_APP_VERSION = "4.0.8";
+const PROCESS_STARTED_MS = Date.now();
 const STACK_NAME = "cs.AI-4";
 
 function appVersionFor(account) {
@@ -3297,7 +3298,14 @@ function accountFromPlan(plan) {
 }
 
 async function healthHandler(event) {
-  return json(200, { ok: true, service: "chopsticks-ai" });
+  return json(200, {
+    ok: true,
+    up: true,
+    service: "chopsticks-ai",
+    version: APP_VERSION,
+    checkedAt: new Date().toISOString(),
+    isolateUptimeMs: Date.now() - PROCESS_STARTED_MS,
+  });
 }
 
 async function requireAccount(event) {
@@ -3464,6 +3472,17 @@ async function handler(event, context) {
     return json(403, { error: "origin not allowed" });
   }
 
+  let payload;
+  try {
+    payload = JSON.parse(event.body || "{}");
+  } catch (e) {
+    return json(400, { error: "invalid JSON" });
+  }
+  const act = String(payload.action || payload.mode || "").toLowerCase();
+  if (act === "uptime" || act === "health") {
+    return healthHandler(event);
+  }
+
   const key = env("OPENROUTER_API_KEY");
   if (!key) {
     return json(200, {
@@ -3472,13 +3491,6 @@ async function handler(event, context) {
         "Ask on chopstickshq.com or email " + AI_EMAIL + ".",
       mode: "unconfigured",
     });
-  }
-
-  let payload;
-  try {
-    payload = JSON.parse(event.body || "{}");
-  } catch (e) {
-    return json(400, { error: "invalid JSON" });
   }
 
   const tier = tierOf(payload.tier);

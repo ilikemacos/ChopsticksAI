@@ -257,8 +257,9 @@
   <p class="composer-disclaimer" id="plate-hint">cs.AI can make mistakes. Verify important info.</p>
 </div>
 <footer class="cursor-statusbar" hidden>
-  <span class="cursor-footer-ver">4.0.7</span>
-  <a href="/chopsticks-ai/web/upgrades/">Upgrades</a>
+  <span class="cursor-footer-ver">4.0.8</span>
+  <span class="cursor-footer-up" id="csai-uptime">API …</span>
+  <a href="/chopsticks-ai/uptime/">Uptime</a>
   <a href="/chopsticks-ai/enterprise/">Enterprise</a>
   <a href="/chopsticks-ai/">cs.AI</a>
   <a href="/">Chopsticks HQ</a>
@@ -722,7 +723,7 @@
     var lead = document.getElementById('intro-lead');
     var title = document.getElementById('topbar-title');
     var dl = document.getElementById('sidebar-download');
-    if (g) g.textContent = 'Welcome to cs.AI (4.0.7)';
+    if (g) g.textContent = 'Welcome to cs.AI (4.0.8)';
     if (title) title.textContent = 'Agent';
     if (sub) sub.textContent = offline
       ? 'Ask the on-device Chopsticks HQ knowledge base'
@@ -1179,7 +1180,7 @@
     return info;
   }
   function showTier() {
-    var ver = '4.0.7';
+    var ver = '4.0.8';
     var topVer = document.getElementById('topbar-ver');
     var footVer = document.querySelector('.cursor-footer-ver');
     if (topVer) topVer.textContent = ver;
@@ -2522,6 +2523,19 @@
   } else {
     restoreGuestSession();
   }
+
+  (function pingUptime() {
+    var el = document.getElementById('csai-uptime');
+    if (!el) return;
+    function tick() {
+      fetch('/api/chopsticks-ai', { method: 'GET', cache: 'no-store' })
+        .then(function (res) { return res.json().then(function (j) { return res.ok && j && (j.up === true || j.ok === true); }); })
+        .then(function (up) { el.textContent = up ? 'API up' : 'API down'; })
+        .catch(function () { el.textContent = 'API down'; });
+    }
+    tick();
+    setInterval(tick, 30000);
+  })();
 
   (function wireCursorChrome() {
     var sidebar = document.getElementById('cursor-sidebar');
