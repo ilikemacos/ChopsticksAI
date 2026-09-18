@@ -147,7 +147,7 @@ final class AppStore: ObservableObject {
     @Published var sidebarExpanded: Bool = UserDefaults.standard.object(forKey: sidebarExpandedKey) as? Bool ?? true
     
     @Published var railLabels: Bool = UserDefaults.standard.object(forKey: railLabelsKey) as? Bool ?? true
-    @Published var tier: String = AppStore.normalizeTier(UserDefaults.standard.string(forKey: tierKey) ?? "csai4flash")
+    @Published var tier: String = AppStore.normalizeTier(UserDefaults.standard.string(forKey: tierKey) ?? "csaifast")
     @Published var userRules: String = UserDefaults.standard.string(forKey: rulesKey) ?? ""
     @Published var privacyMode = UserDefaults.standard.bool(forKey: privacyModeKey)
     @Published var offlineChatMode = UserDefaults.standard.bool(forKey: offlineChatModeKey)
@@ -299,18 +299,25 @@ final class AppStore: ObservableObject {
 
     static func normalizeTier(_ raw: String) -> String {
         switch raw.lowercased().replacingOccurrences(of: " ", with: "") {
-        case "low", "haiku", "fast": return "rice"
-        case "medium", "high", "sonnet", "chopsticks", "standard": return "tamago"
-        case "xhigh", "xhighplus", "xhigh+", "opus", "pro", "ultra": return "hibachi"
+        case "low", "haiku", "fast", "rice", "csaifast": return "csaifast"
+        case "auto", "csaiauto": return "csaiauto"
+        case "flash", "csai47flash", "csai4flash", "4-flash", "flash4", "4flash", "csai-4-flash", "cs.ai-4-flash": return "csai47flash"
+        case "core", "csai46core", "hibachi", "4.6-core", "46core": return "csai46core"
+        case "swift", "csai46swift", "4.6-swift": return "csai46swift"
+        case "lite", "csai46lite", "tamago", "4.6-lite": return "csai46lite"
+        case "core-pro", "csai46corepro", "4.6-core-pro", "4.6-pro": return "csai46corepro"
+        case "pro", "csai47pro", "4.7-pro", "47pro": return "csai47pro"
+        case "medium", "high", "sonnet", "chopsticks", "standard", "super": return "csai46lite"
+        case "xhigh", "xhighplus", "xhigh+", "opus", "ultra": return "csai46core"
         case "insane", "wagyu", "fable": return "wagyua5"
         case "a1", "wagyu-a1", "wagyu1": return "wagyua1"
         case "a2", "wagyu-a2", "wagyu2": return "wagyua2"
         case "a3", "wagyu-a3", "wagyu3": return "wagyua3"
         case "a4", "wagyu-a4", "wagyu4": return "wagyua4"
         case "a5", "wagyu-a5", "wagyu5", "3.5-air", "cs.ai3.5-air", "csai3.5-air": return "wagyua5"
-        case "3.1", "cs.ai3.1", "csai3.1": return "rice"
-        case "3.3-fast", "3.3fast", "cs.ai3.3-fast": return "tamago"
-        case "3.3-thinking", "3.3thinking", "cs.ai3.3-thinking": return "hibachi"
+        case "3.1", "cs.ai3.1", "csai3.1": return "csaifast"
+        case "3.3-fast", "3.3fast", "cs.ai3.3-fast": return "csai46lite"
+        case "3.3-thinking", "3.3thinking", "cs.ai3.3-thinking": return "csai46core"
         case "airii", "air2": return "wagyua1"
         case "airiii", "air3": return "wagyua2"
         case "airvi", "air6": return "wagyua3"
@@ -318,8 +325,6 @@ final class AppStore: ObservableObject {
         case "cscode-pro", "cscodepro", "cscode": return "chopcode"
         case "kaji", "grok", "grokbot", "grok-bot": return "kaji"
         case "max", "maxmode", "csmax": return "max"
-        case "csai4flash", "4-flash", "flash4", "4flash", "csai-4-flash", "cs.ai-4-flash",
-             "cs.AI-4-Flash": return "csai4flash"
         case "csai4air", "air4", "4air", "4-air", "csai-4-air", "cs.ai-4-air",
              "cs.ai-4.0-air", "csai-4.0-air", "csai40air", "4.0-air", "4.0air",
              "csai4.0air", "cs.AI-4.0-Air": return "csai4air"
