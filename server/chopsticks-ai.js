@@ -13,6 +13,7 @@ const { runChopCodeEnsemble, CHOPCODE_AGENTS } = require("./chopcode-ensemble.js
 const { shouldRunOnlineTeam, runOnlineEnsemble } = require("./online-ensemble.js");
 const {
   analyzeRequest,
+  classifyAutoRoute,
   computeBudget,
   followUpQueries,
   rankEvidence,
@@ -31,6 +32,10 @@ const DEEPSEEK_V4_FLASH_FREE = "deepseek/deepseek-v4-flash:free";
 const GEMMA4 = "google/gemma-4-26b-a4b-it:free";
 const GROK41_FAST_FREE = "x-ai/grok-4.1-fast:free";
 const NEMO_ULTRA = "nvidia/nemotron-3-ultra-550b-a55b:free";
+const NEMO_LIGHTNING = "nvidia/nemotron-3.5-lightning:free";
+const OPENROUTER_FREE = "openrouter/free";
+const GPT_OSS_20B_GROQ = "groq/openai/gpt-oss-20b";
+const GPT_OSS_120B_GROQ = "groq/openai/gpt-oss-120b";
 const IMAGE_INPUT_MODEL = GROK41_FAST_FREE;
 
 function glmUltraPlate({
@@ -218,25 +223,168 @@ TIERS.csai4flash = {
   timeoutMs: 24000,
   temperature: 0.18,
 };
+TIERS.csaifast = {
+  label: "Fast",
+  flash4: true,
+  models: [GROK41_FAST_FREE],
+  longModels: [GROK41_FAST_FREE],
+  refine: false,
+  refineModels: [],
+  context: 48000,
+  maxReply: 1800,
+  grounding: 4,
+  searchMax: 4,
+  timeoutMs: 24000,
+  temperature: 0.18,
+};
+TIERS.csaiauto = {
+  label: "Auto",
+  auto: true,
+  models: [OPENROUTER_FREE, GROK41_FAST_FREE],
+  longModels: [OPENROUTER_FREE, GROK41_FAST_FREE],
+  refine: false,
+  refineModels: [],
+  context: 96000,
+  maxReply: 3500,
+  grounding: 6,
+  searchMax: 6,
+  timeoutMs: 26000,
+  temperature: 0.2,
+};
+TIERS.csai47flash = {
+  label: "Flash",
+  flash47: true,
+  models: [NEMO_ULTRA, GPT_OSS_120B_GROQ],
+  longModels: [NEMO_ULTRA, GPT_OSS_120B_GROQ],
+  refine: false,
+  refineModels: [],
+  context: 128000,
+  maxReply: 3500,
+  grounding: 8,
+  searchMax: 8,
+  timeoutMs: 28000,
+  temperature: 0.2,
+};
+TIERS.csai46core = {
+  label: "Core",
+  groqOnly: true,
+  models: [GPT_OSS_120B_GROQ],
+  longModels: [GPT_OSS_120B_GROQ],
+  refine: false,
+  refineModels: [],
+  context: 128000,
+  maxReply: 4096,
+  grounding: 6,
+  searchMax: 6,
+  timeoutMs: 26000,
+  temperature: 0.15,
+};
+TIERS.csai46swift = {
+  label: "Swift",
+  groqOnly: true,
+  models: [GPT_OSS_20B_GROQ],
+  longModels: [GPT_OSS_20B_GROQ],
+  refine: false,
+  refineModels: [],
+  context: 64000,
+  maxReply: 1800,
+  grounding: 4,
+  searchMax: 4,
+  timeoutMs: 20000,
+  temperature: 0.18,
+};
+TIERS.csai46lite = {
+  label: "Lite",
+  models: [NEMO_LIGHTNING],
+  longModels: [NEMO_LIGHTNING],
+  refine: false,
+  refineModels: [],
+  context: 48000,
+  maxReply: 1500,
+  grounding: 3,
+  searchMax: 3,
+  timeoutMs: 18000,
+  temperature: 0.18,
+};
+TIERS.csai46corepro = {
+  label: "Core-Pro",
+  donorPro: true,
+  flash4: true,
+  models: [GROK41_FAST_FREE],
+  longModels: [GROK41_FAST_FREE],
+  refine: false,
+  refineModels: [],
+  context: 96000,
+  maxReply: 2500,
+  grounding: 6,
+  searchMax: 6,
+  timeoutMs: 24000,
+  temperature: 0.18,
+};
+TIERS.csai47pro = {
+  label: "Pro",
+  donorPro: true,
+  models: [GLM52],
+  longModels: [GLM52, GLM_FLASH],
+  refine: true,
+  refineModels: [GLM52],
+  context: 160000,
+  maxReply: 8000,
+  grounding: 12,
+  searchMax: 12,
+  timeoutMs: 28000,
+  temperature: 0.22,
+};
 const TIER_ALIASES = {
-  rice: "rice",
-  haiku: "rice",
-  low: "rice",
-  fast: "rice",
-  tamago: "tamago",
-  sonnet: "tamago",
-  medium: "tamago",
-  high: "tamago",
-  standard: "tamago",
-  chopsticks: "tamago",
-  super: "tamago",
-  hibachi: "hibachi",
-  opus: "hibachi",
-  pro: "hibachi",
-  ultra: "hibachi",
-  xhigh: "hibachi",
-  xhighplus: "hibachi",
-  "xhigh+": "hibachi",
+  csaifast: "csaifast",
+  fast: "csaifast",
+  csaiauto: "csaiauto",
+  auto: "csaiauto",
+  csai47flash: "csai47flash",
+  "47flash": "csai47flash",
+  "4.7-flash": "csai47flash",
+  "4.7flash": "csai47flash",
+  flash: "csai47flash",
+  csai46core: "csai46core",
+  "46core": "csai46core",
+  "4.6-core": "csai46core",
+  "4.6core": "csai46core",
+  core: "csai46core",
+  csai46swift: "csai46swift",
+  "46swift": "csai46swift",
+  "4.6-swift": "csai46swift",
+  swift: "csai46swift",
+  csai46lite: "csai46lite",
+  "46lite": "csai46lite",
+  "4.6-lite": "csai46lite",
+  lite: "csai46lite",
+  csai46corepro: "csai46corepro",
+  "46corepro": "csai46corepro",
+  "4.6-core-pro": "csai46corepro",
+  "4.6-pro": "csai46corepro",
+  "4.6pro": "csai46corepro",
+  "core-pro": "csai46corepro",
+  csai47pro: "csai47pro",
+  "47pro": "csai47pro",
+  "4.7-pro": "csai47pro",
+  "4.7pro": "csai47pro",
+  rice: "csaifast",
+  haiku: "csaifast",
+  low: "csaifast",
+  tamago: "csai46lite",
+  sonnet: "csai46lite",
+  medium: "csai46lite",
+  high: "csai46lite",
+  standard: "csai46lite",
+  chopsticks: "csai46lite",
+  super: "csai46lite",
+  hibachi: "csai46core",
+  opus: "csai46core",
+  pro: "csai47pro",
+  ultra: "csai46core",
+  xhigh: "csai46core",
+  xhighplus: "csai46core",
+  "xhigh+": "csai46core",
   chopcode: "chopcode",
   "chop-code": "chopcode",
   code: "chopcode",
@@ -259,12 +407,12 @@ const TIER_ALIASES = {
   "4-air": "csai4air",
   air4: "csai4air",
   "4air": "csai4air",
-  csai4flash: "csai4flash",
-  "csai-4-flash": "csai4flash",
-  "cs.ai-4-flash": "csai4flash",
-  "4-flash": "csai4flash",
-  flash4: "csai4flash",
-  "4flash": "csai4flash",
+  csai4flash: "csai47flash",
+  "csai-4-flash": "csai47flash",
+  "cs.ai-4-flash": "csai47flash",
+  "4-flash": "csai47flash",
+  flash4: "csai47flash",
+  "4flash": "csai47flash",
   wagyu: "wagyua5",
   fable: "wagyua5",
   insane: "wagyua5",
@@ -294,12 +442,12 @@ const TIER_ALIASES = {
   wagyua3: "wagyua3",
   wagyua4: "wagyua4",
   wagyua5: "wagyua5",
-  "3.1": "rice",
-  "csai3.1": "rice",
-  "3.3-fast": "tamago",
-  "3.3fast": "tamago",
-  "3.3-thinking": "hibachi",
-  "3.3thinking": "hibachi",
+  "3.1": "csaifast",
+  "csai3.1": "csaifast",
+  "3.3-fast": "csai46lite",
+  "3.3fast": "csai46lite",
+  "3.3-thinking": "csai46core",
+  "3.3thinking": "csai46core",
   "3.5-air": "wagyua5",
   airii: "wagyua1",
   air2: "wagyua1",
@@ -313,7 +461,8 @@ const TIER_ALIASES = {
   cscodepro: "chopcode",
   cscode: "chopcode",
 };
-const DEFAULT_TIER = "csai4flash";
+const DEFAULT_TIER = "csaifast";
+const DONOR_PRO_TIERS = new Set(["csai46corepro", "csai47pro"]);
 const tierOf = (name) => {
   const key = String(name || "").toLowerCase().replace(/\s+/g, "");
   const id = TIER_ALIASES[key] || key;
@@ -321,7 +470,8 @@ const tierOf = (name) => {
 };
 
 const AUTH_REQUIRED_TIERS = new Set([
-  "wagyu", "wagyua1", "wagyua2", "wagyua3", "wagyua4", "wagyua5", "chopcode", "kaji", "csai4air",
+  "wagyu", "wagyua1", "wagyua2", "wagyua3", "wagyua4", "wagyua5",
+  "chopcode", "kaji", "csai4air", "csai46corepro", "csai47pro",
 ]);
 
 function timingSafeString(a, b) {
@@ -596,9 +746,10 @@ async function resolveAccount(accessToken) {
     const email = accountEmailFromUser(user);
 
     let entitlement = null;
+    let donorUntil = null;
     try {
       const profRes = await sb(
-        `profiles?id=eq.${encodeURIComponent(user.id)}&select=email,token_budget,context_limit,plan_label,cooldown_ms`,
+        `profiles?id=eq.${encodeURIComponent(user.id)}&select=email,token_budget,context_limit,plan_label,cooldown_ms,donor_until`,
         { method: "GET", headers: { accept: "application/json" } },
         { service: true }
       );
@@ -606,6 +757,7 @@ async function resolveAccount(accessToken) {
         const rows = Array.isArray(profRes.body) ? profRes.body : [];
         const row = rows[0] || null;
         if (row) {
+          if (row.donor_until) donorUntil = String(row.donor_until);
           const tb = Number(row.token_budget);
           const cl = Number(row.context_limit);
           const cool = Number(row.cooldown_ms);
@@ -645,6 +797,7 @@ async function resolveAccount(accessToken) {
       id: user.id,
       email,
       entitlement,
+      donorUntil,
     };
   } catch (e) {
     return null;
@@ -681,6 +834,17 @@ function canUseKaji(account, plan) {
   if (!account || !account.id) return false;
   if (isFounderPlan(account, plan)) return true;
   return Number((plan && plan.keysValid) || 0) >= KAJI_PRO_KEYS;
+}
+
+function canUse47Pro(account, plan) {
+  if (!account || !account.id) return false;
+  if (isFounderPlan(account, plan)) return true;
+  const until = account.donorUntil;
+  if (until) {
+    const end = new Date(until);
+    if (!Number.isNaN(end.getTime()) && end.getTime() > Date.now()) return true;
+  }
+  return false;
 }
 
 function resolvePlan(rawKeys, account, clientId) {
@@ -747,6 +911,9 @@ function normalizeOpenRouterModelId(raw) {
   if (!/^[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._:+\/-]*$/i.test(id)) return "";
   if (id === "nvidia/nemotron-3-ultra:free") return "nvidia/nemotron-3-ultra-550b-a55b:free";
   if (id === "nvidia/nemotron-3-super:free") return "nvidia/nemotron-3-super-120b-a12b:free";
+  if (id === "nvidia/nemotron-3.5-lightning:free" || id === "nemotron-3.5-lightning:free") {
+    return NEMO_LIGHTNING;
+  }
   if (id === "openai/gpt-oss-120b" || id === "gpt-oss-120b:free" || id === "gpt-oss-120b") return "openai/gpt-oss-120b:free";
   if (id === "deepseek/deepseek-v4-flash" || id === "deepseek-v4-flash:free") return "deepseek/deepseek-v4-flash:free";
   if (id === "x-ai/grok-4.1-fast" || id === "grok-4.1-fast:free" || id === "grok-4.1-fast") return "x-ai/grok-4.1-fast:free";
@@ -3128,9 +3295,11 @@ async function callChatModel(opts) {
 }
 
 const DURABLE_FALLBACKS = (tier) => {
+  if (tier && tier.auto) return [GROK41_FAST_FREE];
+  if (tier && tier.flash47) return [NEMO_ULTRA, GROK41_FAST_FREE];
   if (tier && tier.flash4) return [GROK41_FAST_FREE];
-  if (tier && (tier.air4 || tier.team)) return [DEEPSEEK_V4_FLASH_FREE, GPT_OSS_120B_FREE, GEMMA4];
-  return [GEMMA4, GLM_FLASH, GLM52];
+  if (tier && (tier.air4 || tier.team)) return [DEEPSEEK_V4_FLASH_FREE, GPT_OSS_120B_FREE, GROK41_FAST_FREE];
+  return [GROK41_FAST_FREE, GEMMA4, GLM_FLASH];
 };
 
 async function firstOkChat(calls) {
@@ -3320,6 +3489,9 @@ function usagePayload(plan, state) {
     kaji: {
       allowed: canUseKaji(accountFromPlan(plan), plan),
       requiresKeys: KAJI_PRO_KEYS,
+    },
+    donorPro: {
+      allowed: canUse47Pro(accountFromPlan(plan), plan),
     },
   };
 }
@@ -3631,6 +3803,16 @@ async function handler(event, context) {
   }
 
   const plan = resolvePlan(unlockKeys, account, who);
+  if (DONOR_PRO_TIERS.has(tierId) && !account) {
+    tierId = DEFAULT_TIER;
+    tier = TIERS[DEFAULT_TIER];
+  } else if (DONOR_PRO_TIERS.has(tierId) && !canUse47Pro(account, plan)) {
+    return json(403, {
+      error: `${tier.label} is for Ko-fi supporters. Tip on Ko-fi with the same email, or use Fast, Auto, Flash, or Core.`,
+      mode: "donor_pro",
+      tier: tier.label,
+    });
+  }
   if ((tier.chopCode || tier.air4 || tier.hqPro) && !canUseHqPro(account, plan)) {
     return json(403, {
       error: `${tier.label} is Pro. Redeem 10 Fathom Pro API keys in Usage, or use a Founder account.`,
@@ -3863,7 +4045,17 @@ async function handler(event, context) {
     intel.decompose = true;
     if (!clientSearchOff) intel.webRequired = true;
   }
-  const budget = computeBudget(intel, tier, { maxMode: maxModeOn });
+  const displayTier = tier;
+  let routeTier = tier;
+  if (tier.auto) {
+    const autoId = classifyAutoRoute(intel, {
+      hasImage: hasImageInput,
+      coding: isCodingTask(lastUser.content),
+      textLen: String(lastUser.content || "").length,
+    });
+    routeTier = TIERS[autoId] || TIERS[DEFAULT_TIER];
+  }
+  const budget = computeBudget(intel, routeTier, { maxMode: maxModeOn });
   const kajiResume = payload.kajiResume && typeof payload.kajiResume === "object" ? payload.kajiResume : null;
   const searchOn = !kajiResume && !intel.trivial && !intel.hqOnly && intel.webRequired && (
     wantsSearch(searchQuery) && (!clientSearchOff || hadPrefix)
@@ -3917,21 +4109,21 @@ async function handler(event, context) {
     if (last.role === "user") last.content = searchQuery;
   }
 
-  const skipHqGrounding = Boolean((tier.chopCode && !tier.kaji) || (budget.skipHqDump && !tier.kaji));
+  const skipHqGrounding = Boolean((routeTier.chopCode && !routeTier.kaji) || (budget.skipHqDump && !routeTier.kaji));
   const kbFacts = (n) => {
     if (skipHqGrounding) return [];
-    if (tier.kaji) return retrieveForKaji(retrievalQuery(modelTurns), n);
+    if (routeTier.kaji) return retrieveForKaji(retrievalQuery(modelTurns), n);
     return retrieve(retrievalQuery(modelTurns), n);
   };
 
   const system = {
     role: "system",
     content: systemPrompt(
-      kbFacts(tier.grounding || GROUNDING_INTENTS),
-      payload.mode, webSection, tier, language, appVer, maxModeOn
+      kbFacts(routeTier.grounding || GROUNDING_INTENTS),
+      payload.mode, webSection, displayTier, language, appVer, maxModeOn
     ),
   };
-  const messages = fitContext(system, modelTurns, contextFor(tier, plan));
+  const messages = fitContext(system, modelTurns, contextFor(routeTier, plan));
   if (hasImageInput) {
     applyImageInputToMessages(messages, imageAtts);
     applyImageInputToMessages(modelTurns, imageAtts);
@@ -3963,11 +4155,11 @@ async function handler(event, context) {
 
   const RESCUE_RESERVE_MS = 2800;
   const PAIR_RESERVE_MS = 0;
-  const platformLeft = Math.max(10000, (tier.timeoutMs || TIMEOUT_MS) - searchMs);
-  const modelWindow = Math.min(tier.timeoutMs || TIMEOUT_MS, platformLeft, 25000);
+  const platformLeft = Math.max(10000, (routeTier.timeoutMs || TIMEOUT_MS) - searchMs);
+  const modelWindow = Math.min(routeTier.timeoutMs || TIMEOUT_MS, platformLeft, 25000);
   const deadline = Date.now() + modelWindow;
   const modelDeadline = deadline - RESCUE_RESERVE_MS - PAIR_RESERVE_MS;
-  const ATTEMPT_CAP_MS = Math.min(9000, Math.max(5500, Math.floor((tier.timeoutMs || TIMEOUT_MS) * 0.4)));
+  const ATTEMPT_CAP_MS = Math.min(9000, Math.max(5500, Math.floor((routeTier.timeoutMs || TIMEOUT_MS) * 0.4)));
   const withTimeout = (ms) => {
     const c = new AbortController();
     const t = setTimeout(() => c.abort(), Math.max(500, ms));
@@ -3983,15 +4175,15 @@ async function handler(event, context) {
 
     const ask = String(lastUser.content || "");
     const wantsFiles = /\b(write|create|generate|make|build|scaffold|implement|export|download)\b[\s\S]{0,80}\b(file|files|script|code|program|function|class|module|component|app|html|markdown|md|zip|archive|pdf|csv|json)\b|\.\w{1,8}\b|```|write_file/i.test(ask);
-    const useTools = (tier.air4 || tier.team)
+    const useTools = (routeTier.air4 || routeTier.team)
       ? false
       : (budget.skipTools
       ? false
       : (
-        (tier.kaji && (intel.toolsRequired || wantsFiles))
-        || (!tier.kaji && payload.enableTools !== false && (payload.tools === true || wantsFiles))
+        (routeTier.kaji && (intel.toolsRequired || wantsFiles))
+        || (!routeTier.kaji && payload.enableTools !== false && (payload.tools === true || wantsFiles))
       ));
-    const activeTools = tier.kaji
+    const activeTools = routeTier.kaji
       ? (isMacKajiClient(payload)
         ? KAJI_TOOLS
         : KAJI_TOOLS.filter((t) => t.function && t.function.name !== "run_command"))
@@ -4011,16 +4203,16 @@ async function handler(event, context) {
       });
     }
     const chain = (hasImageInput && !customModel
-      ? (tier.air4
+      ? (routeTier.air4
         ? [GROK41_FAST_FREE, DEEPSEEK_V4_FLASH_FREE, GPT_OSS_120B_FREE]
-        : tier.flash4
+        : routeTier.flash4 || routeTier.flash47
           ? [GROK41_FAST_FREE]
-          : [GROK41_FAST_FREE, GLM_FLASH, GLM52])
+          : [GPT_OSS_120B_GROQ, GROK41_FAST_FREE])
       : (kajiResume && kajiResume.model && isHqOpenRouterAllowed(kajiResume.model)
       ? [kajiResume.model]
       : routeModels({
       intel,
-      tier,
+      tier: routeTier,
       groqKey,
       customModel,
       pickedModel,
@@ -4035,7 +4227,7 @@ async function handler(event, context) {
         role: "system",
         content: systemPrompt(
           kbFacts(2),
-          payload.mode, "", tier, language, appVer, maxModeOn
+          payload.mode, "", displayTier, language, appVer, maxModeOn
         ),
       },
       modelTurns,
@@ -4046,11 +4238,11 @@ async function handler(event, context) {
       kajiResume,
       isWidget,
       intel,
-      tier,
+      tier: routeTier,
       maxMode: maxModeOn,
     });
     const fastPromise = (async () => {
-      if (hasImageInput || runTeam || budget.skipFastRace || tier.kaji || tier.air4 || tier.flash4) return null;
+      if (hasImageInput || runTeam || budget.skipFastRace || routeTier.kaji || routeTier.air4 || routeTier.flash4 || routeTier.flash47 || routeTier.auto) return null;
       for (const m of [GEMMA4, GLM52]) {
         if (deadline - Date.now() < 1400) return null;
         const g = withTimeout(Math.min(4200, deadline - Date.now() - 200));
@@ -4079,10 +4271,10 @@ async function handler(event, context) {
       const slimSystem = {
         role: "system",
         content: systemPrompt(
-          kbFacts(Math.min(3, tier.grounding || 3)),
+          kbFacts(Math.min(3, routeTier.grounding || 3)),
           payload.mode,
           String(webSection || "").slice(0, 1800),
-          tier,
+          displayTier,
           language,
           appVer,
           maxModeOn
@@ -4092,7 +4284,7 @@ async function handler(event, context) {
       const gR = withTimeout(Math.max(800, ms));
       try {
         const raced = await firstOkChat(
-          DURABLE_FALLBACKS(tier).map((rescue) => async () => {
+          DURABLE_FALLBACKS(routeTier).map((rescue) => async () => {
             const r = await callChatModelOnce({
               model: rescue,
               messages: slimMessages,
@@ -4179,7 +4371,7 @@ async function handler(event, context) {
       const msLeft = modelDeadline - Date.now();
       if (msLeft <= 700) break;
       const share = ci === 0
-        ? Math.floor(msLeft * (tier.flash4 ? 0.55 : 0.62))
+        ? Math.floor(msLeft * (routeTier.flash4 || routeTier.flash47 ? 0.55 : 0.62))
         : Math.max(1600, Math.floor(msLeft / Math.max(1, chain.length - ci)) - 200);
       const reserveRetry = useTools ? Math.min(2200, Math.floor(share * 0.28)) : 0;
       const budgetMs = Math.min(ATTEMPT_CAP_MS, Math.max(1600, share - reserveRetry));
@@ -4196,7 +4388,7 @@ async function handler(event, context) {
             anthropicKey,
             signal: g.signal,
             maxTokens: replyTokens,
-            temperature: plateTemperature(tier, intel),
+            temperature: plateTemperature(routeTier, intel),
             tools: withTools ? activeTools : undefined,
             toolChoice: withTools ? "auto" : undefined,
           });
@@ -4250,7 +4442,7 @@ async function handler(event, context) {
                 anthropicKey,
                 signal: g3.signal,
                 maxTokens: replyTokens,
-                temperature: plateTemperature(tier, intel),
+                temperature: plateTemperature(routeTier, intel),
                 tools: activeTools,
               });
               draft = {
@@ -4290,7 +4482,7 @@ async function handler(event, context) {
       if (ci === 0 && Date.now() - attemptStart > 8000 && lastStatus !== 404 && lastStatus !== 402) continue;
     }
 
-    if (!draft && !tier.groqOnly) {
+    if (!draft && !routeTier.groqOnly) {
       const left = deadline - Date.now() - 150;
       if (left > 900) {
         try {
@@ -4308,7 +4500,7 @@ async function handler(event, context) {
 
     if (!draft) {
       console.error("chopsticksAI: all models failed", {
-        tier: tier.label, status: lastStatus, detail: String(lastDetail).slice(0, 300),
+        tier: displayTier.label, status: lastStatus, detail: String(lastDetail).slice(0, 300),
         replyTokens, msLeft: deadline - Date.now(),
       });
       const panicLeft = deadline - Date.now();
@@ -4319,7 +4511,7 @@ async function handler(event, context) {
             role: "system",
             content: systemPrompt(
               kbFacts(2),
-              payload.mode, "", tier, language, appVer, maxModeOn
+              payload.mode, "", displayTier, language, appVer, maxModeOn
             ),
           },
           modelTurns,
@@ -4327,7 +4519,7 @@ async function handler(event, context) {
         );
         try {
           const raced = await firstOkChat(
-            DURABLE_FALLBACKS(tier).map((m) => async () => {
+            DURABLE_FALLBACKS(routeTier).map((m) => async () => {
               const r = await callChatModelOnce({
                 model: m,
                 messages: panicMessages,
@@ -4473,13 +4665,13 @@ async function handler(event, context) {
       reply = ensureFileFences("Created " + producedFiles.length + " file(s).", producedFiles);
     }
 
-    const ctxLimit = contextFor(tier, plan);
+    const ctxLimit = contextFor(routeTier, plan);
     return json(200, {
       reply,
       mode: "live",
       appVersion: appVer,
       model: customModel && draftModel ? draftModel : ("cs.AI " + appVer),
-      tier: tier.label,
+      tier: displayTier.label,
       context: ctxLimit,
       contextWindow: contextWindowUsage(messages, ctxLimit, turns.length),
       searched: searchOn,

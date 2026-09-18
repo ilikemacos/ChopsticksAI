@@ -309,8 +309,38 @@ function hybridRetrieve(query, scoredRows, limit) {
   return mixed.slice(0, limit).map((s) => s.intent);
 }
 
+/** Pick Fast / Flash / Core / Lite backend for the Auto plate (customer still sees Auto). */
+function classifyAutoRoute(intel, opts) {
+  const o = opts || {};
+  const len = Number(o.textLen) || 0;
+  if (o.hasImage) return "csai46core";
+  if (o.coding || intel.category === "CODING" || intel.category === "DEBUGGING") return "csai46core";
+  if (intel.category === "CREATIVE" || len > 700) return "csai47flash";
+  if (
+    intel.complexity >= 0.55
+    || intel.category === "RESEARCH"
+    || intel.category === "COMPARISON"
+    || intel.category === "CURRENT_INFORMATION"
+  ) return "csai47flash";
+  if (intel.category === "PLANNING" || intel.category === "ANALYSIS" || intel.category === "MATHEMATICS") {
+    return "csai46core";
+  }
+  if (intel.trivial || (len < 80 && intel.category === "GENERAL")) return "csaifast";
+  if (intel.category === "GENERAL" && len >= 80 && len < 550) return "csai46lite";
+  return "csaifast";
+}
+
 function routeModels({ intel, tier, groqKey, customModel, pickedModel, longRun }) {
   if (customModel && pickedModel) return [pickedModel];
+  if (tier && tier.auto) {
+    return ["openrouter/free", "x-ai/grok-4.1-fast:free"];
+  }
+  if (tier && tier.flash47) {
+    return [
+      "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "groq/openai/gpt-oss-120b",
+    ];
+  }
   if (tier && (tier.air4 || tier.team)) {
     return ["openai/gpt-oss-120b:free", "deepseek/deepseek-v4-flash:free", "google/gemma-4-26b-a4b-it:free"];
   }
@@ -360,6 +390,7 @@ const DECOMPOSE_HINT = [
 
 module.exports = {
   analyzeRequest,
+  classifyAutoRoute,
   computeBudget,
   followUpQueries,
   rankEvidence,
