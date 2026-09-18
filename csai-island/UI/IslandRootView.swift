@@ -33,8 +33,8 @@ struct IslandRootView: View {
 
     private var idleOpacity: Double {
         if mgr.isExpandedSurface { return 1 }
-        if mgr.phase == .idle && !mgr.hover && mgr.active == nil { return 0.22 }
-        if mgr.phase == .idle && !mgr.hover { return 0.55 }
+        if mgr.phase == .idle && !mgr.hover && mgr.active == nil { return 0.85 }
+        if mgr.phase == .idle && !mgr.hover { return 0.95 }
         return 1
     }
 
