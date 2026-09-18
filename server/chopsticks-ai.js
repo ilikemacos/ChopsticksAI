@@ -465,6 +465,50 @@ const TIER_ALIASES = {
 };
 const DEFAULT_TIER = "csaifast";
 const DONOR_PRO_TIERS = new Set(["csai46corepro", "csai47pro"]);
+
+/** Free-tier ops events (suggestion #6):
+ *  - csai.auto_fallback_fast: effective plate collapsed to Fast backend
+ *  - csai.flash_upstream_miss: Flash upstream model attempt failed
+ */
+const FAST_TIER_IDS = new Set(["csaifast", "csai4flash"]);
+const FAST_BACKEND_MODELS = new Set([GROK41_FAST_FREE]);
+
+function tierIdFromTier(tierObj) {
+  if (!tierObj) return "unknown";
+  for (const [id, t] of Object.entries(TIERS)) {
+    if (t === tierObj) return id;
+  }
+  return String(tierObj.label || "unknown").toLowerCase();
+}
+
+function isFastBackendModel(model) {
+  return FAST_BACKEND_MODELS.has(String(model || ""));
+}
+
+function logCsAiOps(event, fields) {
+  try {
+    console.log(JSON.stringify({
+      event,
+      product: "cs.AI",
+      ts: new Date().toISOString(),
+      ...(fields || {}),
+    }));
+  } catch (e) {
+    console.error("chopsticksAI: ops log failed", String(e && e.message));
+  }
+}
+
+function logAutoFallbackFast(fields) {
+  logCsAiOps("csai.auto_fallback_fast", fields);
+}
+
+function flashMissReason(result) {
+  if (!result) return "unknown";
+  if (result.status) return "http_" + result.status;
+  const detail = String(result.detail || "").slice(0, 80);
+  return detail || "empty_completion";
+}
+
 const tierOf = (name) => {
   const key = String(name || "").toLowerCase().replace(/\s+/g, "");
   const id = TIER_ALIASES[key] || key;
@@ -3735,6 +3779,7 @@ async function handler(event, context) {
   const accessToken = extractAccessToken(event);
   const account = await resolveAccount(accessToken);
   const groqKey = resolveGroqKey(payload, account, tier);
+  const turnId = String(payload.turnId || payload.chatId || payload.id || crypto.randomUUID()).slice(0, 64);
 
   if (payload.action === "bootstrapFounder") {
     const secret = env("CHOPSTICKS_AI_BOOTSTRAP_SECRET");
@@ -3826,6 +3871,12 @@ async function handler(event, context) {
 
   const plan = resolvePlan(unlockKeys, account, who);
   if (DONOR_PRO_TIERS.has(tierId) && !account) {
+    logAutoFallbackFast({
+      reason: "unsigned_donor",
+      fromTier: tierId,
+      toTier: DEFAULT_TIER,
+      turnId,
+    });
     tierId = DEFAULT_TIER;
     tier = TIERS[DEFAULT_TIER];
   } else if (DONOR_PRO_TIERS.has(tierId) && !canUse47Pro(account, plan)) {
@@ -4069,6 +4120,21 @@ async function handler(event, context) {
   }
   const displayTier = tier;
   let routeTier = tier;
+  const routeTierId = () => tierIdFromTier(routeTier);
+  const fallbackLogged = new Set();
+  const flashUpstreamMisses = [];
+  const logFastFallbackOnce = (reason, fromTier) => {
+    const key = reason + ":" + fromTier;
+    if (fallbackLogged.has(key)) return;
+    fallbackLogged.add(key);
+    logAutoFallbackFast({
+      reason,
+      fromTier,
+      toTier: DEFAULT_TIER,
+      turnId,
+      intentClass: intel.category,
+    });
+  };
   if (tier.auto) {
     const autoId = classifyAutoRoute(intel, {
       hasImage: hasImageInput,
@@ -4076,6 +4142,9 @@ async function handler(event, context) {
       textLen: String(lastUser.content || "").length,
     });
     routeTier = TIERS[autoId] || TIERS[DEFAULT_TIER];
+    if (autoId === DEFAULT_TIER) {
+      logFastFallbackOnce("auto_route_trivial", "csaiauto");
+    }
   }
   const budget = computeBudget(intel, routeTier, { maxMode: maxModeOn });
   const kajiResume = payload.kajiResume && typeof payload.kajiResume === "object" ? payload.kajiResume : null;
@@ -4386,6 +4455,19 @@ async function handler(event, context) {
       }
     }
 
+    const logFlashUpstreamMisses = (laterFallbackSucceeded) => {
+      for (const miss of flashUpstreamMisses) {
+        logCsAiOps("csai.flash_upstream_miss", {
+          turnId,
+          attempt: miss.attempt,
+          model: miss.model,
+          reason: miss.reason,
+          status: miss.status || 0,
+          laterFallbackSucceeded: Boolean(laterFallbackSucceeded),
+        });
+      }
+    };
+
     if (!draft) {
     for (let ci = 0; ci < chain.length; ci++) {
       const candidate = chain[ci];
@@ -4499,10 +4581,26 @@ async function handler(event, context) {
           draft = r;
         }
         draftModel = candidate;
+        if (
+          routeTier.flash47
+          && isFastBackendModel(candidate)
+          && ci > 0
+          && !FAST_TIER_IDS.has(routeTierId())
+        ) {
+          logFastFallbackOnce("upstream_unavailable", routeTierId());
+        }
         break;
       }
       lastStatus = r.status || 0;
       lastDetail = (r.detail || "") + ` [${modelTag} ${Date.now() - attemptStart}/${budgetMs}ms]`;
+      if (routeTier.flash47) {
+        flashUpstreamMisses.push({
+          attempt: ci,
+          model: modelTag,
+          reason: flashMissReason(r),
+          status: r.status || 0,
+        });
+      }
       if (ci === 0 && Date.now() - attemptStart > 8000 && lastStatus !== 404 && lastStatus !== 402) continue;
     }
 
@@ -4514,6 +4612,9 @@ async function handler(event, context) {
           if (raced && raced.text) {
             draft = raced;
             draftModel = raced.model;
+            if (isFastBackendModel(raced.model) && !FAST_TIER_IDS.has(routeTierId())) {
+              logFastFallbackOnce("live_miss", routeTierId());
+            }
           }
         } catch (e) {
           lastDetail = String(e && e.name) + " [rescue-race]";
@@ -4560,6 +4661,9 @@ async function handler(event, context) {
           if (raced && raced.text) {
             draft = raced;
             draftModel = raced.model;
+            if (isFastBackendModel(raced.model) && !FAST_TIER_IDS.has(routeTierId())) {
+              logFastFallbackOnce("durable_rescue", routeTierId());
+            }
           }
         } catch (e) {
           lastDetail = String(e && e.name) + " [panic]";
@@ -4575,6 +4679,10 @@ async function handler(event, context) {
         draft = fast;
         draftModel = fast.model;
       }
+    }
+
+    if (flashUpstreamMisses.length) {
+      logFlashUpstreamMisses(Boolean(draft && draft.text));
     }
 
     if (!draft) {
@@ -4738,4 +4846,6 @@ module.exports = {
   callChatModel, clockNow,
   _budget: budget, budgetMode, MAX_CONTEXT_TOKENS, TOKEN_BUDGET, COOLDOWN_MS,
   FREE_USAGE, CREDIT_TIERS, mozillaEngine,
+  logCsAiOps, logAutoFallbackFast, isFastBackendModel, tierIdFromTier, flashMissReason,
+  FAST_TIER_IDS, DEFAULT_TIER,
 };
