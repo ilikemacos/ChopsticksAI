@@ -118,7 +118,7 @@ struct CompactIslandContent: View {
         }
         .frame(width: 22, height: 22)
         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-        .onTapGesture { mgr.phase = .expanded; mgr.userPinned = true }
+        .onTapGesture { mgr.openExpanded(tab: .media) }
     }
 
     private static func clock(_ t: TimeInterval) -> String {

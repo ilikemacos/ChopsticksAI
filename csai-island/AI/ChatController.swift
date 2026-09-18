@@ -62,6 +62,25 @@ final class ChatController: ObservableObject {
         pb.setString(text, forType: .string)
     }
 
+    func askClipboard() {
+        guard !isGenerating else { return }
+        let pb = NSPasteboard.general
+        guard let raw = pb.string(forType: .string)?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+              !raw.isEmpty else {
+            error = "Clipboard is empty."
+            return
+        }
+        error = nil
+        let snippet = String(raw.prefix(4000))
+        let prompt = "Summarize or explain this from my clipboard:\n\n\(snippet)"
+        draft = ""
+        lastPrompt = prompt
+        turns.append(ChatTurn(role: "user", text: prompt))
+        persist()
+        Task { await generate() }
+    }
+
     private func generate() async {
         isGenerating = true
         streamingText = ""

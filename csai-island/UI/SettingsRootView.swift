@@ -21,13 +21,14 @@ struct SettingsRootView: View {
             Toggle("Enable Dynamic Island", isOn: $settings.islandEnabled)
             Toggle("Launch at login", isOn: $settings.launchAtLogin)
                 .onChange(of: settings.launchAtLogin) { _, v in LoginItemService.set(v) }
+            Toggle("Expand on hover near notch", isOn: $settings.hoverToExpand)
             Picker("Island position", selection: $settings.position) {
                 ForEach(IslandPosition.allCases) { p in
                     Text(p.label).tag(p)
                 }
             }
             Slider(value: $settings.animationIntensity, in: 0.5...1.6) { Text("Animation intensity") }
-            Toggle("Automatically collapse", isOn: $settings.autoCollapse)
+            Toggle("Automatically collapse HUD blips", isOn: $settings.autoCollapse)
             Slider(value: $settings.autoCollapseDelay, in: 1.2...8) { Text("Collapse delay") }
             Toggle("Keyboard shortcut (⌃⌥Space)", isOn: $settings.hotKeyEnabled)
         }
@@ -57,13 +58,16 @@ struct SettingsRootView: View {
         Form {
             Toggle("Enable cs.AI", isOn: $settings.aiEnabled)
             TextField("API endpoint", text: $settings.apiEndpoint)
-            TextField("Model / plate", text: $settings.model)
-                .help("csai4flash, air, or another plate the server understands.")
+            Picker("Default plate", selection: $settings.plate) {
+                ForEach(PlateOption.allCases) { plate in
+                    Label(plate.label, systemImage: plate.symbol).tag(plate)
+                }
+            }
             SecureField("API key (optional)", text: $apiKey)
                 .help("Stored in Keychain. Public chopstickshq.com Flash does not require a key.")
             Toggle("Prefer streaming responses", isOn: $settings.streaming)
             Toggle("Keep conversation history", isOn: $settings.keepHistory)
-            Text("The live HQ API currently returns a full JSON completion. Streaming is parsed when the server sends SSE.")
+            Text("Plates are Fast, Auto, Flash, and Core — no provider names in the island UI.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

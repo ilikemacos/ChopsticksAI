@@ -34,5 +34,9 @@
 	<string>cs.AI Island can show when the camera is in use.</string>
 	<key>NSDownloadsFolderUsageDescription</key>
 	<string>cs.AI Island watches Downloads so new files can appear in the island.</string>
+	<key>NSFocusStatusUsageDescription</key>
+	<string>cs.AI Island shows Focus / Do Not Disturb status in the island.</string>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>cs.AI Island shows Now Playing in the island.</string>
 </dict>
 </plist>
