@@ -8,8 +8,8 @@ struct IslandChrome<Content: View>: View {
     var body: some View {
         let r = settings.cornerRadius
         content()
-            .padding(.horizontal, mgr.phase == .idle ? 6 : 12)
-            .padding(.vertical, mgr.phase == .idle ? 2 : 8)
+            .padding(.horizontal, mgr.phase == .idle ? 6 : (mgr.isExpandedSurface ? 14 : 12))
+            .padding(.vertical, mgr.phase == .idle ? 2 : (mgr.isExpandedSurface ? 12 : 8))
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(chrome)
             .clipShape(RoundedRectangle(cornerRadius: r, style: .continuous))

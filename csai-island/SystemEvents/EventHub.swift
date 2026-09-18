@@ -13,6 +13,7 @@ final class EventHub {
     let capture = CaptureIndicatorMonitor()
     let notifications = NotificationBridge()
     let music = NowPlayingMonitor.shared
+    let stats = StatsMonitor.shared
 
     func start() {
         volume.start()
@@ -26,5 +27,6 @@ final class EventHub {
         capture.start()
         notifications.start()
         music.start()
+        stats.start()
     }
 }

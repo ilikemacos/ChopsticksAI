@@ -64,7 +64,12 @@ final class IslandPanelController: NSObject {
             return
         }
         let geo = NotchGeometry.current(settings: AppSettings.shared)
-        let next = geo.size(for: mgr.kind, phase: mgr.phase, ai: mgr.aiOpen, settings: AppSettings.shared)
+        let next = geo.size(
+            for: mgr.kind,
+            phase: mgr.phase,
+            ai: mgr.isExpandedSurface || mgr.aiOpen,
+            settings: AppSettings.shared
+        )
         size = next
         hosting.frame = NSRect(origin: .zero, size: next)
         let origin = geo.islandOrigin(size: next, phase: mgr.phase)
@@ -79,7 +84,7 @@ final class IslandPanelController: NSObject {
             panel.setFrame(frame, display: true)
         }
         panel.orderFrontRegardless()
-        if mgr.aiOpen {
+        if mgr.isExpandedSurface || mgr.aiOpen {
             panel.makeKeyAndOrderFront(nil)
         }
     }
