@@ -3723,9 +3723,9 @@ async function handler(event, context) {
     });
   }
 
-  const tier = tierOf(payload.tier);
+  let tier = tierOf(payload.tier);
   const tierKey = String(payload.tier || DEFAULT_TIER).toLowerCase().replace(/\s+/g, "");
-  const tierId = TIER_ALIASES[tierKey] || tierKey || DEFAULT_TIER;
+  let tierId = TIER_ALIASES[tierKey] || tierKey || DEFAULT_TIER;
   const apiKey = resolveOpenRouterKey(payload);
   const anthropicKey = resolveAnthropicKey(payload);
   const unlockKeys = Array.isArray(payload.unlockKeys)
