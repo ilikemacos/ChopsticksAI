@@ -2,7 +2,8 @@ import Foundation
 
 enum PlateCatalog {
     static let ids = [
-        "csai4flash", "rice", "tamago", "hibachi",
+        "csaifast", "csaiauto", "csai47flash", "csai46core", "csai46swift", "csai46lite",
+        "csai46corepro", "csai47pro",
         "csai4air", "chopcode",
         "wagyua1", "wagyua2", "wagyua3", "wagyua4", "wagyua5",
         "kaji", "max", "stickercoderplus",
@@ -15,10 +16,14 @@ enum PlateCatalog {
     static func label(_ id: String, sky: Bool) -> String {
         if sky {
             switch id {
-            case "rice": return "cs.AI 3.1"
-            case "tamago": return "cs.AI 3.3-Fast"
-            case "hibachi": return "cs.AI 3.3-Thinking"
-            case "csai4flash": return "cs.AI-4-Flash"
+            case "csaifast": return "Fast"
+            case "csaiauto": return "Auto"
+            case "csai47flash": return "Flash"
+            case "csai46core": return "Core"
+            case "csai46swift": return "Swift"
+            case "csai46lite": return "Lite"
+            case "csai46corepro": return "Core-Pro"
+            case "csai47pro": return "Pro"
             case "csai4air": return "cs.AI-4.0-Air"
             case "wagyua1": return "Air II"
             case "wagyua2": return "Air III"
@@ -33,10 +38,14 @@ enum PlateCatalog {
             }
         }
         switch id {
-        case "rice": return "Rice"
-        case "tamago": return "Tamago"
-        case "hibachi": return "Hibachi"
-        case "csai4flash": return "cs.AI-4-Flash"
+        case "csaifast": return "Fast"
+        case "csaiauto": return "Auto"
+        case "csai47flash": return "Flash"
+        case "csai46core": return "Core"
+        case "csai46swift": return "Swift"
+        case "csai46lite": return "Lite"
+        case "csai46corepro": return "Core-Pro"
+        case "csai47pro": return "Pro"
         case "csai4air": return "cs.AI-4.0-Air"
         case "wagyua1": return "Wagyu A1"
         case "wagyua2": return "Wagyu A2"

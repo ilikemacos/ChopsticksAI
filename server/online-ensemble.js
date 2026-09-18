@@ -75,7 +75,7 @@ function shouldRunOnlineTeam({
 }) {
   if (customModel || kajiResume || isWidget) return false;
   if (!(tier && (tier.air4 || tier.team))) return false;
-  if (tier && (tier.chopCode || tier.kaji || tier.groqOnly || tier.flash4)) return false;
+  if (tier && (tier.chopCode || tier.kaji || tier.groqOnly || tier.flash4 || tier.flash47 || tier.auto)) return false;
   return true;
 }
 

@@ -86,7 +86,7 @@
       <div class="grok-topbar-brand">
         <span class="grok-topbar-title" id="topbar-title">cs.AI</span>
         <span class="grok-topbar-sep">·</span>
-        <span class="grok-topbar-plate" id="topbar-plate">cs.AI-4-Flash</span>
+        <span class="grok-topbar-plate" id="topbar-plate">Fast</span>
         <span class="grok-topbar-badge" id="topbar-online">Online</span>
       </div>
       <div class="grok-topbar-actions" id="topbar-guest">
@@ -223,13 +223,17 @@
         <button type="button" class="tool-btn" id="or-groq-filter" hidden title="Groq models">Groq</button>
         <select class="mode-select" id="or-model" hidden aria-label="Model"><option value="">Model…</option></select>
         <div class="plate-wrap" id="plate-wrap">
-          <button type="button" class="chip plate-btn" id="plate-btn" aria-haspopup="listbox" aria-expanded="false" title="Choose model">cs.AI-4-Flash</button>
+          <button type="button" class="chip plate-btn" id="plate-btn" aria-haspopup="listbox" aria-expanded="false" title="Choose model">Fast</button>
           <div class="plate-menu" id="plate-menu" hidden role="listbox" aria-label="Plates"></div>
           <select class="mode-select" id="tier" hidden aria-label="Plate">
-            <option value="csai4flash" selected>cs.AI-4-Flash</option>
-            <option value="rice">Rice</option>
-            <option value="tamago">Tamago</option>
-            <option value="hibachi">Hibachi</option>
+            <option value="csaifast" selected>Fast</option>
+            <option value="csaiauto">Auto</option>
+            <option value="csai47flash">Flash</option>
+            <option value="csai46core">Core</option>
+            <option value="csai46swift">Swift</option>
+            <option value="csai46lite">Lite</option>
+            <option value="csai46corepro">Core-Pro</option>
+            <option value="csai47pro">Pro</option>
             <option value="csai4air">cs.AI-4.0-Air</option>
             <option value="chopcode">csCode-Pro</option>
             <option value="wagyua1">Wagyu A1</option>
@@ -270,10 +274,14 @@
   'use strict';
 
   var EFFORT = {
-    rice: { label: 'Rice', maxTokens: 800 },
-    tamago: { label: 'Tamago', maxTokens: 2000 },
-    hibachi: { label: 'Hibachi', maxTokens: 4000 },
-    csai4flash: { label: 'cs.AI-4-Flash', maxTokens: 1800 },
+    csaifast: { label: 'Fast', maxTokens: 1800 },
+    csaiauto: { label: 'Auto', maxTokens: 3500 },
+    csai47flash: { label: 'Flash', maxTokens: 3500 },
+    csai46core: { label: 'Core', maxTokens: 4096 },
+    csai46swift: { label: 'Swift', maxTokens: 1800 },
+    csai46lite: { label: 'Lite', maxTokens: 1500 },
+    csai46corepro: { label: 'Core-Pro', maxTokens: 2500 },
+    csai47pro: { label: 'Pro', maxTokens: 8000 },
     wagyu: { label: 'Wagyu A5', maxTokens: 8000 },
     wagyua1: { label: 'Wagyu A1', maxTokens: 2500 },
     wagyua2: { label: 'Wagyu A2', maxTokens: 4000 },
@@ -283,28 +291,26 @@
     chopcode: { label: 'ChopCode', maxTokens: 4000 },
     kaji: { label: 'Kaji', maxTokens: 6000 },
     max: { label: 'Max', maxTokens: 2000 },
-    csai4air: { label: 'cs.AI-4.0-Air', maxTokens: 8000 },
-    low: { label: 'Rice', maxTokens: 800 },
-    high: { label: 'Tamago', maxTokens: 2000 },
-    pro: { label: 'Hibachi', maxTokens: 4000 },
-    medium: { label: 'Tamago', maxTokens: 2000 },
-    insane: { label: 'Wagyu', maxTokens: 8000 },
-    chopsticks: { label: 'Tamago', maxTokens: 2000 },
-    stickercoderplus: { label: 'Wagyu', maxTokens: 8000 },
-    ultra: { label: 'Hibachi', maxTokens: 4000 },
-    super: { label: 'Tamago', maxTokens: 2000 }
+    csai4air: { label: 'cs.AI-4.0-Air', maxTokens: 8000 }
   };
   var LEGACY_TIER_MAP = {
-    low: 'rice', fast: 'rice', haiku: 'rice',
-    medium: 'tamago', high: 'tamago', standard: 'tamago', sonnet: 'tamago',
-    chopsticks: 'tamago', super: 'tamago',
-    pro: 'hibachi', opus: 'hibachi', ultra: 'hibachi', xhigh: 'hibachi',
-    xhighplus: 'hibachi', code: 'chopcode', kaji: 'kaji', grok: 'kaji', grokbot: 'kaji',
+    csaifast: 'csaifast', fast: 'csaifast', csaiauto: 'csaiauto', auto: 'csaiauto',
+    csai47flash: 'csai47flash', flash: 'csai47flash', '4.7-flash': 'csai47flash', '47flash': 'csai47flash',
+    csai46core: 'csai46core', core: 'csai46core', '4.6-core': 'csai46core', '46core': 'csai46core',
+    csai46swift: 'csai46swift', swift: 'csai46swift', '4.6-swift': 'csai46swift',
+    csai46lite: 'csai46lite', lite: 'csai46lite', '4.6-lite': 'csai46lite',
+    csai46corepro: 'csai46corepro', 'core-pro': 'csai46corepro', '4.6-core-pro': 'csai46corepro', '4.6-pro': 'csai46corepro',
+    csai47pro: 'csai47pro', pro: 'csai47pro', '4.7-pro': 'csai47pro', '47pro': 'csai47pro',
+    low: 'csaifast', haiku: 'csaifast', rice: 'csaifast',
+    medium: 'csai46lite', high: 'csai46lite', standard: 'csai46lite', sonnet: 'csai46lite',
+    tamago: 'csai46lite', chopsticks: 'csai46lite', super: 'csai46lite',
+    hibachi: 'csai46core', opus: 'csai46core', ultra: 'csai46core', xhigh: 'csai46core', xhighplus: 'csai46core',
+    code: 'chopcode', kaji: 'kaji', grok: 'kaji', grokbot: 'kaji',
     insane: 'wagyua5', fable: 'wagyua5', stickercoderplus: 'wagyua5',
     wagyu: 'wagyua5', a1: 'wagyua1', a2: 'wagyua2', a3: 'wagyua3', a4: 'wagyua4', a5: 'wagyua5',
     'wagyu-a1': 'wagyua1', 'wagyu-a2': 'wagyua2', 'wagyu-a3': 'wagyua3', 'wagyu-a4': 'wagyua4', 'wagyu-a5': 'wagyua5',
-    '3.1': 'rice', 'csai3.1': 'rice', '3.3-fast': 'tamago', '3.3fast': 'tamago',
-    '3.3-thinking': 'hibachi', '3.3thinking': 'hibachi', '3.5-air': 'wagyua5',
+    '3.1': 'csaifast', 'csai3.1': 'csaifast', '3.3-fast': 'csai46lite', '3.3fast': 'csai46lite',
+    '3.3-thinking': 'csai46core', '3.3thinking': 'csai46core', '3.5-air': 'wagyua5',
     airii: 'wagyua1', air2: 'wagyua1', airiii: 'wagyua2', air3: 'wagyua2',
     airvi: 'wagyua3', air6: 'wagyua3', airv: 'wagyua4', air5: 'wagyua4',
     'cscode-pro': 'chopcode', cscodepro: 'chopcode', cscode: 'chopcode',
@@ -312,12 +318,17 @@
     csai4air: 'csai4air', air4: 'csai4air', '4-air': 'csai4air', '4air': 'csai4air',
     'csai-4-air': 'csai4air', 'cs.ai-4-air': 'csai4air', 'cs.ai-4.0-air': 'csai4air',
     'csai-4.0-air': 'csai4air', '4.0-air': 'csai4air', csai40air: 'csai4air',
-    csai4flash: 'csai4flash', 'csai-4-flash': 'csai4flash', 'cs.ai-4-flash': 'csai4flash',
-    '4-flash': 'csai4flash', flash4: 'csai4flash', '4flash': 'csai4flash'
+    csai4flash: 'csai47flash', 'csai-4-flash': 'csai47flash', 'cs.ai-4-flash': 'csai47flash',
+    '4-flash': 'csai47flash', flash4: 'csai47flash', '4flash': 'csai47flash'
   };
   function normalizeTier(id) {
-    var key = String(id || '').toLowerCase();
+    var key = String(id || '').toLowerCase().replace(/\s+/g, '');
     return LEGACY_TIER_MAP[key] || key;
+  }
+  function migrateSavedTier(raw) {
+    var t = normalizeTier(raw);
+    if (!t || !EFFORT[t]) return 'csaifast';
+    return t;
   }
   var API = '/api/chopsticks-ai';
   var STORE = 'chq.web.session';
@@ -962,22 +973,17 @@
     if (bar) node.appendChild(bar);
   }
 
-  try {
-    var savedTier = normalizeTier(localStorage.getItem('chq.aiTier'));
-    if (savedTier && isWagyu(savedTier) && !(Cloud && Cloud.isSignedIn && Cloud.isSignedIn())) savedTier = 'csai4flash';
-    if (savedTier && EFFORT[savedTier]) tierSel.value = savedTier;
-    var savedLang = localStorage.getItem(LANG_KEY);
-    if (savedLang && langSel.querySelector('option[value="' + savedLang + '"]')) langSel.value = savedLang;
-  } catch (e) {}
   var SKY_NAMES = {
-    rice: 'cs.AI 3.1', tamago: 'cs.AI 3.3-Fast', hibachi: 'cs.AI 3.3-Thinking',
+    csaifast: 'Fast', csaiauto: 'Auto', csai47flash: 'Flash', csai46core: 'Core',
+    csai46swift: 'Swift', csai46lite: 'Lite', csai46corepro: 'Core-Pro', csai47pro: 'Pro',
     wagyua1: 'Air II', wagyua2: 'Air III', wagyua3: 'Air VI', wagyua4: 'Air V',
-    wagyua5: 'cs.AI 3.5-Air', csai4flash: 'cs.AI-4-Flash', csai4air: 'cs.AI-4.0-Air', chopcode: 'csCode-Pro', kaji: 'Kaji', max: 'Max'
+    wagyua5: 'cs.AI 3.5-Air', csai4air: 'cs.AI-4.0-Air', chopcode: 'csCode-Pro', kaji: 'Kaji', max: 'Max'
   };
   var SUSHI_NAMES = {
-    rice: 'Rice', tamago: 'Tamago', hibachi: 'Hibachi',
+    csaifast: 'Fast', csaiauto: 'Auto', csai47flash: 'Flash', csai46core: 'Core',
+    csai46swift: 'Swift', csai46lite: 'Lite', csai46corepro: 'Core-Pro', csai47pro: 'Pro',
     wagyua1: 'Wagyu A1', wagyua2: 'Wagyu A2', wagyua3: 'Wagyu A3', wagyua4: 'Wagyu A4',
-    wagyua5: 'Wagyu A5', csai4flash: 'cs.AI-4-Flash', csai4air: 'cs.AI-4.0-Air', chopcode: 'ChopCode', kaji: 'Kaji', max: 'Max'
+    wagyua5: 'Wagyu A5', csai4air: 'cs.AI-4.0-Air', chopcode: 'ChopCode', kaji: 'Kaji', max: 'Max'
   };
   function plateSkyOn() {
     try {
@@ -995,10 +1001,14 @@
     return map[t] || t;
   }
   var PLATES = [
-    { id: 'csai4flash', tag: 'Flagship', group: 'Everyday' },
-    { id: 'rice', tag: 'Fast', group: 'Everyday' },
-    { id: 'tamago', tag: 'Balanced', group: 'Everyday' },
-    { id: 'hibachi', tag: 'Thinking', group: 'Everyday' },
+    { id: 'csaifast', tag: 'Default', group: 'Everyday' },
+    { id: 'csaiauto', tag: 'Smart', group: 'Everyday' },
+    { id: 'csai47flash', tag: 'Flagship', group: 'Everyday' },
+    { id: 'csai46core', tag: 'Thinking', group: 'Everyday' },
+    { id: 'csai46swift', tag: 'Quick', group: 'Everyday' },
+    { id: 'csai46lite', tag: 'Light', group: 'Everyday' },
+    { id: 'csai46corepro', tag: 'Donor', group: 'Donor' },
+    { id: 'csai47pro', tag: 'Donor', group: 'Donor' },
     { id: 'csai4air', tag: 'Best', group: 'PRO' },
     { id: 'chopcode', tag: 'Code', group: 'PRO' },
     { id: 'wagyua1', tag: 'A1', group: 'Wagyu' },
@@ -1012,13 +1022,15 @@
   function plateGroups() {
     return plateSkyOn()
       ? [
-          { label: 'cs.AI', ids: ['csai4flash', 'rice', 'tamago', 'hibachi'] },
+          { label: 'cs.AI', ids: ['csaifast', 'csaiauto', 'csai47flash', 'csai46core', 'csai46swift', 'csai46lite'] },
+          { label: 'Donor', ids: ['csai46corepro', 'csai47pro'] },
           { label: 'PRO', ids: ['csai4air', 'chopcode'] },
           { label: 'Air', ids: ['wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
           { label: 'Apps', ids: ['kaji', 'max'] }
         ]
       : [
-          { label: 'Everyday', ids: ['csai4flash', 'rice', 'tamago', 'hibachi'] },
+          { label: 'Everyday', ids: ['csaifast', 'csaiauto', 'csai47flash', 'csai46core', 'csai46swift', 'csai46lite'] },
+          { label: 'Donor', ids: ['csai46corepro', 'csai47pro'] },
           { label: 'PRO', ids: ['csai4air', 'chopcode'] },
           { label: 'Wagyu', ids: ['wagyua1', 'wagyua2', 'wagyua3', 'wagyua4', 'wagyua5'] },
           { label: 'Apps', ids: ['kaji', 'max'] }
@@ -1030,11 +1042,23 @@
   var plateHint = document.getElementById('plate-hint');
   function currentPlate() {
     var id = normalizeTier(tierSel.value);
-    var row = PLATES.filter(function (p) { return p.id === id; })[0] || PLATES[1];
+    var row = PLATES.filter(function (p) { return p.id === id; })[0] || PLATES[0];
     return { id: row.id, name: plateDisplayName(row.id), tag: row.tag, group: row.group };
   }
   var chopcodeAllowed = false;
   var kajiAllowed = false;
+  var donorProAllowed = false;
+  function is47Pro(id) {
+    var t = normalizeTier(id);
+    return t === 'csai47pro';
+  }
+  function is46CorePro(id) {
+    var t = normalizeTier(id);
+    return t === 'csai46corepro';
+  }
+  function isDonorPro(id) {
+    return is47Pro(id) || is46CorePro(id);
+  }
   function isHqPro(id) {
     var t = normalizeTier(id);
     return t === 'csai4air' || t === 'chopcode';
@@ -1057,6 +1081,10 @@
     if (!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn())) return true;
     return !kajiAllowed;
   }
+  function donorProLocked() {
+    if (!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn())) return true;
+    return !donorProAllowed;
+  }
   function setPlate(id) {
     id = normalizeTier(id);
     var prev = normalizeTier(tierSel.value);
@@ -1074,6 +1102,17 @@
       closePlateMenu();
       return false;
     }
+    if (isDonorPro(id) && donorProLocked()) {
+      if (!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn()) && window.openCsAuth) window.openCsAuth();
+      if (status) {
+        status.hidden = false;
+        status.textContent = Cloud && Cloud.isSignedIn && Cloud.isSignedIn()
+          ? 'Core-Pro and Pro need a Ko-fi tip on the same email.'
+          : 'Sign in to use Core-Pro or Pro.';
+      }
+      closePlateMenu();
+      return false;
+    }
     if (id === 'kaji' && kajiLocked()) {
       if (!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn()) && window.openCsAuth) window.openCsAuth();
       if (status) {
@@ -1087,7 +1126,7 @@
       location.href = '/chopsticks-ai/web/kaji/' + (cloudChatId ? ('?chat=' + encodeURIComponent(cloudChatId)) : '');
       return true;
     }
-    if (!EFFORT[id]) id = 'csai4flash';
+    if (!EFFORT[id]) id = 'csaifast';
     tierSel.value = id;
     try { localStorage.setItem('chq.aiTier', id); } catch (e) {}
     if (id === 'max') setMaxMode(true);
@@ -1105,12 +1144,14 @@
   function plateLocked(row) {
     if (isWagyu(row.id)) return wagyuLocked();
     if (isHqPro(row.id)) return hqProLocked();
+    if (isDonorPro(row.id)) return donorProLocked();
     if (row.id === 'kaji') return kajiLocked();
     return false;
   }
   function plateLockLabel(row) {
     if (isWagyu(row.id)) return 'Sign in';
     if (isHqPro(row.id)) return Cloud && Cloud.isSignedIn && Cloud.isSignedIn() ? '10 keys' : 'Sign in';
+    if (isDonorPro(row.id)) return Cloud && Cloud.isSignedIn && Cloud.isSignedIn() ? 'Ko-fi' : 'Sign in';
     if (row.id === 'kaji') return Cloud && Cloud.isSignedIn && Cloud.isSignedIn() ? '5 keys' : 'Sign in';
     return '';
   }
@@ -1167,7 +1208,7 @@
     }
   }
   function effortInfo() {
-    var info = EFFORT[tierSel.value] || EFFORT.csai4flash;
+    var info = EFFORT[normalizeTier(tierSel.value)] || EFFORT.csaifast;
     if (maxModeOn() || tierSel.value === 'max') return { label: info.label, maxTokens: 1000 };
     return info;
   }
@@ -1451,13 +1492,16 @@
     lastUsageData = d;
     var nextAllowed = !!(d && d.usage && ((d.usage.air4 && d.usage.air4.allowed) || (d.usage.chopcode && d.usage.chopcode.allowed)));
     var nextKaji = !!(d && d.usage && d.usage.kaji && d.usage.kaji.allowed);
-    if (nextAllowed !== chopcodeAllowed || nextKaji !== kajiAllowed) {
+    var nextDonor = !!(d && d.usage && d.usage.donorPro && d.usage.donorPro.allowed);
+    if (nextAllowed !== chopcodeAllowed || nextKaji !== kajiAllowed || nextDonor !== donorProAllowed) {
       chopcodeAllowed = nextAllowed;
       kajiAllowed = nextKaji;
+      donorProAllowed = nextDonor;
       renderPlateUI();
     } else {
       chopcodeAllowed = nextAllowed;
       kajiAllowed = nextKaji;
+      donorProAllowed = nextDonor;
     }
     if (cooldownTimer) { clearInterval(cooldownTimer); cooldownTimer = null; }
     if (resetTimer) { clearInterval(resetTimer); resetTimer = null; }
@@ -1528,7 +1572,6 @@
   } else {
     updateOfflineToggleUI();
   }
-  showTier();
   if (plateBtn && plateMenu) {
     plateBtn.addEventListener('click', function (e) {
       e.stopPropagation();
@@ -1549,6 +1592,21 @@
       closePlateMenu();
     });
   }
+  function applySavedTier() {
+    try {
+      var savedTier = migrateSavedTier(localStorage.getItem('chq.aiTier'));
+      if (savedTier && isWagyu(savedTier) && !(Cloud && Cloud.isSignedIn && Cloud.isSignedIn())) savedTier = 'csaifast';
+      if (savedTier && isDonorPro(savedTier) && donorProLocked()) savedTier = 'csaifast';
+      if (savedTier && EFFORT[savedTier]) {
+        tierSel.value = savedTier;
+        try { localStorage.setItem('chq.aiTier', savedTier); } catch (e) {}
+      }
+      var savedLang = localStorage.getItem(LANG_KEY);
+      if (savedLang && langSel.querySelector('option[value="' + savedLang + '"]')) langSel.value = savedLang;
+    } catch (e) {}
+  }
+  applySavedTier();
+  showTier();
   var plateTilesEl = document.getElementById('plate-tiles');
   if (plateTilesEl) {
     plateTilesEl.addEventListener('click', function (e) {
@@ -2098,8 +2156,8 @@
       .then(function (r) { return r.json(); })
       .then(function (d) {
         var liveMiss = d && d.mode === 'error' && /didn.t return an answer/.test(String(d.reply || ''));
-        if (liveMiss && payload.tier !== 'csai4flash') {
-          payload.tier = 'csai4flash';
+        if (liveMiss && payload.tier !== 'csaifast') {
+          payload.tier = 'csaifast';
           payload.disableSearch = true;
           return fetch(API, { method: 'POST', headers: headers, body: JSON.stringify(payload) }).then(function (r) { return r.json(); });
         }
@@ -2114,7 +2172,7 @@
           saveSession();
           return;
         }
-        if (d && (d.mode === 'auth_required' || d.mode === 'chopcode_pro')) {
+        if (d && (d.mode === 'auth_required' || d.mode === 'chopcode_pro' || d.mode === 'donor_pro')) {
           var need = d.error || 'Sign in to use this plate.';
           history.push({ role: 'assistant', content: need });
           thinking.replaceChild(renderAssistant(need), thinking.lastChild);
