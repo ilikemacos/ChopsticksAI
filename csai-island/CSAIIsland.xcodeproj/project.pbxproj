@@ -1,0 +1,463 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+		252AC49376C0F1D13CC64382 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
+		AA5E5E02D18C30C7620A99EC = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSAIService.swift; sourceTree = "<group>"; };
+		AA56C4E4223330B49D937C33 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatController.swift; sourceTree = "<group>"; };
+		D5EA481883167F7A82624782 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationStore.swift; sourceTree = "<group>"; };
+		3FC7FA32BFF525111FFC57E9 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainCredentials.swift; sourceTree = "<group>"; };
+		B8B1F01B9933E34447BF870A = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingParser.swift; sourceTree = "<group>"; };
+		06B4C862B54B3570A8B4D6AF = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandSpring.swift; sourceTree = "<group>"; };
+		4EFFD1BDB68CEA80E4024525 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		1FA3F916F48F2556B43F3F2D = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSAIIslandApp.swift; sourceTree = "<group>"; };
+		9924EAB99D222116B1409920 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
+		D5E18BAA7D75D82B656B95F1 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandPanelController.swift; sourceTree = "<group>"; };
+		C7C377198C5D349A70716EF9 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandStateManager.swift; sourceTree = "<group>"; };
+		F6138BEDBDD343591813549C = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchGeometry.swift; sourceTree = "<group>"; };
+		4182B30E855D5D37A5191C3D = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingMonitor.swift; sourceTree = "<group>"; };
+		18DE272844FDEA137EB0A5AF = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		DC72AE03E17E71A29C980CF6 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandKind.swift; sourceTree = "<group>"; };
+		0476FBF2300374BA5B803FA5 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandPayload.swift; sourceTree = "<group>"; };
+		7A30EFC29B1AF73E7805E6F9 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBridge.swift; sourceTree = "<group>"; };
+		03C26285476EB950ED6B54FB = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeyService.swift; sourceTree = "<group>"; };
+		03E140699DEE2BB9DFCD8158 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemService.swift; sourceTree = "<group>"; };
+		ED9B8A33AD795F9F0F4153FA = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryMonitor.swift; sourceTree = "<group>"; };
+		B7B55F696D962E38036D5316 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothMonitor.swift; sourceTree = "<group>"; };
+		BC2898B82C51E61952D40322 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessMonitor.swift; sourceTree = "<group>"; };
+		58E78D7477A260375C08E105 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureIndicatorMonitor.swift; sourceTree = "<group>"; };
+		77B253B60F610EDDF5381ECC = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadMonitor.swift; sourceTree = "<group>"; };
+		490767C719E2D63D20872EAF = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventHub.swift; sourceTree = "<group>"; };
+		C562EF6B2795213D4CB83D18 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusMonitor.swift; sourceTree = "<group>"; };
+		4D67D982482E8564FECFD66F = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
+		B3A0E5C6E54DB159617B24E2 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotMonitor.swift; sourceTree = "<group>"; };
+		C6F23C0168412FA735EAC50D = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeMonitor.swift; sourceTree = "<group>"; };
+		3E954C0E0BE1B94CF27C79E6 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactViews.swift; sourceTree = "<group>"; };
+		5672486BB975BF94CBBDD388 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandedViews.swift; sourceTree = "<group>"; };
+		0AD6816637F40FEF375C58F7 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandChrome.swift; sourceTree = "<group>"; };
+		880648945A7F38D782C6F611 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandRootView.swift; sourceTree = "<group>"; };
+		9055C6E194BFD4D866F5E958 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownView.swift; sourceTree = "<group>"; };
+		22953DDA5E277CC26E0549D7 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRootView.swift; sourceTree = "<group>"; };
+		402227BC915A17EAB07DEE5E = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Debounce.swift; sourceTree = "<group>"; };
+		707A1B8AA6F495C9BF6658C2 = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0B8FE8C58B23D2288819C897 = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "cs.AI Island.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		70C9DAA1C48C0828CDA0292F = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		01DD795933460842EABDB99D = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		5CC428954E222EF12A5D94A7 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Combine.framework; path = System/Library/Frameworks/Combine.framework; sourceTree = SDKROOT; };
+		78B53A8D46C7EBA3EA7F69D2 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		C17CFCFE401BDA6E4B42E501 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		60C11F4066C2BBF6CA2BD561 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOBluetooth.framework; path = System/Library/Frameworks/IOBluetooth.framework; sourceTree = SDKROOT; };
+		CF206F0BAF3AF1D6FF191506 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Network.framework; path = System/Library/Frameworks/Network.framework; sourceTree = SDKROOT; };
+		95C32CC2F44A2B1A8F11C4C8 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		9FFEBC19736035116DF0D6C6 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		090BF6988142248D7CE23E26 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
+		B403A2F1BA08FEC1C9F79000 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Intents.framework; path = System/Library/Frameworks/Intents.framework; sourceTree = SDKROOT; };
+		0C81ED7F11707567F3C5A09C = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
+		022C33AE5D0D574A4DA5FB35 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		E7E9A65B764352FCA164BCDC = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		006DFE883C43CE718A2E2F58 = {isa = PBXBuildFile; fileRef = 252AC49376C0F1D13CC64382; };
+		CA45CA4B96925212E9CA2281 = {isa = PBXBuildFile; fileRef = AA5E5E02D18C30C7620A99EC; };
+		3B34BC0BF9B6A192D662D613 = {isa = PBXBuildFile; fileRef = AA56C4E4223330B49D937C33; };
+		ACB398C45A18908F953C933F = {isa = PBXBuildFile; fileRef = D5EA481883167F7A82624782; };
+		02273945D2BBC187C595A840 = {isa = PBXBuildFile; fileRef = 3FC7FA32BFF525111FFC57E9; };
+		A8C9A02719A8E069AF6F7DFA = {isa = PBXBuildFile; fileRef = B8B1F01B9933E34447BF870A; };
+		A8C80C610E28BE6E0C04144A = {isa = PBXBuildFile; fileRef = 06B4C862B54B3570A8B4D6AF; };
+		6529E9F8951C15FBADE64FA3 = {isa = PBXBuildFile; fileRef = 4EFFD1BDB68CEA80E4024525; };
+		8B778F2E6287DAC93AE8B932 = {isa = PBXBuildFile; fileRef = 1FA3F916F48F2556B43F3F2D; };
+		45022A8DBFA3283DBA68A833 = {isa = PBXBuildFile; fileRef = 9924EAB99D222116B1409920; };
+		D25D220E8B5D7414AFC55056 = {isa = PBXBuildFile; fileRef = D5E18BAA7D75D82B656B95F1; };
+		E8D0CF0BF6ED4B7CD9A96261 = {isa = PBXBuildFile; fileRef = C7C377198C5D349A70716EF9; };
+		4AEEFF74DDB50F096330CD8F = {isa = PBXBuildFile; fileRef = F6138BEDBDD343591813549C; };
+		7092E73EABC22CF50FEB92D0 = {isa = PBXBuildFile; fileRef = 4182B30E855D5D37A5191C3D; };
+		07F4991D371F4C063D4AEC39 = {isa = PBXBuildFile; fileRef = 18DE272844FDEA137EB0A5AF; };
+		FE949D59FE929A0AE750AE07 = {isa = PBXBuildFile; fileRef = DC72AE03E17E71A29C980CF6; };
+		160A21A5B3C9C63F4DEB4DD8 = {isa = PBXBuildFile; fileRef = 0476FBF2300374BA5B803FA5; };
+		32539A124F259B9A486EFF4F = {isa = PBXBuildFile; fileRef = 7A30EFC29B1AF73E7805E6F9; };
+		D3431728F6AFCAAF5CFF4EF5 = {isa = PBXBuildFile; fileRef = 03C26285476EB950ED6B54FB; };
+		8F8807464583AB2ACC980BD5 = {isa = PBXBuildFile; fileRef = 03E140699DEE2BB9DFCD8158; };
+		265B961AF2DD6A28F93D870E = {isa = PBXBuildFile; fileRef = ED9B8A33AD795F9F0F4153FA; };
+		1AB63ABDB6504B240DB2D59B = {isa = PBXBuildFile; fileRef = B7B55F696D962E38036D5316; };
+		81ADC723ECE8537771354FA2 = {isa = PBXBuildFile; fileRef = BC2898B82C51E61952D40322; };
+		0577EE52A2C96359A6D61D65 = {isa = PBXBuildFile; fileRef = 58E78D7477A260375C08E105; };
+		8535CEA2CA852A25BEE3475B = {isa = PBXBuildFile; fileRef = 77B253B60F610EDDF5381ECC; };
+		D940C5573E53471A911C8429 = {isa = PBXBuildFile; fileRef = 490767C719E2D63D20872EAF; };
+		413C08B7B2050B44753A5A36 = {isa = PBXBuildFile; fileRef = C562EF6B2795213D4CB83D18; };
+		E0607CE6908D857030CCE065 = {isa = PBXBuildFile; fileRef = 4D67D982482E8564FECFD66F; };
+		B1A78599BE2E8436616D2407 = {isa = PBXBuildFile; fileRef = B3A0E5C6E54DB159617B24E2; };
+		392F9D733ABFBFC5487443B7 = {isa = PBXBuildFile; fileRef = C6F23C0168412FA735EAC50D; };
+		BE5D6050E176DB8669B1CBC6 = {isa = PBXBuildFile; fileRef = 3E954C0E0BE1B94CF27C79E6; };
+		53E8923239ECA4C32C293BFA = {isa = PBXBuildFile; fileRef = 5672486BB975BF94CBBDD388; };
+		34B34F35674B601634B70DF4 = {isa = PBXBuildFile; fileRef = 0AD6816637F40FEF375C58F7; };
+		7D5C89F9305C39A6CEF01F94 = {isa = PBXBuildFile; fileRef = 880648945A7F38D782C6F611; };
+		77C33E1A01BEA9E8E00BEF32 = {isa = PBXBuildFile; fileRef = 9055C6E194BFD4D866F5E958; };
+		709FC1891708AB1F80B20A19 = {isa = PBXBuildFile; fileRef = 22953DDA5E277CC26E0549D7; };
+		FB5FB64D27ADC6EA8FBB6441 = {isa = PBXBuildFile; fileRef = 402227BC915A17EAB07DEE5E; };
+		59A8BA2855B7F6B4424B5641 = {isa = PBXBuildFile; fileRef = 70C9DAA1C48C0828CDA0292F; };
+		3B22D1D0F6CAF680B0976163 = {isa = PBXBuildFile; fileRef = 01DD795933460842EABDB99D; };
+		3D8C58E94465231ED54A3D37 = {isa = PBXBuildFile; fileRef = 5CC428954E222EF12A5D94A7; };
+		AFD688259FD9074BA370618F = {isa = PBXBuildFile; fileRef = 78B53A8D46C7EBA3EA7F69D2; };
+		E5DEA59D04A8F3665A8B19F0 = {isa = PBXBuildFile; fileRef = C17CFCFE401BDA6E4B42E501; };
+		7993D2F81742830ED071E4BB = {isa = PBXBuildFile; fileRef = 60C11F4066C2BBF6CA2BD561; };
+		F2B1E181FA724992FF956472 = {isa = PBXBuildFile; fileRef = CF206F0BAF3AF1D6FF191506; };
+		901735D347460824EC5C5FFB = {isa = PBXBuildFile; fileRef = 95C32CC2F44A2B1A8F11C4C8; };
+		8BA582771A9A982A0600385C = {isa = PBXBuildFile; fileRef = 9FFEBC19736035116DF0D6C6; };
+		8A1E577258C7B838A6291B2A = {isa = PBXBuildFile; fileRef = 090BF6988142248D7CE23E26; };
+		807753106F483652F20A55CD = {isa = PBXBuildFile; fileRef = B403A2F1BA08FEC1C9F79000; };
+		F13A1BF916EDE7D370A74BF6 = {isa = PBXBuildFile; fileRef = 0C81ED7F11707567F3C5A09C; };
+		82D78ACB2C893853782CDD98 = {isa = PBXBuildFile; fileRef = 022C33AE5D0D574A4DA5FB35; };
+		2A01E7C28F3E1CA67A0E76F8 = {isa = PBXBuildFile; fileRef = E7E9A65B764352FCA164BCDC; };
+		A092FF75FCD653E71744FB85 = {
+			isa = PBXGroup;
+			children = (
+				252AC49376C0F1D13CC64382,
+				AA5E5E02D18C30C7620A99EC,
+				AA56C4E4223330B49D937C33,
+				D5EA481883167F7A82624782,
+				3FC7FA32BFF525111FFC57E9,
+				B8B1F01B9933E34447BF870A,
+			);
+			path = AI;
+			sourceTree = "<group>";
+		};
+		ED85E7BAD98246DFC6B989D3 = {
+			isa = PBXGroup;
+			children = (
+				06B4C862B54B3570A8B4D6AF,
+			);
+			path = Animations;
+			sourceTree = "<group>";
+		};
+		D3CF9C94FB5115197CC60000 = {
+			isa = PBXGroup;
+			children = (
+				4EFFD1BDB68CEA80E4024525,
+				1FA3F916F48F2556B43F3F2D,
+				9924EAB99D222116B1409920,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		5B80E43F32658E40966530E8 = {
+			isa = PBXGroup;
+			children = (
+				D5E18BAA7D75D82B656B95F1,
+				C7C377198C5D349A70716EF9,
+				F6138BEDBDD343591813549C,
+			);
+			path = DynamicIsland;
+			sourceTree = "<group>";
+		};
+		E9B0578468C04C22A5B54809 = {
+			isa = PBXGroup;
+			children = (
+				4182B30E855D5D37A5191C3D,
+			);
+			path = Media;
+			sourceTree = "<group>";
+		};
+		C17809257C19D60E3B370726 = {
+			isa = PBXGroup;
+			children = (
+				18DE272844FDEA137EB0A5AF,
+				DC72AE03E17E71A29C980CF6,
+				0476FBF2300374BA5B803FA5,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		16EA3242A8EBC63AF7DCA4B8 = {
+			isa = PBXGroup;
+			children = (
+				7A30EFC29B1AF73E7805E6F9,
+			);
+			path = Notifications;
+			sourceTree = "<group>";
+		};
+		C7E9A71C8407002C99B729E6 = {
+			isa = PBXGroup;
+			children = (
+				707A1B8AA6F495C9BF6658C2,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		B4D96DE663180DC0FBF024E7 = {
+			isa = PBXGroup;
+			children = (
+				03C26285476EB950ED6B54FB,
+				03E140699DEE2BB9DFCD8158,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		9D13F9B0A11C81A961A8602D = {
+			isa = PBXGroup;
+			children = (
+				ED9B8A33AD795F9F0F4153FA,
+				B7B55F696D962E38036D5316,
+				BC2898B82C51E61952D40322,
+				58E78D7477A260375C08E105,
+				77B253B60F610EDDF5381ECC,
+				490767C719E2D63D20872EAF,
+				C562EF6B2795213D4CB83D18,
+				4D67D982482E8564FECFD66F,
+				B3A0E5C6E54DB159617B24E2,
+				C6F23C0168412FA735EAC50D,
+			);
+			path = SystemEvents;
+			sourceTree = "<group>";
+		};
+		1C9288300D3AC9BA629770D4 = {
+			isa = PBXGroup;
+			children = (
+				3E954C0E0BE1B94CF27C79E6,
+				5672486BB975BF94CBBDD388,
+				0AD6816637F40FEF375C58F7,
+				880648945A7F38D782C6F611,
+				9055C6E194BFD4D866F5E958,
+				22953DDA5E277CC26E0549D7,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		22944AD4F441B0FC22C52702 = {
+			isa = PBXGroup;
+			children = (
+				402227BC915A17EAB07DEE5E,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		17D4474801E7FB00E1C94899 = {
+			isa = PBXGroup;
+			children = (
+				70C9DAA1C48C0828CDA0292F,
+				01DD795933460842EABDB99D,
+				5CC428954E222EF12A5D94A7,
+				78B53A8D46C7EBA3EA7F69D2,
+				C17CFCFE401BDA6E4B42E501,
+				60C11F4066C2BBF6CA2BD561,
+				CF206F0BAF3AF1D6FF191506,
+				95C32CC2F44A2B1A8F11C4C8,
+				9FFEBC19736035116DF0D6C6,
+				090BF6988142248D7CE23E26,
+				B403A2F1BA08FEC1C9F79000,
+				0C81ED7F11707567F3C5A09C,
+				022C33AE5D0D574A4DA5FB35,
+				E7E9A65B764352FCA164BCDC,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A8CBE22D73EBCC4E5F27B59C = {
+			isa = PBXGroup;
+			children = (
+				0B8FE8C58B23D2288819C897,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2B731CEFC6751AAE0EC69B98 = {
+			isa = PBXGroup;
+			children = (
+				A092FF75FCD653E71744FB85,
+				ED85E7BAD98246DFC6B989D3,
+				D3CF9C94FB5115197CC60000,
+				5B80E43F32658E40966530E8,
+				E9B0578468C04C22A5B54809,
+				C17809257C19D60E3B370726,
+				16EA3242A8EBC63AF7DCA4B8,
+				C7E9A71C8407002C99B729E6,
+				B4D96DE663180DC0FBF024E7,
+				9D13F9B0A11C81A961A8602D,
+				1C9288300D3AC9BA629770D4,
+				22944AD4F441B0FC22C52702,
+				17D4474801E7FB00E1C94899,
+				A8CBE22D73EBCC4E5F27B59C,
+			);
+			sourceTree = "<group>";
+		};
+		F2AB5FB218DA8B84623F4557 = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				006DFE883C43CE718A2E2F58,
+				CA45CA4B96925212E9CA2281,
+				3B34BC0BF9B6A192D662D613,
+				ACB398C45A18908F953C933F,
+				02273945D2BBC187C595A840,
+				A8C9A02719A8E069AF6F7DFA,
+				A8C80C610E28BE6E0C04144A,
+				6529E9F8951C15FBADE64FA3,
+				8B778F2E6287DAC93AE8B932,
+				45022A8DBFA3283DBA68A833,
+				D25D220E8B5D7414AFC55056,
+				E8D0CF0BF6ED4B7CD9A96261,
+				4AEEFF74DDB50F096330CD8F,
+				7092E73EABC22CF50FEB92D0,
+				07F4991D371F4C063D4AEC39,
+				FE949D59FE929A0AE750AE07,
+				160A21A5B3C9C63F4DEB4DD8,
+				32539A124F259B9A486EFF4F,
+				D3431728F6AFCAAF5CFF4EF5,
+				8F8807464583AB2ACC980BD5,
+				265B961AF2DD6A28F93D870E,
+				1AB63ABDB6504B240DB2D59B,
+				81ADC723ECE8537771354FA2,
+				0577EE52A2C96359A6D61D65,
+				8535CEA2CA852A25BEE3475B,
+				D940C5573E53471A911C8429,
+				413C08B7B2050B44753A5A36,
+				E0607CE6908D857030CCE065,
+				B1A78599BE2E8436616D2407,
+				392F9D733ABFBFC5487443B7,
+				BE5D6050E176DB8669B1CBC6,
+				53E8923239ECA4C32C293BFA,
+				34B34F35674B601634B70DF4,
+				7D5C89F9305C39A6CEF01F94,
+				77C33E1A01BEA9E8E00BEF32,
+				709FC1891708AB1F80B20A19,
+				FB5FB64D27ADC6EA8FBB6441,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4F6F5CC3FCCF73F75AE9CCF4 = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				59A8BA2855B7F6B4424B5641,
+				3B22D1D0F6CAF680B0976163,
+				3D8C58E94465231ED54A3D37,
+				AFD688259FD9074BA370618F,
+				E5DEA59D04A8F3665A8B19F0,
+				7993D2F81742830ED071E4BB,
+				F2B1E181FA724992FF956472,
+				901735D347460824EC5C5FFB,
+				8BA582771A9A982A0600385C,
+				8A1E577258C7B838A6291B2A,
+				807753106F483652F20A55CD,
+				F13A1BF916EDE7D370A74BF6,
+				82D78ACB2C893853782CDD98,
+				2A01E7C28F3E1CA67A0E76F8,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		55B558C7EF820E6E00E5993B = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		42AEFBAE01D2DFD981F7DA7D = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2080502859FB363E8EF65FF2;
+			buildPhases = (
+				F2AB5FB218DA8B84623F4557,
+				4F6F5CC3FCCF73F75AE9CCF4,
+				55B558C7EF820E6E00E5993B,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CSAIIsland;
+			productName = CSAIIsland;
+			productReference = 0B8FE8C58B23D2288819C897;
+			productType = "com.apple.product-type.application";
+		};
+		46F86FAA6BBF9AC94A7E4595 = {
+			isa = PBXProject;
+			buildConfigurationList = 2D6CADEF21B99EA5E890ABE8;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base,);
+			mainGroup = 2B731CEFC6751AAE0EC69B98;
+			productRefGroup = A8CBE22D73EBCC4E5F27B59C;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				42AEFBAE01D2DFD981F7DA7D,
+			);
+		};
+		B1CC8FE5176142122794FE0A = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		80D34FDBFC214A62DA2B7427 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		9295F0E992D28689955FBB7A = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGNING_ALLOWED = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.chopstickshq.csai-island;
+				PRODUCT_NAME = "cs.AI Island";
+				SWIFT_VERSION = 5.0;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		29B64A418306CC02D181FEE4 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGNING_ALLOWED = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.chopstickshq.csai-island;
+				PRODUCT_NAME = "cs.AI Island";
+				SWIFT_VERSION = 5.0;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		2D6CADEF21B99EA5E890ABE8 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1CC8FE5176142122794FE0A,
+				80D34FDBFC214A62DA2B7427,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2080502859FB363E8EF65FF2 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9295F0E992D28689955FBB7A,
+				29B64A418306CC02D181FEE4,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+	};
+	rootObject = 46F86FAA6BBF9AC94A7E4595;
+}

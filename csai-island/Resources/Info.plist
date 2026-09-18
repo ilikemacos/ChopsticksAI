@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleExecutable</key>
+	<string>CSAIIsland</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.chopstickshq.csai-island</string>
+	<key>CFBundleName</key>
+	<string>cs.AI Island</string>
+	<key>CFBundleDisplayName</key>
+	<string>cs.AI Island</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>cs.AI Island shows when Bluetooth headphones connect.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>cs.AI Island can show when the microphone is in use.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>cs.AI Island can show when the camera is in use.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>cs.AI Island watches Downloads so new files can appear in the island.</string>
+</dict>
+</plist>
