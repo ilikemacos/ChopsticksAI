@@ -51,6 +51,7 @@ struct NotchGeometry {
         return CGPoint(x: x, y: y)
     }
 
+    @MainActor
     func size(for kind: IslandKind, phase: IslandPhase, ai: Bool, settings: AppSettings) -> CGSize {
         let mgr = IslandStateManager.shared
         let tab = mgr.selectedTab

@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 final class EventHub {
     static let shared = EventHub()
     let volume = VolumeMonitor()
