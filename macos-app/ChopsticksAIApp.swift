@@ -2,16 +2,27 @@ import AppKit
 import SwiftUI
 
 private let apiURL = URL(string: "https://chopstickshq.com/api/chopsticks-ai")!
-private let appMarketingVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "3.5.0"
 
 private let starters = [
-    "What is Chopsticks HQ?",
-    "Plan a change to the Mac app",
+    "What is ChopsticksAI?",
+    "How do I install rNitro?",
+    "macOS says it can't be opened",
+    "How do I unlock Fathom Pro?",
+    "Explain how SSDs work",
+    "Write me a haiku about Mondays",
 ]
 
-private func effortTiers(sky: Bool) -> [(id: String, label: String)] {
-    PlateCatalog.ids.map { ($0, PlateCatalog.label($0, sky: sky)) }
-}
+private let effortTiers: [(id: String, label: String)] = [
+    ("low", "Low"),
+    ("medium", "Medium"),
+    ("high", "High"),
+    ("xhigh", "Xhigh"),
+    ("xhighplus", "Xhigh+"),
+    ("insane", "Insane"),
+    ("chopsticks", "Chopsticks"),
+    ("chopcode", "ChopCode"),
+    ("stickercoderplus", "StickerCoder+"),
+]
 
 struct SearchSource: Equatable, Identifiable, Codable {
     var id: UUID = UUID()
@@ -25,27 +36,6 @@ struct ChatFile: Identifiable, Equatable, Codable {
     let name: String
     let content: String
     let language: String
-    var encoding: String? = nil
-}
-
-struct AgentTrace: Identifiable, Equatable, Codable {
-    var id: String
-    var label: String
-    var role: String?
-    var status: String
-    var preview: String?
-    var message: String?
-    var ms: Int?
-}
-
-struct AgentConversationTurn: Identifiable, Equatable, Codable {
-    var id: String
-    var speaker: String
-    var label: String?
-    var type: String
-    var text: String
-    var status: String?
-    var ms: Int?
 }
 
 struct ChatLine: Identifiable, Equatable, Codable {
@@ -54,8 +44,6 @@ struct ChatLine: Identifiable, Equatable, Codable {
     let text: String
     var sources: [SearchSource] = []
     var files: [ChatFile] = []
-    var agents: [AgentTrace] = []
-    var conversation: [AgentConversationTurn] = []
 }
 
 struct ChatFolder: Identifiable, Equatable, Codable {
@@ -154,8 +142,8 @@ struct ChatUsageBar: View {
         .frame(maxWidth: 420)
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 4)
-        .animation(Cursor.motionPanel, value: stats)
-        .animation(Cursor.motionPanel, value: webSearchEnabled)
+        .animation(.spring(response: 0.34, dampingFraction: 0.82), value: stats)
+        .animation(.spring(response: 0.34, dampingFraction: 0.82), value: webSearchEnabled)
     }
 
     @ViewBuilder
@@ -218,7 +206,7 @@ struct ChatUsageBar: View {
                 }
             }
             .frame(height: 6)
-            .animation(Cursor.motionPanel, value: progress)
+            .animation(.spring(response: 0.45, dampingFraction: 0.86), value: progress)
         }
     }
 }
@@ -525,18 +513,16 @@ final class ChatModel: ObservableObject {
 
     func loadCloudChats() async {
         guard AuthStore.shared.isSignedIn else { return }
-        let local = sessions
-        let keepActive = activeSessionId
         let savedFolderMap = folderByRemoteId
         let savedFolders = folders
         do {
             let remote = try await ChatCloud.listChats()
             var loaded: [ChatSession] = []
-            for chat in remote.prefix(40) {
+            for chat in remote.prefix(20) {
                 let msgs = try await ChatCloud.loadMessages(chatId: chat.id)
                 let lines: [ChatLine] = msgs.map { m in
                     let sources = m.sources.compactMap { d -> SearchSource? in
-                        guard let title = d["title"], title != "\u{200B}csai" else { return nil }
+                        guard let title = d["title"] else { return nil }
                         return SearchSource(title: title, url: d["url"] ?? "", snippet: d["snippet"])
                     }
                     return ChatLine(role: m.role, text: m.content, sources: sources)
@@ -548,31 +534,17 @@ final class ChatModel: ObservableObject {
                     lines: lines.isEmpty ? [welcomeLine] : lines
                 ))
             }
-            let remoteIds = Set(loaded.compactMap(\.remoteId))
-            let unsynced = local.filter { sess in
-                let hasUser = sess.lines.contains { $0.role == "user" }
-                guard hasUser else { return false }
-                if let rid = sess.remoteId { return !remoteIds.contains(rid) }
-                return true
-            }
-            var merged = loaded
-            for sess in unsynced {
-                if !merged.contains(where: { $0.id == sess.id || ($0.remoteId != nil && $0.remoteId == sess.remoteId) }) {
-                    merged.append(sess)
-                }
-            }
-            guard !merged.isEmpty else { return }
-            sessions = merged
-            if let keepActive, merged.contains(where: { $0.id == keepActive }) {
-                activeSessionId = keepActive
+            if !loaded.isEmpty {
+                sessions = loaded
+                activeSessionId = loaded.first?.id
+                folders = savedFolders
+                folderByRemoteId = savedFolderMap
+                applyFolderMap()
             } else {
-                activeSessionId = merged.first?.id
+                resetForAccountSwitch()
             }
-            folders = savedFolders
-            folderByRemoteId = savedFolderMap
-            applyFolderMap()
         } catch {
-            // Keep the on-disk workspace — never wipe chats because the network failed.
+            resetForAccountSwitch()
         }
         saveWorkspace()
     }
@@ -580,7 +552,7 @@ final class ChatModel: ObservableObject {
     private var welcomeLine: ChatLine {
         ChatLine(
             role: "assistant",
-            text: "What’s on your mind?\n\nAsk anything. Sign in to sync chats."
+            text: "Hi — I'm cs.AI 2.5.4.\n\nEmail + password sign-in via chopstickshq.com. Keyword KB + Chromium search. Ask anything. Pick StickerCoder+ for coding."
         )
     }
 
@@ -595,21 +567,7 @@ final class ChatModel: ObservableObject {
         let attach = AttachmentStore.shared
         let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !busy else { return }
-        if let msg = store.regionUnavailable {
-            mutateActive { $0.lines.append(ChatLine(role: "assistant", text: msg)) }
-            draft = ""
-            return
-        }
-        if PlateCatalog.isHqPro(store.tier) && !store.hqProUnlocked {
-            mutateActive {
-                $0.lines.append(ChatLine(
-                    role: "assistant",
-                    text: "PRO plates (cs.AI-4.0-Air and csCode-Pro) need 10 Fathom Pro keys in Usage, or a Founder account."
-                ))
-            }
-            draft = ""
-            return
-        }
+        if attach.isUploading { return }
         let ready = attach.ready
         guard !text.isEmpty || !ready.isEmpty else { return }
         ensureSession()
@@ -647,7 +605,6 @@ final class ChatModel: ObservableObject {
         let prompt = text.isEmpty ? "Please review the attached files." : text
 
         busy = true
-        defer { busy = false }
         mutateActive { session in
             session.lines.append(ChatLine(role: "user", text: display))
             if session.title == "New Chat" {
@@ -669,19 +626,13 @@ final class ChatModel: ObservableObject {
         attach.clear()
         let result = await fetchReply(for: prompt, store: store, attachments: payloadAttach)
         usage = result.usage
-        offlineMode = store.offlineChatMode
+        offlineMode = store.offlineChatMode || store.privacyMode || !NetworkStatus.shared.isOnline
         mutateActive {
-            $0.lines.append(ChatLine(
-                role: "assistant",
-                text: result.text,
-                sources: result.sources,
-                files: result.files,
-                agents: result.agents,
-                conversation: result.conversation
-            ))
+            $0.lines.append(ChatLine(role: "assistant", text: result.text, sources: result.sources, files: result.files))
         }
+        busy = false
         saveWorkspace()
-        Task { await syncActiveToCloud() }
+        await syncActiveToCloud()
     }
 
     private struct ReplyResult {
@@ -689,12 +640,7 @@ final class ChatModel: ObservableObject {
         let usage: UsageStats
         let sources: [SearchSource]
         var files: [ChatFile] = []
-        var agents: [AgentTrace] = []
-        var conversation: [AgentConversationTurn] = []
         var offline: Bool = false
-        var localTools: [[String: Any]]? = nil
-        var resumeModel: String? = nil
-        var mode: String? = nil
     }
 
     private func searchRequest(for text: String) -> (query: String, force: Bool) {
@@ -758,11 +704,11 @@ final class ChatModel: ObservableObject {
     }
 
     private func usesLocalKB(store: AppStore) -> Bool {
-        store.offlineChatMode
+        store.offlineChatMode || store.privacyMode
     }
 
     private func onlineFailureMessage() -> String {
-        "I couldn’t reach a model just now. Try Rice, or send the question again."
+        "The live model didn’t return an answer. Try a shorter question, or send again in a few seconds."
     }
 
     private func requestReply(payload: [String: Any], userText: String) async -> ReplyResult? {
@@ -776,56 +722,22 @@ final class ChatModel: ObservableObject {
                 req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             }
         }
-        req.timeoutInterval = 90
+        req.timeoutInterval = 75
         req.httpBody = try? JSONSerialization.data(withJSONObject: payload)
 
         do {
             let (data, resp) = try await URLSession.shared.data(for: req)
             let http = resp as? HTTPURLResponse
             let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
-            if let msg = AppStore.regionUnavailableMessage(obj: obj, status: http?.statusCode) {
-                AppStore.shared.noteRegionUnavailable(msg)
-                return ReplyResult(text: msg, usage: UsageStats(), sources: [], offline: false)
-            }
             let reply = (obj?["reply"] as? String)?
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
             let mode = obj?["mode"] as? String
-            if mode == "kaji_local_tools", let tools = obj?["localTools"] as? [[String: Any]], !tools.isEmpty {
-                return ReplyResult(
-                    text: reply,
-                    usage: obj.map { parseUsage($0) } ?? UsageStats(),
-                    sources: parseSources(obj ?? [:]),
-                    files: [],
-                    offline: false,
-                    localTools: tools,
-                    resumeModel: obj?["model"] as? String,
-                    mode: mode
-                )
+            if mode == "error" {
+                return nil
             }
-            if http?.statusCode == 401 || http?.statusCode == 403 {
-                let err = (obj?["error"] as? String) ?? ""
-                if mode == "kaji_pro" || err.lowercased().contains("kaji") {
-                    return ReplyResult(
-                        text: err.isEmpty
-                            ? "Kaji is Pro. Redeem 5 Fathom Pro keys in Usage. Think different. Ask Kaji."
-                            : err,
-                        usage: UsageStats(),
-                        sources: [],
-                        offline: false
-                    )
-                }
-                if mode == "chopcode_pro" || err.lowercased().contains("chopcode") {
-                    return ReplyResult(
-                        text: err.isEmpty
-                            ? "ChopCode needs Pro. Redeem 5 Fathom Pro keys in Usage, or switch to Tamago."
-                            : err,
-                        usage: UsageStats(),
-                        sources: [],
-                        offline: false
-                    )
-                }
-                if mode == "auth_required" {
+            guard let obj, !reply.isEmpty else {
+                if http?.statusCode == 403, obj?["mode"] as? String == "auth_required" {
                     return ReplyResult(
                         text: "Sign in is required for this effort level. Open Usage or sign in with your email.",
                         usage: UsageStats(),
@@ -833,11 +745,6 @@ final class ChatModel: ObservableObject {
                         offline: false
                     )
                 }
-            }
-            if mode == "error", reply.isEmpty {
-                return nil
-            }
-            guard let obj, !reply.isEmpty else {
                 if http?.statusCode == 429 {
                     return ReplyResult(
                         text: reply.isEmpty ? "Too many requests — wait a minute and try again." : reply,
@@ -851,15 +758,6 @@ final class ChatModel: ObservableObject {
             let stats = parseUsage(obj)
             let sources = parseSources(obj)
             let files = parseFiles(obj, reply: reply)
-            if let pages = obj["browser"] as? [[String: Any]],
-               let first = pages.first,
-               let href = first["url"] as? String,
-               href.lowercased().hasPrefix("https://") {
-                AppStore.shared.pendingBrowserURL = href
-                AppStore.shared.kajiOpenedURL = href
-            }
-            let agents = parseAgents(obj)
-            let conversation = parseConversation(obj)
             AppStore.shared.applyUsage(
                 obj["usage"] as? [String: Any],
                 budget: obj["budget"] as? [String: Any],
@@ -870,8 +768,6 @@ final class ChatModel: ObservableObject {
                 usage: stats,
                 sources: sources,
                 files: files,
-                agents: agents,
-                conversation: conversation,
                 offline: false
             )
         } catch {
@@ -880,10 +776,7 @@ final class ChatModel: ObservableObject {
     }
 
     private func noNetworkMessage() -> String {
-        if CSAIEdition.current.isOffline {
-            return "No network is needed. cs.AI Offline answers from the on-device knowledge base."
-        }
-        return "No network connection. cs.AI Online needs the internet — it does not fall back to a local knowledge base."
+        "No network connection detected. Connect to Wi‑Fi or turn on Offline mode in Settings → Chat to use local product help."
     }
 
     private func fetchReply(for userText: String, store: AppStore, attachments: [[String: Any]] = []) async -> ReplyResult {
@@ -891,7 +784,7 @@ final class ChatModel: ObservableObject {
             if let local = kbFallback(userText) {
                 let tag = store.privacyMode
                     ? "(Privacy mode · local product help only.)"
-                    : "(Offline mode · local product help only. Turn it off in Settings → Chat.)"
+                    : "(Offline mode · local product help only.)"
                 return ReplyResult(
                     text: local + "\n\n" + tag,
                     usage: UsageStats(),
@@ -900,7 +793,7 @@ final class ChatModel: ObservableObject {
                 )
             }
             let hint = store.privacyMode
-                ? "Privacy mode is on — cs.AI stays on this Mac and does not call the cloud API. Turn privacy off in Settings."
+                ? "Privacy mode is on — cs.AI stays on this Mac and does not call the cloud API. Ask a product question or turn privacy off in Settings."
                 : "Offline mode is on — cs.AI uses the local product KB only. Turn it off in Settings → Chat for live answers."
             return ReplyResult(
                 text: hint,
@@ -910,86 +803,60 @@ final class ChatModel: ObservableObject {
             )
         }
 
+        guard NetworkStatus.shared.isOnline else {
+            return ReplyResult(
+                text: noNetworkMessage(),
+                usage: UsageStats(),
+                sources: [],
+                offline: false
+            )
+        }
+
         let (query, forceSearch) = searchRequest(for: userText)
         var payload: [String: Any] = [
             "messages": apiMessages(forcingSearch: query),
-            "tier": store.tier,
+            "tier": store.maxMode && store.tier == "high" ? "xhigh" : store.tier,
             "mode": "agent",
             "maxTokens": tierMaxTokens(store.tier),
             "unlockKeys": store.unlockKeys,
             "enableTools": store.enableTools,
-            "maxMode": store.maxMode || store.tier == "max",
-            "client": "macos",
         ]
         if !forceSearch && !store.webSearchEnabled {
             payload["disableSearch"] = true
         }
         payload["onlineMode"] = true
-        payload["offlineMode"] = false
-        payload["offlineChatMode"] = false
         if !attachments.isEmpty {
             payload["attachments"] = attachments
         }
         payload["language"] = store.language
-        MoreModelsStore.shared.applyKeysToPayload(&payload)
-
-        if store.tier == "kaji" {
-            payload["enableTools"] = true
-            var working = payload
-            var lastPartial = ""
-            for _ in 0..<4 {
-                guard let result = await requestReply(payload: working, userText: userText) else { break }
-                if result.mode == "kaji_local_tools", let tools = result.localTools, !tools.isEmpty {
-                    lastPartial = result.text
-                    let executed = await KajiMacFiles.run(tools)
-                    let chips = AppStore.shared.applyKajiToolResults(executed)
-                    if !chips.isEmpty {
-                        mutateActive { session in
-                            for chip in chips {
-                                session.lines.append(ChatLine(role: "tool", text: chip))
-                            }
-                        }
-                    }
-                    working["kajiResume"] = [
-                        "model": result.resumeModel ?? "",
-                        "text": result.text,
-                        "toolCalls": tools,
-                        "results": executed,
-                    ]
-                    continue
-                }
-                return result
-            }
-            if !lastPartial.isEmpty {
-                return ReplyResult(text: lastPartial, usage: UsageStats(), sources: [], offline: false)
-            }
-        }
 
         if let result = await requestReply(payload: payload, userText: userText) {
             return result
         }
-        if store.tier != "rice" {
-            var rice = payload
-            rice["tier"] = "rice"
-            rice["maxTokens"] = tierMaxTokens("rice")
-            rice["disableSearch"] = true
-            rice["enableTools"] = false
-            if let result = await requestReply(payload: rice, userText: userText) {
+        var lite = payload
+        lite["tier"] = "medium"
+        lite["maxTokens"] = tierMaxTokens("medium")
+        lite["disableSearch"] = true
+        if let result = await requestReply(payload: lite, userText: userText) {
+            return result
+        }
+        if forceSearch {
+            var full = payload
+            full.removeValue(forKey: "disableSearch")
+            if let result = await requestReply(payload: full, userText: userText) {
                 return result
             }
         }
-        if CSAIEdition.current.isOffline, let local = kbFallback(userText) {
+        if let local = kbFallback(userText) {
             return ReplyResult(
-                text: local,
+                text: local + "\n\n(Live model unavailable — local product help.)",
                 usage: UsageStats(),
                 sources: [],
                 offline: true
             )
         }
         return ReplyResult(
-            text: CSAIEdition.current.isOffline
-                ? "I only have the on-device Chopsticks HQ docs in this app — I can’t write general code here. Use cs.AI Online for that."
-                : "I couldn’t reach a live model just now. Try Rice, or send the question again.",
+            text: onlineFailureMessage(),
             usage: UsageStats(),
             sources: [],
             offline: false
@@ -997,51 +864,19 @@ final class ChatModel: ObservableObject {
     }
 
     private func parseFiles(_ obj: [String: Any], reply: String) -> [ChatFile] {
-        var apiFiles: [ChatFile] = []
+        var out: [ChatFile] = []
         if let arr = obj["files"] as? [[String: Any]] {
             for item in arr {
                 guard let name = item["name"] as? String, !name.isEmpty else { continue }
                 let content = item["content"] as? String ?? ""
                 let language = item["language"] as? String ?? "text"
-                let encoding = item["encoding"] as? String
-                apiFiles.append(ChatFile(name: name, content: content, language: language, encoding: encoding))
+                out.append(ChatFile(name: name, content: content, language: language))
             }
         }
-        return Self.collectAllFiles(reply: reply, apiFiles: apiFiles)
-    }
-
-    private func parseAgents(_ obj: [String: Any]) -> [AgentTrace] {
-        guard let arr = obj["agents"] as? [[String: Any]] else { return [] }
-        return arr.compactMap { item in
-            let id = item["id"] as? String ?? UUID().uuidString
-            let label = item["label"] as? String ?? id
-            let status = item["status"] as? String ?? "pending"
-            return AgentTrace(
-                id: id,
-                label: label,
-                role: item["role"] as? String,
-                status: status,
-                preview: item["preview"] as? String,
-                message: item["message"] as? String,
-                ms: item["ms"] as? Int
-            )
+        if out.isEmpty {
+            out = Self.extractFencedFiles(from: reply)
         }
-    }
-
-    private func parseConversation(_ obj: [String: Any]) -> [AgentConversationTurn] {
-        guard let arr = obj["conversation"] as? [[String: Any]] else { return [] }
-        return arr.compactMap { item in
-            guard let text = item["text"] as? String else { return nil }
-            return AgentConversationTurn(
-                id: item["id"] as? String ?? UUID().uuidString,
-                speaker: item["speaker"] as? String ?? "Agent",
-                label: item["label"] as? String,
-                type: item["type"] as? String ?? "message",
-                text: text,
-                status: item["status"] as? String,
-                ms: item["ms"] as? Int
-            )
-        }
+        return out
     }
 
     static func extractFencedFiles(from text: String) -> [ChatFile] {
@@ -1060,7 +895,6 @@ final class ChatModel: ObservableObject {
             let bits = head.split(whereSeparator: { $0.isWhitespace }).map(String.init)
             var lang = "text"
             var name = ""
-            var encoding: String?
             if bits.count >= 2 {
                 lang = bits[0].lowercased()
                 name = bits.dropFirst().joined(separator: " ")
@@ -1075,96 +909,7 @@ final class ChatModel: ObservableObject {
                 name = "chopsticksai-file.txt"
             }
             name = (name as NSString).lastPathComponent
-            if lang == "base64", let realName = name.split(separator: " ").last.map(String.init), realName.contains(".") {
-                encoding = "base64"
-                name = realName
-                lang = (name as NSString).pathExtension.lowercased()
-                if lang.isEmpty { lang = "text" }
-            }
-            out.append(ChatFile(name: name, content: body, language: lang, encoding: encoding))
-        }
-        return out
-    }
-
-    static func collectAllFiles(reply: String, apiFiles: [ChatFile]) -> [ChatFile] {
-        var lists: [[ChatFile]] = [apiFiles, extractFencedFiles(from: reply)]
-        let parts = reply.components(separatedBy: "```")
-        for (idx, part) in parts.enumerated() where idx % 2 == 0 {
-            lists.append(extractLooseCodeFiles(from: part))
-        }
-        return mergeFiles(lists)
-    }
-
-    static func mergeFiles(_ lists: [[ChatFile]]) -> [ChatFile] {
-        var map: [String: ChatFile] = [:]
-        for list in lists {
-            for file in list {
-                map[file.name] = file
-            }
-        }
-        return Array(map.values)
-    }
-
-    static func looksLikeCodeLine(_ line: String) -> Bool {
-        let t = line.trimmingCharacters(in: .whitespacesAndNewlines)
-        if t.isEmpty { return false }
-        if t.range(of: #"^<\/?[a-zA-Z!][^>]*>"#, options: .regularExpression) != nil { return true }
-        if t.range(of: #"^(const|let|var|function|class|import |export |return |document\.|window\.|console\.)"#, options: .regularExpression) != nil { return true }
-        if t.range(of: #"[{};]\s*$"#, options: .regularExpression) != nil,
-           t.count < 240,
-           t.range(of: #"^[A-Z][^<{]{12,}[.!?]$"#, options: .regularExpression) == nil {
-            return true
-        }
-        return false
-    }
-
-    static func guessLangFromBlock(_ block: String) -> String {
-        if block.range(of: #"<!DOCTYPE|<html\b|<head\b|<body\b|<\/?(div|span|script|style|p|section)\b"#, options: [.regularExpression, .caseInsensitive]) != nil {
-            return "html"
-        }
-        if block.range(of: #"\b(const|let|function|=>|document\.)\b"#, options: .regularExpression) != nil {
-            return "javascript"
-        }
-        if block.range(of: #"\b(def |import |print\()"#, options: .regularExpression) != nil {
-            return "python"
-        }
-        if block.range(of: #"[.#][\w-]+\s*\{"#, options: .regularExpression) != nil {
-            return "css"
-        }
-        return "text"
-    }
-
-    static func extractLooseCodeFiles(from prose: String) -> [ChatFile] {
-        let lines = prose.components(separatedBy: "\n")
-        var out: [ChatFile] = []
-        var i = 0
-        while i < lines.count {
-            let two = looksLikeCodeLine(lines[i]) && i + 1 < lines.count && looksLikeCodeLine(lines[i + 1])
-            if two {
-                let start = i
-                i += 2
-                while i < lines.count,
-                      looksLikeCodeLine(lines[i]) || lines[i].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    i += 1
-                }
-                while i > start, lines[i - 1].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    i -= 1
-                }
-                let text = lines[start..<i].joined(separator: "\n").trimmingCharacters(in: CharacterSet.newlines)
-                if !text.isEmpty {
-                    let lang = guessLangFromBlock(text)
-                    let ext = lang == "javascript" ? "js" : (lang == "text" ? "txt" : lang)
-                    out.append(ChatFile(name: "chopsticksai-file.\(ext)", content: text, language: lang))
-                }
-                continue
-            }
-            let start = i
-            i += 1
-            while i < lines.count {
-                if looksLikeCodeLine(lines[i]), i + 1 < lines.count, looksLikeCodeLine(lines[i + 1]) { break }
-                i += 1
-            }
-            _ = lines[start..<i].joined(separator: "\n")
+            out.append(ChatFile(name: name, content: body, language: lang))
         }
         return out
     }
@@ -1180,20 +925,17 @@ final class ChatModel: ObservableObject {
     }
 
     private func tierMaxTokens(_ tier: String) -> Int {
-        if AppStore.shared.maxMode || tier == "max" { return 1000 }
         switch tier {
-        case "rice": return 800
-        case "tamago": return 1600
-        case "hibachi": return 4000
-        case "csai4flash": return 1800
-        case "wagyua1": return 2500
-        case "wagyua2": return 4000
-        case "wagyua3": return 5500
-        case "wagyua4": return 7000
-        case "csai4air", "wagyua5", "stickercoderplus": return 8000
-        case "chopcode": return 4096
-        case "kaji": return 6000
-        default: return 1600
+        case "low": return 400
+        case "medium": return 600
+        case "high": return 1000
+        case "xhigh": return 2000
+        case "xhighplus": return 3000
+        case "insane": return 4000
+        case "chopsticks": return 800
+        case "chopcode": return 4000
+        case "stickercoderplus": return 6000
+        default: return 1000
         }
     }
 }
@@ -1206,7 +948,7 @@ struct RootShell: View {
 
     private var secondaryWidth: CGFloat {
         guard store.sidebarExpanded, store.nav != .settings else { return 0 }
-        if store.nav == .agents || store.nav == .kaji {
+        if store.nav == .agents {
             return store.compact ? 180 : 220
         }
         return store.compact ? 168 : 200
@@ -1218,12 +960,11 @@ struct RootShell: View {
             secondarySidebar
             mainPane
         }
-        .animation(Cursor.motionPanel, value: store.sidebarExpanded)
-        .animation(Cursor.motionNav, value: store.nav)
-        .animation(Cursor.motionSoft, value: store.compact)
+        .animation(.spring(response: 0.38, dampingFraction: 0.86), value: store.sidebarExpanded)
+        .animation(.spring(response: 0.34, dampingFraction: 0.88), value: store.nav)
+        .animation(.easeInOut(duration: 0.22), value: store.compact)
         .preferredColorScheme(.dark)
         .background(Cursor.bg)
-        .font(.system(size: 15))
         .frame(minWidth: 980, minHeight: 640)
         .onAppear {
             store.bootstrapAccountState()
@@ -1268,7 +1009,7 @@ struct RootShell: View {
     private var iconRail: some View {
         VStack(alignment: store.railLabels ? .leading : .center, spacing: 6) {
             Button {
-                withAnimation(Cursor.motionPanel) {
+                withAnimation(.spring(response: 0.38, dampingFraction: 0.86)) {
                     store.toggleSidebar()
                 }
             } label: {
@@ -1290,13 +1031,13 @@ struct RootShell: View {
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
                         .fill(Cursor.hover.opacity(0.65))
                 )
-                .animation(Cursor.motionPanel, value: store.sidebarExpanded)
+                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: store.sidebarExpanded)
             }
             .buttonStyle(.plain)
             .help(store.sidebarExpanded ? "Collapse sidebar" : "Expand sidebar")
             .padding(.bottom, 4)
 
-            ForEach(railItems, id: \.id) { item in
+            ForEach([AppNav.agents, .search, .cloudAgents, .automations, .repos, .marketplace, .usage, .account], id: \.id) { item in
                 railButton(item)
             }
             Spacer()
@@ -1305,7 +1046,7 @@ struct RootShell: View {
         .padding(.vertical, 12)
         .padding(.horizontal, store.railLabels ? 8 : 8)
         .frame(width: store.railLabels ? 148 : 52)
-        .animation(Cursor.motionPanel, value: store.railLabels)
+        .animation(.spring(response: 0.36, dampingFraction: 0.86), value: store.railLabels)
         .background(Cursor.rail)
         .overlay(alignment: .trailing) {
             Rectangle().fill(Cursor.hairline).frame(width: 1)
@@ -1315,7 +1056,7 @@ struct RootShell: View {
     private func railButton(_ item: AppNav) -> some View {
         let selected = store.nav == item
         return Button {
-            withAnimation(Cursor.motionNav) {
+            withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
                 store.nav = item
                 if !store.sidebarExpanded, item != .settings {
                     store.setSidebarExpanded(true)
@@ -1339,18 +1080,11 @@ struct RootShell: View {
                 RoundedRectangle(cornerRadius: 9, style: .continuous)
                     .fill(selected ? Cursor.selected : Color.clear)
             )
-            .scaleEffect(selected ? 1.01 : 1)
-            .animation(Cursor.motionNav, value: store.nav)
+            .scaleEffect(selected ? 1.02 : 1)
+            .animation(.spring(response: 0.28, dampingFraction: 0.75), value: store.nav)
         }
         .buttonStyle(.plain)
         .help(item.title)
-    }
-
-    private var railItems: [AppNav] {
-        if CSAIEdition.current.isOffline {
-            return [.agents, .search, .labs, .usage, .account]
-        }
-        return [.agents, .kaji, .search, .labs, .usage, .account]
     }
 
     
@@ -1362,7 +1096,7 @@ struct RootShell: View {
                 EmptyView()
             } else {
                 Group {
-                    if store.nav == .agents || store.nav == .kaji {
+                    if store.nav == .agents {
                         agentsSidebar
                     } else {
                         VStack(alignment: .leading, spacing: 0) {
@@ -1394,14 +1128,11 @@ struct RootShell: View {
 
     private var sidebarBlurb: String {
         switch store.nav {
-        case .search: return "In-app browser"
-        case .kaji: return "Kaji uses the browser, your folders, and a headless Alpine sandbox."
-        case .labs: return "Preview rooms — Cloud Agents, Automations, Repos, Marketplace"
+        case .search: return "Chromium browser · Google search"
         case .cloudAgents: return "Remote agent runs"
         case .automations: return "Schedules & event triggers"
         case .repos: return "Local repositories"
         case .marketplace: return "Plugins & extensions"
-        case .moreModels: return "Groq, OpenRouter, and Claude catalogs"
         case .usage: return "Allowance & upgrades"
         case .account: return auth.isSignedIn ? auth.email : "Sign in to sync chats"
         default: return ""
@@ -1417,7 +1148,7 @@ struct RootShell: View {
                     HStack(spacing: 6) {
                         Image(systemName: "plus")
                             .font(.system(size: 11, weight: .semibold))
-                        Text(store.nav == .kaji ? "New Kaji" : "New Agent")
+                        Text("New Agent")
                             .font(.system(size: 12.5, weight: .medium))
                     }
                     .frame(maxWidth: .infinity)
@@ -1781,12 +1512,8 @@ struct RootShell: View {
         switch store.nav {
         case .agents:
             AgentChatView(model: chat, store: store, updater: updater)
-        case .kaji:
-            KajiAppView(store: store, model: chat)
         case .search:
             ChromiumBrowserView()
-        case .labs:
-            LabsView(store: store)
         case .cloudAgents:
             CloudAgentsView()
         case .automations:
@@ -1795,8 +1522,6 @@ struct RootShell: View {
             ReposView(store: store)
         case .marketplace:
             MarketplaceView()
-        case .moreModels:
-            MoreModelsView()
         case .usage:
             UsageView(store: store)
         case .account:
@@ -1815,7 +1540,6 @@ struct AgentChatView: View {
     @ObservedObject var updater: AppAutoUpdate
     @ObservedObject private var network = NetworkStatus.shared
     @ObservedObject private var attachments = AttachmentStore.shared
-    @ObservedObject private var moreModels = MoreModelsStore.shared
     @FocusState private var focused: Bool
 
     private var showEmpty: Bool { model.lines.count <= 1 && !model.busy }
@@ -1825,42 +1549,23 @@ struct AgentChatView: View {
     }
 
     private var effortLabel: String {
-        PlateCatalog.label(store.tier, sky: store.skyPlates)
+        effortTiers.first(where: { $0.id == store.tier })?.label ?? "High"
     }
 
     private var composerPlaceholder: String {
         if store.webSearchEnabled {
-            return "Ask cs.AI"
+            return "Plan, search, build, or attach files…"
         }
-        return "Ask cs.AI (search off)"
+        return "Plan, build, or attach files… (/search forces lookup)"
     }
 
     private var emptyTagline: String {
-        "What’s on your mind?"
+        store.webSearchEnabled ? "Plan, search, build anything" : "Plan and build — web search is off"
     }
 
     var body: some View {
         VStack(spacing: 0) {
             header
-            if let banner = store.whatsNewBanner, !banner.isEmpty {
-                HStack(alignment: .top, spacing: 10) {
-                    Text(banner)
-                        .font(.system(size: 12))
-                        .foregroundStyle(Cursor.soft)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: 8)
-                    Button("Dismiss") {
-                        store.dismissWhatsNewBanner()
-                    }
-                    .font(.system(size: 11, weight: .semibold))
-                    .buttonStyle(.plain)
-                    .foregroundStyle(Cursor.chromium)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Cursor.panel)
-                .overlay(alignment: .bottom) { Rectangle().fill(Cursor.hairline).frame(height: 1) }
-            }
             ZStack(alignment: .bottom) {
                 messageList
                 if showEmpty { emptyState }
@@ -1876,9 +1581,26 @@ struct AgentChatView: View {
             Image(systemName: "sparkle")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Cursor.soft)
-            Text("cs.AI")
+            Text("Agent")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(Cursor.text)
+            Text(modeLabel)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Cursor.muted)
+            Text("·")
+                .foregroundStyle(Cursor.muted)
+            Text(effortLabel)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Cursor.muted)
+            if !store.webSearchEnabled {
+                Text("Search off")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Cursor.muted)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(Cursor.hover))
+                    .transition(.scale.combined(with: .opacity))
+            }
             if store.offlineChatMode || store.privacyMode {
                 Text(store.privacyMode ? "Privacy" : "Offline")
                     .font(.system(size: 10, weight: .semibold))
@@ -1912,7 +1634,7 @@ struct AgentChatView: View {
                     .frame(width: 28, height: 28)
             }
             .buttonStyle(.plain)
-            .help("New chat")
+            .help("New Agent")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 11)
@@ -1932,13 +1654,13 @@ struct AgentChatView: View {
                         .font(.system(size: 22, weight: .medium))
                         .foregroundStyle(Cursor.text)
                 }
-                Text(emptyTagline)
+                Text("ChopsticksAI")
                     .font(.system(size: 26, weight: .semibold))
                     .foregroundStyle(Cursor.text)
-                Text(store.webSearchEnabled ? "Ask anything. Sign in to sync chats." : "Ask anything — web search is off.")
-                    .font(.system(size: 15))
+                Text(emptyTagline)
+                    .font(.system(size: 13.5))
                     .foregroundStyle(Cursor.muted)
-                    .animation(Cursor.motionSoft, value: store.webSearchEnabled)
+                    .animation(.easeInOut(duration: 0.22), value: store.webSearchEnabled)
             }
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                 ForEach(starters, id: \.self) { s in
@@ -1952,8 +1674,8 @@ struct AgentChatView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 11)
-                            .background(Capsule().fill(Cursor.panel))
-                            .overlay(Capsule().strokeBorder(Cursor.border))
+                            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Cursor.panel))
+                            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Cursor.border))
                     }
                     .buttonStyle(.plain)
                     .disabled(model.busy)
@@ -1969,29 +1691,20 @@ struct AgentChatView: View {
     private var messageList: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                VStack(alignment: .leading, spacing: store.compact ? 16 : 22) {
+                LazyVStack(alignment: .leading, spacing: store.compact ? 16 : 22) {
                     ForEach(model.lines) { line in
                         if !(showEmpty && line.role == "assistant") {
                             MessageRow(line: line, compact: store.compact).id(line.id)
                         }
                     }
                     if model.busy {
-                        if store.tier == "chopcode" {
-                            MultiAgentPanel(
-                                agents: Array(ChopCodeThinking.placeholders.prefix(4)),
-                                conversation: Array(ChopCodeThinking.instantTurns.prefix(4)),
-                                compact: store.compact,
-                                title: "Agent conversation"
-                            )
-                        } else {
-                            HStack(spacing: 8) {
-                                ProgressView().controlSize(.small)
-                                Text("Thinking…")
-                                    .font(.system(size: 13))
-                                    .foregroundStyle(Cursor.muted)
-                            }
-                            .padding(.vertical, 4)
+                        HStack(spacing: 10) {
+                            ProgressView().controlSize(.small).tint(Cursor.soft)
+                            Text("Thinking…")
+                                .font(.system(size: 12.5))
+                                .foregroundStyle(Cursor.muted)
                         }
+                        .padding(.leading, 36)
                     }
                     Color.clear.frame(height: 12).id("bottom")
                 }
@@ -2001,10 +1714,10 @@ struct AgentChatView: View {
                 .frame(maxWidth: .infinity)
             }
             .onChange(of: model.lines.count) { _, _ in
-                withAnimation(Cursor.motionSoft) { proxy.scrollTo("bottom", anchor: .bottom) }
+                withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo("bottom", anchor: .bottom) }
             }
             .onChange(of: model.busy) { _, _ in
-                withAnimation(Cursor.motionSoft) { proxy.scrollTo("bottom", anchor: .bottom) }
+                withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo("bottom", anchor: .bottom) }
             }
         }
     }
@@ -2013,39 +1726,6 @@ struct AgentChatView: View {
         VStack(spacing: 8) {
             if model.usage.hasAny || !store.webSearchEnabled {
                 ChatUsageBar(stats: model.usage, webSearchEnabled: store.webSearchEnabled, resetInMs: store.usage.resetInMs)
-            }
-            if let msg = store.regionUnavailable {
-                Text(msg)
-                    .font(.system(size: 12.5))
-                    .foregroundStyle(Cursor.text)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(10)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Cursor.panel))
-                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Cursor.hairline))
-            }
-            if !store.kajiOpenedURL.isEmpty {
-                HStack {
-                    Text("Opened \(store.kajiOpenedURL)")
-                        .font(.system(size: 11))
-                        .foregroundStyle(Cursor.chromium)
-                        .lineLimit(1)
-                    Spacer()
-                    Button("Browser") {
-                        store.nav = .search
-                    }
-                    .font(.system(size: 11, weight: .semibold))
-                    .buttonStyle(.plain)
-                    .foregroundStyle(Cursor.chromium)
-                }
-                .padding(.horizontal, 4)
-            }
-            if attachments.hasImage {
-                Text("Image output is unavailable")
-                    .font(.system(size: 10.5))
-                    .foregroundStyle(Cursor.muted)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 4)
             }
             if !attachments.status.isEmpty {
                 Text(attachments.status)
@@ -2086,19 +1766,14 @@ struct AgentChatView: View {
             VStack(alignment: .leading, spacing: 0) {
                 TextField(composerPlaceholder, text: $model.draft, axis: .vertical)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 15))
+                    .font(.system(size: 13.5))
                     .foregroundStyle(Cursor.text)
                     .lineLimit(1...10)
                     .focused($focused)
                     .padding(.horizontal, 14)
                     .padding(.top, 14)
                     .padding(.bottom, 10)
-                    .onKeyPress { press in
-                        guard press.key == .return else { return .ignored }
-                        if press.modifiers.contains(.shift) { return .ignored }
-                        Task { await model.send(model.draft) }
-                        return .handled
-                    }
+                    .onSubmit { Task { await model.send(model.draft) } }
 
                 HStack(spacing: 6) {
                     Button {
@@ -2110,7 +1785,7 @@ struct AgentChatView: View {
                     .help("Attach files or images (up to 500 MB, sign in)")
 
                     Button {
-                        withAnimation(Cursor.motionNav) {
+                        withAnimation(.spring(response: 0.32, dampingFraction: 0.78)) {
                             store.toggleWebSearch()
                         }
                     } label: {
@@ -2134,34 +1809,8 @@ struct AgentChatView: View {
                     }
                     .buttonStyle(.plain)
                     .help(store.webSearchEnabled
-                          ? "Automatic web search on each question. Click to turn off."
+                          ? "Automatic Chromium web search on each question. Click to turn off."
                           : "Web search is off. Click to re-enable, or use /search … for one-off lookups.")
-
-                    Button {
-                        withAnimation(Cursor.motionNav) {
-                            store.setMaxMode(!store.maxMode)
-                        }
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "brain")
-                                .font(.system(size: 10, weight: .medium))
-                            Text(store.maxMode ? "Max" : "Max off")
-                                .font(.system(size: 11.5, weight: .medium))
-                        }
-                        .foregroundStyle(store.maxMode ? Cursor.chromium : Cursor.muted)
-                        .padding(.horizontal, 9)
-                        .padding(.vertical, 5)
-                        .background(
-                            Capsule().fill(
-                                store.maxMode ? Cursor.chromium.opacity(0.14) : Cursor.hover
-                            )
-                        )
-                        .overlay(Capsule().strokeBorder(
-                            store.maxMode ? Cursor.chromium.opacity(0.35) : Cursor.border
-                        ))
-                    }
-                    .buttonStyle(.plain)
-                    .help("Max mode thinks harder. Each request uses 1,000 tokens.")
 
                     Menu {
                         ForEach(store.customModes) { mode in
@@ -2187,30 +1836,15 @@ struct AgentChatView: View {
                     .fixedSize()
 
                     Menu {
-                        let plates = effortTiers(sky: store.skyPlates)
-                        Section(store.skyPlates ? "cs.AI" : "Everyday") {
-                            ForEach(plates.filter { ["csai4flash", "rice", "tamago", "hibachi"].contains($0.id) }, id: \.id) { t in
-                                plateMenuRow(t)
-                            }
-                        }
-                        Section("PRO") {
-                            ForEach(plates.filter { PlateCatalog.isHqPro($0.id) }, id: \.id) { t in
-                                plateMenuRow(t)
-                            }
-                        }
-                        Section(store.skyPlates ? "Air" : "Wagyu") {
-                            ForEach(plates.filter { $0.id.hasPrefix("wagyu") }, id: \.id) { t in
-                                plateMenuRow(t)
-                            }
-                        }
-                        Section("Apps") {
-                            ForEach(plates.filter { ["kaji", "max"].contains($0.id) }, id: \.id) { t in
-                                plateMenuRow(t)
-                            }
-                        }
-                        Section("More") {
-                            ForEach(plates.filter { $0.id == "stickercoderplus" }, id: \.id) { t in
-                                plateMenuRow(t)
+                        ForEach(effortTiers, id: \.id) { t in
+                            Button {
+                                store.setTier(t.id)
+                            } label: {
+                                if t.id == store.tier {
+                                    Label(t.label, systemImage: "checkmark")
+                                } else {
+                                    Text(t.label)
+                                }
                             }
                         }
                     } label: {
@@ -2228,16 +1862,6 @@ struct AgentChatView: View {
                     }
                     .menuStyle(.borderlessButton)
                     .fixedSize()
-
-                    if !moreModels.selectedModelId.isEmpty {
-                        Button {
-                            store.nav = .moreModels
-                        } label: {
-                            chip(icon: "sparkles", title: String(moreModels.selectedLabel.prefix(22)))
-                        }
-                        .buttonStyle(.plain)
-                        .help(moreModels.selectedModelId)
-                    }
 
                     if let repo = store.repos.first {
                         chip(icon: "externaldrive", title: repo.name)
@@ -2260,8 +1884,8 @@ struct AgentChatView: View {
                 .padding(.horizontal, 10)
                 .padding(.bottom, 10)
             }
-            .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Cursor.composer))
-            .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(Cursor.border))
+            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Cursor.composer))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Cursor.border))
             .shadow(color: .black.opacity(0.35), radius: 18, y: 6)
             .padding(.horizontal, store.compact ? 14 : 22)
             .padding(.bottom, 14)
@@ -2270,23 +1894,6 @@ struct AgentChatView: View {
         }
         .padding(.top, 6)
         .background(Cursor.bg)
-    }
-
-    private func plateMenuRow(_ t: (id: String, label: String)) -> some View {
-        let locked = PlateCatalog.isHqPro(t.id) && !store.hqProUnlocked
-        return Button {
-            if locked { return }
-            store.setTier(t.id)
-            if t.id == "max" { store.setMaxMode(true) }
-        } label: {
-            if t.id == store.tier {
-                Label(t.label, systemImage: "checkmark")
-            } else if locked {
-                Label(t.label + " · 10 keys", systemImage: "lock.fill")
-            } else {
-                Text(t.label)
-            }
-        }
     }
 
     private func chip(icon: String, title: String) -> some View {
@@ -2305,9 +1912,7 @@ struct AgentChatView: View {
     }
 
     private var sendEnabled: Bool {
-        let typed = !model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        let files = !AttachmentStore.shared.ready.isEmpty
-        return !model.busy && store.regionUnavailable == nil && (typed || files)
+        !model.busy && !model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }
 
@@ -2318,7 +1923,8 @@ struct MessageRow: View {
     private var isUser: Bool { line.role == "user" }
 
     private var displayFiles: [ChatFile] {
-        ChatModel.collectAllFiles(reply: line.text, apiFiles: line.files)
+        if !line.files.isEmpty { return line.files }
+        return ChatModel.extractFencedFiles(from: line.text)
     }
 
     private var assistantProse: String {
@@ -2328,19 +1934,6 @@ struct MessageRow: View {
     }
 
     var body: some View {
-        if line.role == "tool" {
-            HStack(spacing: 8) {
-                Image(systemName: "folder")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Cursor.muted)
-                Text(line.text)
-                    .font(.system(size: 11.5, weight: .medium))
-                    .foregroundStyle(Cursor.soft)
-                Spacer()
-            }
-            .padding(.horizontal, 4)
-            .padding(.vertical, 2)
-        } else {
         HStack(alignment: .top, spacing: 12) {
             ZStack {
                 Circle()
@@ -2364,7 +1957,7 @@ struct MessageRow: View {
 
                 if isUser {
                     Text(line.text)
-                        .font(.system(size: 15))
+                        .font(.system(size: compact ? 13 : 13.5))
                         .foregroundStyle(Cursor.text)
                         .lineSpacing(3)
                         .textSelection(.enabled)
@@ -2373,15 +1966,9 @@ struct MessageRow: View {
                         .padding(.vertical, 9)
                         .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Cursor.userBubble))
                 } else {
-                    if !line.agents.isEmpty || !line.conversation.isEmpty {
-                        MultiAgentPanel(agents: line.agents, conversation: line.conversation, compact: compact)
-                    }
-                    if !displayFiles.isEmpty {
-                        GeneratedFilesBanner(files: displayFiles, compact: compact)
-                    }
                     if !assistantProse.isEmpty {
                         Text(assistantProse)
-                            .font(.system(size: 15))
+                            .font(.system(size: compact ? 13 : 13.5))
                             .foregroundStyle(Cursor.text)
                             .lineSpacing(4)
                             .textSelection(.enabled)
@@ -2395,454 +1982,13 @@ struct MessageRow: View {
                         }
                     }
                 }
+
+                if !isUser, !line.sources.isEmpty {
+                    SourcesView(sources: line.sources, compact: compact)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        }
-    }
-}
-
-struct ChopCodeThinking {
-    static let chatter: [String] = [
-        "I'll take the first pass.",
-        "Looking at structure and edge cases.",
-        "I'll watch naming and APIs.",
-        "Drafting a compact version.",
-        "Checking the refactor path.",
-        "Fast sketch incoming.",
-        "I'll flag file layout.",
-        "Reviewing for sharp edges.",
-        "Matching the request literally.",
-        "Reasoning through the tricky bit.",
-        "Merging the room into one answer."
-    ]
-
-    static let placeholders: [AgentTrace] = (1...10).map { n in
-        AgentTrace(
-            id: "a\(n)",
-            label: "Agent \(n)",
-            role: nil,
-            status: "running",
-            preview: chatter[n - 1]
-        )
-    } + [
-        AgentTrace(
-            id: "lead",
-            label: "Lead",
-            role: "synthesizer",
-            status: "running",
-            preview: chatter[10]
-        )
-    ]
-
-    static var instantTurns: [AgentConversationTurn] {
-        (1...10).map { n in
-            AgentConversationTurn(
-                id: "t\(n)",
-                speaker: "Agent \(n)",
-                label: "Agent \(n)",
-                type: "discuss",
-                text: chatter[n - 1]
-            )
-        } + [
-            AgentConversationTurn(
-                id: "lead-talk",
-                speaker: "Lead",
-                label: "Lead",
-                type: "synthesis",
-                text: chatter[10]
-            )
-        ]
-    }
-}
-
-struct MultiAgentPanel: View {
-    let agents: [AgentTrace]
-    let conversation: [AgentConversationTurn]
-    var compact: Bool = false
-    var title: String? = nil
-    @State private var expanded = true
-
-    private var fullThread: [AgentConversationTurn] {
-        let live = conversation.filter { $0.type != "user" }
-        if live.contains(where: { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.text != "…" }) {
-            return live
-        }
-        if !live.isEmpty { return live }
-        return agents.enumerated().map { i, a in
-            let name = Self.publicName(a.label, index: i)
-            let body = (a.message ?? a.preview ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            let fallback = i < ChopCodeThinking.chatter.count ? ChopCodeThinking.chatter[i] : "On it."
-            return AgentConversationTurn(
-                id: a.id,
-                speaker: name,
-                label: name,
-                type: a.role == "synthesizer" ? "synthesis" : "draft",
-                text: body.isEmpty || body == "…" ? fallback : body
-            )
-        }
-    }
-
-    static func publicName(_ raw: String, index: Int) -> String {
-        let t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        let low = t.lowercased()
-        if low.hasPrefix("agent") || low == "lead" || low == "you" { return t }
-        if low.contains("lead") { return "Lead" }
-        return "Agent \(index + 1)"
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: compact ? 8 : 10) {
-            Button {
-                withAnimation(Cursor.motionSoft) { expanded.toggle() }
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: expanded ? "chevron.down" : "chevron.right")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Cursor.blue)
-                    Image(systemName: "bubble.left.and.bubble.right.fill")
-                        .font(.system(size: compact ? 11 : 12, weight: .semibold))
-                        .foregroundStyle(Cursor.blue)
-                    Text(title ?? "Agent conversation")
-                        .font(.system(size: compact ? 12 : 12.5, weight: .semibold))
-                        .foregroundStyle(Cursor.text)
-                    Spacer(minLength: 0)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-
-            if expanded {
-                VStack(alignment: .leading, spacing: 12) {
-                    ForEach(fullThread) { turn in
-                        AgentChatBubble(turn: turn, compact: compact)
-                    }
-                }
-            }
-        }
-        .padding(compact ? 10 : 12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Cursor.blue.opacity(0.08))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(Cursor.blue.opacity(0.28))
-        )
-    }
-}
-
-struct AgentChatBubble: View {
-    let turn: AgentConversationTurn
-    var compact: Bool = false
-
-    private var name: String {
-        MultiAgentPanel.publicName(turn.label ?? turn.speaker, index: 0)
-    }
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 8) {
-            ZStack {
-                Circle()
-                    .fill(accent.opacity(0.22))
-                    .frame(width: 22, height: 22)
-                Text(avatar)
-                    .font(.system(size: 9, weight: .bold, design: .rounded))
-                    .foregroundStyle(accent)
-            }
-            VStack(alignment: .leading, spacing: 3) {
-                Text(name)
-                    .font(.system(size: compact ? 11 : 11.5, weight: .semibold))
-                    .foregroundStyle(Cursor.text)
-                Text(turn.text)
-                    .font(.system(size: compact ? 12 : 12.5))
-                    .foregroundStyle(turn.text == "…" ? Cursor.muted : Cursor.soft)
-                    .italic(turn.text == "…")
-                    .lineSpacing(3)
-                    .textSelection(.enabled)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 0)
-        }
-    }
-
-    private var avatar: String {
-        if name.lowercased() == "lead" { return "L" }
-        if let n = name.split(separator: " ").last { return String(n.prefix(2)) }
-        return "A"
-    }
-
-    private var accent: Color {
-        switch turn.type {
-        case "discuss": return Color(red: 0.77, green: 0.61, blue: 1.0)
-        case "synthesis": return Cursor.green
-        default: return Cursor.blue
-        }
-    }
-}
-
-struct AgentTurnRow: View {
-    let turn: AgentConversationTurn
-    var compact: Bool = false
-    @State private var open = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Button {
-                withAnimation(Cursor.motionSoft) { open.toggle() }
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: open ? "chevron.down" : "chevron.right")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(Cursor.muted)
-                    Text(turn.label ?? turn.speaker)
-                        .font(.system(size: compact ? 11.5 : 12, weight: .semibold))
-                        .foregroundStyle(Cursor.text)
-                        .lineLimit(1)
-                    Text(turn.type.uppercased())
-                        .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
-                        .foregroundStyle(typeColor)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Capsule().fill(Cursor.hover))
-                    Spacer(minLength: 0)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            if open {
-                Text(turn.text)
-                    .font(.system(size: compact ? 11 : 11.5, design: .monospaced))
-                    .foregroundStyle(Cursor.soft)
-                    .lineSpacing(3)
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
-        .padding(8)
-        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Cursor.panel))
-        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Cursor.hairline))
-    }
-
-    private var typeColor: Color {
-        switch turn.type {
-        case "draft": return Cursor.blue
-        case "discuss": return Color(red: 0.77, green: 0.61, blue: 1.0)
-        case "synthesis": return Cursor.green
-        default: return Cursor.muted
-        }
-    }
-}
-
-struct AgentTraceRow: View {
-    let agent: AgentTrace
-    var compact: Bool = false
-    @State private var open = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Button {
-                withAnimation(Cursor.motionSoft) { open.toggle() }
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: open ? "chevron.down" : "chevron.right")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(Cursor.muted)
-                    Text(agent.label)
-                        .font(.system(size: compact ? 11.5 : 12, weight: .semibold))
-                        .foregroundStyle(Cursor.text)
-                        .lineLimit(1)
-                    Text(agent.status)
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(statusColor)
-                    Spacer(minLength: 0)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            if open {
-                Text(agent.message ?? agent.preview ?? "Still working…")
-                    .font(.system(size: compact ? 11 : 11.5, design: .monospaced))
-                    .foregroundStyle(Cursor.soft)
-                    .lineSpacing(3)
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
-        .padding(8)
-        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Cursor.panel))
-        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Cursor.hairline))
-    }
-
-    private var statusColor: Color {
-        switch agent.status {
-        case "done": return Cursor.green
-        case "running", "discussing": return Cursor.blue
-        case "skipped", "error": return Color(red: 0.88, green: 0.44, blue: 0.44)
-        default: return Cursor.muted
-        }
-    }
-}
-
-struct GeneratedFileWriter {
-    static func icon(for name: String) -> String {
-        switch (name as NSString).pathExtension.lowercased() {
-        case "html", "htm": return "globe"
-        case "zip", "tar", "gz", "tgz": return "doc.zipper"
-        case "md", "markdown": return "doc.richtext"
-        case "json", "yaml", "yml", "toml", "xml", "csv": return "doc.text"
-        case "py", "js", "ts", "tsx", "jsx", "swift", "go", "rs", "rb", "php", "java", "c", "cpp", "h", "sh":
-            return "chevron.left.forwardslash.chevron.right"
-        default: return "doc.text.fill"
-        }
-    }
-
-    static func sanitizeFileName(_ raw: String) -> String {
-        var name = raw.replacingOccurrences(of: "\\", with: "/")
-        name = name.split(separator: "/").last.map(String.init) ?? "file.txt"
-        name = name.replacingOccurrences(of: "\0", with: "")
-        name = name.replacingOccurrences(of: "..", with: "")
-        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "._-+() "))
-        name = String(name.unicodeScalars.map { allowed.contains($0) ? Character($0) : "_" })
-        name = name.trimmingCharacters(in: CharacterSet(charactersIn: "."))
-        if name.isEmpty { name = "file.txt" }
-        return String(name.prefix(180))
-    }
-
-    static func write(_ file: ChatFile, to url: URL) throws {
-        if file.encoding?.lowercased() == "base64" {
-            guard let data = Data(base64Encoded: file.content.filter { !$0.isWhitespace && !$0.isNewline }) else {
-                throw NSError(domain: "cs.AI", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid base64 data"])
-            }
-            try data.write(to: url)
-            return
-        }
-        try file.content.write(to: url, atomically: true, encoding: .utf8)
-    }
-
-    @MainActor
-    static func save(_ file: ChatFile, store: AppStore, usePanel: Bool? = nil, onStatus: @escaping (String) -> Void) {
-        let confirm = usePanel ?? store.confirmFileSave
-        if confirm {
-            let panel = NSSavePanel()
-            panel.nameFieldStringValue = sanitizeFileName(file.name)
-            panel.canCreateDirectories = true
-            panel.begin { resp in
-                guard resp == .OK, let url = panel.url else { return }
-                do {
-                    try write(file, to: url)
-                    onStatus("Saved \(url.lastPathComponent)")
-                } catch {
-                    onStatus("Save failed")
-                }
-            }
-        } else {
-            let safeName = sanitizeFileName(file.name)
-            let url = store.resolvedWriteFolder().appendingPathComponent(safeName)
-            do {
-                try write(file, to: url)
-                onStatus("Saved \(url.lastPathComponent)")
-            } catch {
-                onStatus("Save failed")
-            }
-        }
-    }
-
-    @MainActor
-    static func saveAll(_ files: [ChatFile], store: AppStore, onStatus: @escaping (String) -> Void) {
-        guard !files.isEmpty else { return }
-        if files.count == 1 {
-            save(files[0], store: store, onStatus: onStatus)
-            return
-        }
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.canCreateDirectories = true
-        panel.prompt = "Choose folder"
-        panel.message = "Save \(files.count) generated files"
-        panel.begin { resp in
-            guard resp == .OK, let dir = panel.url else { return }
-            var saved = 0
-            for file in files {
-                let url = dir.appendingPathComponent(sanitizeFileName(file.name))
-                if (try? write(file, to: url)) != nil { saved += 1 }
-            }
-            onStatus("Saved \(saved) file\(saved == 1 ? "" : "s")")
-        }
-    }
-}
-
-struct GeneratedFilesBanner: View {
-    let files: [ChatFile]
-    var compact: Bool = false
-    @ObservedObject private var store = AppStore.shared
-    @State private var status = ""
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                Image(systemName: "arrow.down.doc.fill")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Cursor.green)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(files.count == 1 ? "Generated file ready" : "Generated \(files.count) files")
-                        .font(.system(size: compact ? 12.5 : 13, weight: .semibold))
-                        .foregroundStyle(Cursor.text)
-                    Text("HTML, Markdown, ZIP, code, and more — tap to download.")
-                        .font(.system(size: compact ? 10.5 : 11))
-                        .foregroundStyle(Cursor.muted)
-                }
-                Spacer(minLength: 8)
-                GhostButton(title: files.count == 1 ? "Download" : "Download all") {
-                    GeneratedFileWriter.saveAll(files, store: store) {
-                        status = $0
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { status = "" }
-                    }
-                }
-            }
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(files) { file in
-                        Button {
-                            GeneratedFileWriter.save(file, store: store) { status = $0 }
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: GeneratedFileWriter.icon(for: file.name))
-                                    .font(.system(size: 11, weight: .semibold))
-                                Text(file.name)
-                                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                                    .lineLimit(1)
-                                Image(systemName: "arrow.down.circle.fill")
-                                    .font(.system(size: 11))
-                            }
-                            .foregroundStyle(Cursor.text)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 7)
-                            .background(Capsule().fill(Cursor.hover))
-                            .overlay(Capsule().strokeBorder(Cursor.border))
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-            if !status.isEmpty {
-                Text(status)
-                    .font(.system(size: 11))
-                    .foregroundStyle(Cursor.muted)
-            }
-        }
-        .padding(compact ? 10 : 12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Cursor.green.opacity(0.08))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(Cursor.green.opacity(0.28))
-        )
     }
 }
 
@@ -2856,7 +2002,7 @@ struct FileCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                Image(systemName: GeneratedFileWriter.icon(for: file.name))
+                Image(systemName: "doc.text.fill")
                     .font(.system(size: 12))
                     .foregroundStyle(Cursor.soft)
                 VStack(alignment: .leading, spacing: 2) {
@@ -2875,14 +2021,11 @@ struct FileCardView: View {
                     status = "Copied"
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { status = "" }
                 }
-                GhostButton(title: "Download") {
-                    GeneratedFileWriter.save(file, store: store) {
-                        status = $0
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { status = "" }
-                    }
+                GhostButton(title: "Save") {
+                    saveFile()
                 }
             }
-            if showPreview, file.encoding?.lowercased() != "base64" {
+            if showPreview {
                 ScrollView {
                     Text(file.content)
                         .font(.system(size: compact ? 11 : 11.5, design: .monospaced))
@@ -2891,10 +2034,6 @@ struct FileCardView: View {
                         .textSelection(.enabled)
                 }
                 .frame(maxHeight: compact ? 120 : 180)
-            } else if file.encoding?.lowercased() == "base64" {
-                Text("Binary file · use Download")
-                    .font(.system(size: 11))
-                    .foregroundStyle(Cursor.muted)
             }
             if !status.isEmpty {
                 Text(status)
@@ -2907,38 +2046,70 @@ struct FileCardView: View {
         .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Cursor.panel))
         .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Cursor.hairline))
     }
+
+    private func saveFile() {
+        if store.confirmFileSave {
+            let panel = NSSavePanel()
+            panel.nameFieldStringValue = file.name
+            panel.canCreateDirectories = true
+            panel.begin { resp in
+                guard resp == .OK, let url = panel.url else { return }
+                write(to: url)
+            }
+        } else {
+            let safeName = sanitizeFileName(file.name)
+            let url = store.resolvedWriteFolder().appendingPathComponent(safeName)
+            write(to: url)
+        }
+    }
+
+    private func sanitizeFileName(_ raw: String) -> String {
+        var name = raw.replacingOccurrences(of: "\\", with: "/")
+        name = name.split(separator: "/").last.map(String.init) ?? "file.txt"
+        name = name.replacingOccurrences(of: "\0", with: "")
+        name = name.replacingOccurrences(of: "..", with: "")
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "._-+() "))
+        name = String(name.unicodeScalars.map { allowed.contains($0) ? Character($0) : "_" })
+        name = name.trimmingCharacters(in: CharacterSet(charactersIn: "."))
+        if name.isEmpty { name = "file.txt" }
+        return String(name.prefix(180))
+    }
+
+    private func write(to url: URL) {
+        do {
+            try file.content.write(to: url, atomically: true, encoding: .utf8)
+            status = "Saved \(url.lastPathComponent)"
+        } catch {
+            status = "Save failed"
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { status = "" }
+    }
 }
 
 struct SourcesView: View {
     let sources: [SearchSource]
     var compact: Bool = false
-    @State private var expanded = false
 
     var body: some View {
-        DisclosureGroup(isExpanded: $expanded) {
-            VStack(alignment: .leading, spacing: 6) {
-                ForEach(sources) { source in
-                    if let link = URL(string: source.url), !source.url.isEmpty {
-                        Link(source.title, destination: link)
-                            .font(.system(size: compact ? 11.5 : 12))
-                            .foregroundStyle(Cursor.soft)
-                            .lineLimit(2)
-                    } else {
-                        Text(source.title)
-                            .font(.system(size: compact ? 11.5 : 12))
-                            .foregroundStyle(Cursor.muted)
-                            .lineLimit(2)
-                    }
+        VStack(alignment: .leading, spacing: 5) {
+            Text("Sources")
+                .font(.system(size: 10.5, weight: .semibold))
+                .foregroundStyle(Cursor.muted)
+            ForEach(sources) { source in
+                if let link = URL(string: source.url), !source.url.isEmpty {
+                    Link(source.title, destination: link)
+                        .font(.system(size: compact ? 11.5 : 12))
+                        .foregroundStyle(Cursor.soft)
+                        .lineLimit(2)
+                } else {
+                    Text(source.title)
+                        .font(.system(size: compact ? 11.5 : 12))
+                        .foregroundStyle(Cursor.muted)
+                        .lineLimit(2)
                 }
             }
-            .padding(.top, 6)
-        } label: {
-            Text(sources.count == 1 ? "1 source" : "\(sources.count) sources")
-                .font(.system(size: 11.5, weight: .medium))
-                .foregroundStyle(Cursor.muted)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 7)
+        .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Cursor.panel))
         .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Cursor.hairline))

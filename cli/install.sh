@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Install cs.AI CLI (`csai`) to ~/bin/csai (or /usr/local/bin with --system).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

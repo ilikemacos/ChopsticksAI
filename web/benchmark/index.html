@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<script>
+(function(){try{var t=localStorage.getItem('chq.theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches)document.documentElement.setAttribute('data-theme','light');}catch(e){}})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cs.AI benchmark — Chopsticks HQ</title>
+<meta name="description" content="Published scores for Grok 4.6, Claude Sonnet 5, Composer 2.5, Nemotron 3 Ultra, GLM 5.3, GLM-4.7-Flash, and cs.AI 4.7-Flash. Vendor figures only — not a HQ bake-off.">
+<link rel="canonical" href="https://chopstickshq.com/chopsticks-ai/benchmark/">
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/chopsticks-ai/product.css">
+</head>
+<body>
+<div class="app">
+  <nav>
+    <a class="nav-logo" href="/">Chopsticks HQ <span>· cs.AI</span></a>
+    <div class="nav-mid">
+      <a class="nav-link" href="/chopsticks-ai/">Home</a>
+      <a class="nav-link" href="/chopsticks-ai/web/">Chat</a>
+      <a class="nav-link" href="/chopsticks-ai/online/">Online</a>
+      <a class="nav-link" href="/chopsticks-ai/benchmark/">Benchmark</a>
+    </div>
+    <button type="button" class="theme-toggle" data-theme-toggle>Theme</button>
+  </nav>
+  <main>
+    <div class="wrap wrap-wide">
+      <p class="kicker">chopsticksAI · published scores</p>
+      <h1>Benchmark</h1>
+      <p class="lead">Side-by-side bars from the labs’ own cards — not a Chopsticks HQ eval. cs.AI 4.7-Flash is Nemotron 3 Ultra, so those two bars match on purpose.</p>
+      <div class="bench" id="bench-root">
+        <p class="bench-disclaimer" data-bench-disclaimer></p>
+        <p class="bench-asof" data-bench-asof></p>
+        <div class="bench-tabs" data-bench-tabs></div>
+        <div class="card bench-panel" data-bench-panel></div>
+      </div>
+      <p style="margin-top:1.5rem"><a class="btn btn-primary" href="/chopsticks-ai/web/">Open cs.AI chat</a> <a class="btn btn-outline" href="/chopsticks-ai/">Back to cs.AI</a></p>
+    </div>
+  </main>
+</div>
+<script src="/js/theme.js"></script>
+<script src="/chopsticks-ai/benchmark/chart.js"></script>
+<script>
+(function () {
+  function go() { window.CsAiBenchmark.load(document.getElementById("bench-root")); }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", go);
+  else go();
+})();
+</script>
+</body>
+</html>

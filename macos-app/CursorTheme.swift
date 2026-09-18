@@ -1,41 +1,34 @@
 import SwiftUI
 
 enum Cursor {
-    static let bg = Color.black
-    static let sidebar = Color.black
-    static let rail = Color.black
-    static let panel = Color(red: 0.086, green: 0.094, blue: 0.110)
-    static let composer = Color(red: 0.086, green: 0.094, blue: 0.110)
-    static let hover = Color(red: 0.118, green: 0.125, blue: 0.141)
-    static let selected = Color(red: 0.153, green: 0.165, blue: 0.180)
-    static let hairline = Color(red: 0.184, green: 0.200, blue: 0.212)
-    static let border = Color(red: 0.184, green: 0.200, blue: 0.212)
-    static let muted = Color(red: 0.443, green: 0.463, blue: 0.482)
-    static let soft = Color(red: 0.906, green: 0.914, blue: 0.918)
-    static let text = Color(red: 0.906, green: 0.914, blue: 0.918)
-    static let userBubble = Color(red: 0.086, green: 0.094, blue: 0.110)
+    static let bg = Color(red: 0.086, green: 0.086, blue: 0.086)          
+    static let sidebar = Color(red: 0.075, green: 0.075, blue: 0.075)     
+    static let rail = Color(red: 0.067, green: 0.067, blue: 0.067)        
+    static let panel = Color(red: 0.110, green: 0.110, blue: 0.110)       
+    static let composer = Color(red: 0.129, green: 0.129, blue: 0.129)    
+    static let hover = Color(red: 0.165, green: 0.165, blue: 0.165)       
+    static let selected = Color(red: 0.188, green: 0.188, blue: 0.188)    
+    static let hairline = Color.white.opacity(0.07)
+    static let border = Color.white.opacity(0.11)
+    static let muted = Color.white.opacity(0.42)
+    static let soft = Color.white.opacity(0.68)
+    static let text = Color.white.opacity(0.92)
+    static let userBubble = Color(red: 0.165, green: 0.165, blue: 0.165)
     static let accent = Color.white
     static let accentFg = Color.black
-    static let blue = Color(red: 0.114, green: 0.608, blue: 0.941)
-    static let green = Color(red: 0.000, green: 0.729, blue: 0.486)
-    static let chromium = Color(red: 0.114, green: 0.608, blue: 0.941)
+    static let blue = Color(red: 0.35, green: 0.55, blue: 0.98)
+    static let green = Color(red: 0.35, green: 0.72, blue: 0.48)
+    static let chromium = Color(red: 0.102, green: 0.451, blue: 0.910)
     static var mozilla: Color { chromium }
-
-    static let motionPanel = Animation.spring(response: 0.52, dampingFraction: 0.92)
-    static let motionNav = Animation.spring(response: 0.48, dampingFraction: 0.94)
-    static let motionSoft = Animation.easeInOut(duration: 0.36)
 }
 
 enum AppNav: String, CaseIterable, Identifiable {
     case agents
-    case kaji
     case search
-    case labs
     case cloudAgents
     case automations
     case repos
     case marketplace
-    case moreModels
     case usage
     case account
     case settings
@@ -44,15 +37,12 @@ enum AppNav: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .agents: return "Chats"
-        case .kaji: return "Kaji"
+        case .agents: return "Agents"
         case .search: return "Browser"
-        case .labs: return "Labs"
-        case .cloudAgents: return "Cloud Agents (preview)"
-        case .automations: return "Automations (preview)"
+        case .cloudAgents: return "Cloud Agents"
+        case .automations: return "Automations"
         case .repos: return "Repositories"
-        case .marketplace: return "Marketplace (preview)"
-        case .moreModels: return "More models"
+        case .marketplace: return "Marketplace"
         case .usage: return "Usage"
         case .account: return "Account"
         case .settings: return "Settings"
@@ -62,14 +52,11 @@ enum AppNav: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .agents: return "bubble.left.and.bubble.right"
-        case .kaji: return "sparkle"
         case .search: return "globe"
-        case .labs: return "square.grid.2x2"
         case .cloudAgents: return "cloud"
         case .automations: return "arrow.triangle.2.circlepath"
         case .repos: return "externaldrive"
         case .marketplace: return "puzzlepiece.extension"
-        case .moreModels: return "sparkles"
         case .usage: return "chart.bar"
         case .account: return "person.crop.circle"
         case .settings: return "gearshape"
@@ -106,11 +93,11 @@ enum SettingsSection: String, CaseIterable, Identifiable {
         case .models: return "Models"
         case .rules: return "Rules, Skills, Subagents"
         case .customize: return "Customize"
-        case .plugins: return "Plugins (preview)"
-        case .mcp: return "Tools & MCPs (preview)"
-        case .indexing: return "Indexing & Docs (preview)"
-        case .hooks: return "Hooks (preview)"
-        case .cloudAgents: return "Cloud Agents (preview)"
+        case .plugins: return "Plugins"
+        case .mcp: return "Tools & MCPs"
+        case .indexing: return "Indexing & Docs"
+        case .hooks: return "Hooks"
+        case .cloudAgents: return "Cloud Agents"
         case .network: return "Network"
         case .beta: return "Beta"
         case .privacy: return "Privacy"

@@ -21,7 +21,6 @@ private let webSearchKey = "chopsticksAI.webSearchEnabled"
 private let confirmFileSaveKey = "chopsticksAI.confirmFileSave"
 private let defaultWriteFolderKey = "chopsticksAI.defaultWriteFolder"
 private let betaFilePreviewKey = "chopsticksAI.betaFilePreview"
-private let plateStyleKey = "chopsticksAI.plateStyle"
 private let unlockKeysKey = "chopsticksAI.fathomProUnlockKeys"
 private let apiURL = URL(string: "https://chopstickshq.com/api/chopsticks-ai")!
 
@@ -81,8 +80,6 @@ struct UsageSnapshot: Equatable {
     ]
     var budgetMode: String = "—"
     var error: String?
-    var chopcodeAllowed: Bool = false
-    var kajiAllowed: Bool = false
 
     var progress: Double {
         guard limit > 0 else { return 0 }
@@ -123,19 +120,6 @@ struct UsageSnapshot: Equatable {
     }
 }
 
-enum CSAIEdition: String {
-    case online, offline
-
-    static var current: CSAIEdition {
-        let raw = (Bundle.main.object(forInfoDictionaryKey: "CSAIEdition") as? String ?? "online")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
-        return raw == "offline" ? .offline : .online
-    }
-
-    var isOffline: Bool { self == .offline }
-}
-
 @MainActor
 final class AppStore: ObservableObject {
     static let shared = AppStore()
@@ -147,9 +131,10 @@ final class AppStore: ObservableObject {
     @Published var sidebarExpanded: Bool = UserDefaults.standard.object(forKey: sidebarExpandedKey) as? Bool ?? true
     
     @Published var railLabels: Bool = UserDefaults.standard.object(forKey: railLabelsKey) as? Bool ?? true
-    @Published var tier: String = AppStore.normalizeTier(UserDefaults.standard.string(forKey: tierKey) ?? "csaifast")
+    @Published var tier: String = UserDefaults.standard.string(forKey: tierKey) ?? "high"
     @Published var userRules: String = UserDefaults.standard.string(forKey: rulesKey) ?? ""
     @Published var privacyMode = UserDefaults.standard.bool(forKey: privacyModeKey)
+    /// Local KB only — off by default; online mode uses the live model whenever the network is up.
     @Published var offlineChatMode = UserDefaults.standard.bool(forKey: offlineChatModeKey)
     @Published var language: String = UserDefaults.standard.string(forKey: languageKey) ?? "en"
     @Published var autoRun = UserDefaults.standard.object(forKey: autoRunKey) as? Bool ?? true
@@ -164,7 +149,6 @@ final class AppStore: ObservableObject {
     @Published var defaultWriteFolder: String = UserDefaults.standard.string(forKey: defaultWriteFolderKey) ?? ""
     
     @Published var betaFilePreview: Bool = UserDefaults.standard.object(forKey: betaFilePreviewKey) as? Bool ?? true
-    @Published var skyPlates: Bool = UserDefaults.standard.string(forKey: plateStyleKey) != "sushi"
     @Published var customModes: [CustomMode] = []
     @Published var automations: [AutomationItem] = []
     @Published var repos: [RepoItem] = []
@@ -173,15 +157,6 @@ final class AppStore: ObservableObject {
     @Published var keyDraft = ""
     @Published var usage = UsageSnapshot()
     @Published var usageBusy = false
-    @Published var regionUnavailable: String?
-    @Published var pendingBrowserURL = ""
-    @Published var kajiActivity: [String] = []
-    @Published var kajiOpenedURL = ""
-    @Published var kajiLastWritePath: String?
-    @Published var kajiLastCommand: String?
-    @Published var kajiLastCommandOk: Bool?
-    @Published var kajiLastCommandOutput: String?
-    @Published var whatsNewBanner: String?
 
     private init() {
         customModes = Self.load(modesKey) ?? [
@@ -193,76 +168,10 @@ final class AppStore: ObservableObject {
         repos = Self.load(reposKey) ?? []
         unlockKeys = []
         if selectedModeId == nil { selectedModeId = customModes.first(where: { $0.name == "Agent" })?.id ?? customModes.first?.id }
-        if CSAIEdition.current.isOffline {
-            offlineChatMode = true
-            UserDefaults.standard.set(true, forKey: offlineChatModeKey)
-        } else {
-            offlineChatMode = false
-            UserDefaults.standard.set(false, forKey: offlineChatModeKey)
-        }
     }
 
     func bootstrapAccountState() {
         reloadForAccount(userId: AuthStore.shared.userId)
-    }
-
-    func dismissWhatsNewBanner() {
-        whatsNewBanner = nil
-        WhatsNew.markSeen()
-    }
-
-    func applyKajiToolResults(_ executed: [[String: Any]]) -> [String] {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
-        var chips: [String] = []
-        for item in executed {
-            let name = String(item["name"] as? String ?? "")
-            let raw = String(item["content"] as? String ?? "")
-            let json = (try? JSONSerialization.jsonObject(with: Data(raw.utf8))) as? [String: Any] ?? [:]
-            let ok = json["ok"] as? Bool ?? false
-            let path = String(json["path"] as? String ?? "")
-            let pretty: String = {
-                if path.hasPrefix(home) { return "~" + path.dropFirst(home.count) }
-                return path
-            }()
-            let short = URL(fileURLWithPath: path).lastPathComponent
-            var chip = ""
-            switch name {
-            case "list_dir" where ok:
-                chip = "Listed \(pretty.isEmpty ? "~" : pretty)"
-            case "read_file" where ok:
-                chip = "Read \(short)"
-            case "write_mac_file" where ok:
-                chip = "Wrote \(short)"
-                kajiLastWritePath = path
-            case "run_command":
-                let cmd = String(json["command"] as? String ?? "")
-                if !cmd.isEmpty { kajiLastCommand = cmd }
-                kajiLastCommandOk = ok
-                let out = String(json["output"] as? String ?? "")
-                    .replacingOccurrences(of: "\n", with: " ")
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                let err = String(json["error"] as? String ?? "")
-                if ok {
-                    kajiLastCommandOutput = out.isEmpty ? "(no output)" : String(out.prefix(180))
-                } else if err.contains("cancelled") {
-                    kajiLastCommandOutput = "Cancelled"
-                } else {
-                    kajiLastCommandOutput = err.isEmpty ? "Not run" : String(err.prefix(140))
-                }
-                chip = ok ? "Ran in Alpine sandbox" : "Command not run"
-            default:
-                break
-            }
-            if !chip.isEmpty {
-                noteKajiActivity(chip)
-                chips.append(chip)
-            }
-        }
-        return chips
-    }
-
-    func noteKajiActivity(_ line: String) {
-        kajiActivity = Array(([line] + kajiActivity).prefix(6))
     }
 
     func setCompact(_ on: Bool) {
@@ -284,61 +193,9 @@ final class AppStore: ObservableObject {
         UserDefaults.standard.set(on, forKey: railLabelsKey)
     }
 
-    func setSkyPlates(_ on: Bool) {
-        skyPlates = on
-        UserDefaults.standard.set(on ? "sky" : "sushi", forKey: plateStyleKey)
-    }
-
-    var hqProUnlocked: Bool {
-        if usage.chopcodeAllowed { return true }
-        if usage.keysValid >= 10 { return true }
-        if (usage.accountPlan ?? "").localizedCaseInsensitiveContains("founder") { return true }
-        if AuthStore.shared.email.lowercased() == "mzx@lam.ws" { return true }
-        return false
-    }
-
-    static func normalizeTier(_ raw: String) -> String {
-        switch raw.lowercased().replacingOccurrences(of: " ", with: "") {
-        case "low", "haiku", "fast", "rice", "csaifast": return "csaifast"
-        case "auto", "csaiauto": return "csaiauto"
-        case "flash", "csai47flash", "csai4flash", "4-flash", "flash4", "4flash", "csai-4-flash", "cs.ai-4-flash": return "csai47flash"
-        case "core", "csai46core", "hibachi", "4.6-core", "46core": return "csai46core"
-        case "swift", "csai46swift", "4.6-swift": return "csai46swift"
-        case "lite", "csai46lite", "tamago", "4.6-lite": return "csai46lite"
-        case "core-pro", "csai46corepro", "4.6-core-pro", "4.6-pro": return "csai46corepro"
-        case "pro", "csai47pro", "4.7-pro", "47pro": return "csai47pro"
-        case "medium", "high", "sonnet", "chopsticks", "standard", "super": return "csai46lite"
-        case "xhigh", "xhighplus", "xhigh+", "opus", "ultra": return "csai46core"
-        case "insane", "wagyu", "fable": return "wagyua5"
-        case "a1", "wagyu-a1", "wagyu1": return "wagyua1"
-        case "a2", "wagyu-a2", "wagyu2": return "wagyua2"
-        case "a3", "wagyu-a3", "wagyu3": return "wagyua3"
-        case "a4", "wagyu-a4", "wagyu4": return "wagyua4"
-        case "a5", "wagyu-a5", "wagyu5", "3.5-air", "cs.ai3.5-air", "csai3.5-air": return "wagyua5"
-        case "3.1", "cs.ai3.1", "csai3.1": return "csaifast"
-        case "3.3-fast", "3.3fast", "cs.ai3.3-fast": return "csai46lite"
-        case "3.3-thinking", "3.3thinking", "cs.ai3.3-thinking": return "csai46core"
-        case "airii", "air2": return "wagyua1"
-        case "airiii", "air3": return "wagyua2"
-        case "airvi", "air6": return "wagyua3"
-        case "airv", "air5": return "wagyua4"
-        case "cscode-pro", "cscodepro", "cscode": return "chopcode"
-        case "kaji", "grok", "grokbot", "grok-bot": return "kaji"
-        case "max", "maxmode", "csmax": return "max"
-        case "csai4air", "air4", "4air", "4-air", "csai-4-air", "cs.ai-4-air",
-             "cs.ai-4.0-air", "csai-4.0-air", "csai40air", "4.0-air", "4.0air",
-             "csai4.0air", "cs.AI-4.0-Air": return "csai4air"
-        default: return raw
-        }
-    }
-
-    func setTier(_ id: String, syncNav: Bool = true) {
-        let next = Self.normalizeTier(id)
-        if syncNav, next != "kaji", nav == .kaji {
-            nav = .agents
-        }
-        tier = next
-        UserDefaults.standard.set(next, forKey: tierKey)
+    func setTier(_ id: String) {
+        tier = id
+        UserDefaults.standard.set(id, forKey: tierKey)
     }
 
     func setUserRules(_ text: String) {
@@ -352,18 +209,12 @@ final class AppStore: ObservableObject {
     }
 
     func setOfflineChatMode(_ on: Bool) {
-        if CSAIEdition.current.isOffline {
-            offlineChatMode = true
-            UserDefaults.standard.set(true, forKey: offlineChatModeKey)
-            return
-        }
-        offlineChatMode = false
-        UserDefaults.standard.set(false, forKey: offlineChatModeKey)
-        _ = on
+        offlineChatMode = on
+        UserDefaults.standard.set(on, forKey: offlineChatModeKey)
     }
 
     var chatUsesOnlineModel: Bool {
-        !offlineChatMode
+        !offlineChatMode && !privacyMode && NetworkStatus.shared.isOnline
     }
 
     static let supportedLanguages: [(code: String, label: String)] = [
@@ -558,26 +409,6 @@ final class AppStore: ObservableObject {
         saveUnlockKeys()
     }
 
-    static let regionUnavailableFallback =
-        "cs.AI is currently unavailable in Brazil while we complete regional privacy, data-processing, and compliance requirements."
-
-    static func regionUnavailableMessage(obj: [String: Any]?, status: Int?) -> String? {
-        if (obj?["code"] as? String) == "region_unavailable" {
-            let err = (obj?["error"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            return err.isEmpty ? regionUnavailableFallback : err
-        }
-        if status == 451 {
-            let err = (obj?["error"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            return err.isEmpty ? regionUnavailableFallback : err
-        }
-        return nil
-    }
-
-    func noteRegionUnavailable(_ message: String) {
-        regionUnavailable = message
-        usage.error = message
-    }
-
     func refreshUsage() async {
         usageBusy = true
         defer { usageBusy = false }
@@ -598,13 +429,9 @@ final class AppStore: ObservableObject {
         req.httpBody = try? JSONSerialization.data(withJSONObject: payload)
         do {
             let (data, resp) = try await URLSession.shared.data(for: req)
-            let http = resp as? HTTPURLResponse
-            let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
-            if let msg = Self.regionUnavailableMessage(obj: obj, status: http?.statusCode) {
-                noteRegionUnavailable(msg)
-                return
-            }
-            guard let http, http.statusCode == 200, let obj else {
+            guard let http = resp as? HTTPURLResponse, http.statusCode == 200,
+                  let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+            else {
                 usage.error = "Could not reach chopstickshq.com for usage."
                 return
             }
@@ -689,15 +516,6 @@ final class AppStore: ObservableObject {
             }
         }
         snap.budgetMode = mode ?? (u["budgetMode"] as? String) ?? snap.budgetMode
-        if let chop = u["chopcode"] as? [String: Any] {
-            snap.chopcodeAllowed = (chop["allowed"] as? Bool) == true
-        }
-        if let air = u["air4"] as? [String: Any], (air["allowed"] as? Bool) == true {
-            snap.chopcodeAllowed = true
-        }
-        if let kaji = u["kaji"] as? [String: Any] {
-            snap.kajiAllowed = (kaji["allowed"] as? Bool) == true
-        }
         usage = snap
     }
 

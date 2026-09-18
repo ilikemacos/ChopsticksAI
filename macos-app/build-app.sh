@@ -2,23 +2,14 @@
 set -Eeuo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-REPO="$(cd "$ROOT/.." && pwd)"
 AI="$REPO/engine"
-SITE="${CHOPSTICKS_AI_SITE:-$REPO/../chopstickshq-site/chopsticks-ai}"
+SITE="$ROOT/../chopstickshq-site/chopsticks-ai"
 BUNDLE="chopsticksAI.app"
 EXEC="chopsticksAI"
-VERSION="${1:-v4.1h}"
-EDITION="${2:-online}"
+VERSION="${1:-v2.0.0}"
 BUILD="$ROOT/build"
-if [[ "$EDITION" == "offline" ]]; then
-  BUNDLE="cs.AI Offline.app"
-  ZIP="chopsticksAI-offline-${VERSION}.zip"
-else
-  BUNDLE="chopsticksAI.app"
-  ZIP="chopsticksAI-${VERSION}.zip"
-  EDITION="online"
-fi
 APP="$BUILD/$BUNDLE"
+ZIP="chopsticksAI-${VERSION}.zip"
 
 [[ "$(uname)" == "Darwin" ]] || { echo "macOS only"; exit 1; }
 
@@ -67,14 +58,14 @@ ARCH="$(uname -m)"
 TARGET="arm64-apple-macos14.0"
 [[ "$ARCH" == "arm64" ]] || TARGET="x86_64-apple-macos14.0"
 
-echo "Building chopsticksAI $VERSION ($EDITION) ($TARGET)..."
+echo "Building chopsticksAI $VERSION ($TARGET)..."
 
 rm -rf "$BUILD"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$ROOT/Info.plist" "$APP/Contents/Info.plist"
 cp "$ROOT/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 
-SHARED="$REPO/shared/AppAutoUpdate.swift"
+SHARED="$ROOT/../shared/AppAutoUpdate.swift"
 BIN="$APP/Contents/MacOS/$EXEC"
 
 SDK_ARGS=()
@@ -87,30 +78,19 @@ SWIFT_CMD+=(
   -framework SwiftUI
   -framework AppKit
   -framework WebKit
-  -framework IOKit
-  -framework Virtualization
   -o "$BIN"
   "$AI/ChopsticksAIKB.swift"
   "$AI/ChopsticksAIEngine.swift"
   "$SHARED"
   "$ROOT/CursorTheme.swift"
   "$ROOT/AppStore.swift"
-  "$ROOT/KeychainStore.swift"
   "$ROOT/CloudAuth.swift"
-  "$ROOT/Energy.swift"
   "$ROOT/NetworkStatus.swift"
   "$ROOT/Onboarding.swift"
   "$ROOT/WhatsNew.swift"
   "$ROOT/Attachments.swift"
   "$ROOT/CursorPages.swift"
   "$ROOT/ChromiumBrowser.swift"
-  "$ROOT/MoreModelsStore.swift"
-  "$ROOT/MoreModelsView.swift"
-  "$ROOT/PlateCatalog.swift"
-  "$ROOT/KajiApp.swift"
-  "$ROOT/KajiCommandGate.swift"
-  "$ROOT/KajiMacFiles.swift"
-  "$ROOT/KajiLinuxGuest.swift"
   "$ROOT/ChopsticksAIApp.swift"
 )
 "${SWIFT_CMD[@]}"
@@ -119,20 +99,6 @@ SWIFT_CMD+=(
 chmod +x "$BIN"
 
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VERSION#v}" "$APP/Contents/Info.plist" 2>/dev/null || true
-BUNDLE_VER="${VERSION#v}"
-BUNDLE_BUILD="$(python3 -c 'import re,sys; s=sys.argv[1].lower(); n=[int(x) for x in re.findall(r"\d+", s)[:3]]+[0,0,0]; extra=2 if s.rstrip().endswith("b") else (1 if s.rstrip().endswith("a") else 0); print(n[0]*1000+n[1]*100+n[2]+extra)' "$BUNDLE_VER")"
-/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUNDLE_BUILD" "$APP/Contents/Info.plist" 2>/dev/null || true
-/usr/libexec/PlistBuddy -c "Set :CSAIEdition $EDITION" "$APP/Contents/Info.plist" 2>/dev/null || \
-  /usr/libexec/PlistBuddy -c "Add :CSAIEdition string $EDITION" "$APP/Contents/Info.plist"
-if [[ "$EDITION" == "offline" ]]; then
-  /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName cs.AI Offline" "$APP/Contents/Info.plist"
-  /usr/libexec/PlistBuddy -c "Set :CFBundleName cs.AI Offline" "$APP/Contents/Info.plist"
-  /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.chopstickshq.chopsticksai.offline" "$APP/Contents/Info.plist"
-else
-  /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName cs.AI Online" "$APP/Contents/Info.plist"
-  /usr/libexec/PlistBuddy -c "Set :CFBundleName chopsticksAI" "$APP/Contents/Info.plist"
-  /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.chopstickshq.chopsticksai.online" "$APP/Contents/Info.plist"
-fi
 codesign --force --deep --sign - "$APP"
 
 rm -f "$BUILD/$ZIP"
@@ -148,22 +114,14 @@ unzip -q "$BUILD/$ZIP" -d "$CHECK"
 mkdir -p "$SITE"
 cp "$BUILD/$ZIP" "$SITE/"
 cp "$ROOT/install-chopsticks-ai.sh" "$SITE/"
-if [[ "$EDITION" == "offline" ]]; then
-  MAC_JSON="$SITE/macos-offline-version.json"
-  VER_JSON="$SITE/offline-version.json"
-else
-  MAC_JSON="$SITE/macos-version.json"
-  VER_JSON="$SITE/version.json"
-fi
 
 PY="$(command -v python3.11 2>/dev/null || command -v python3 2>/dev/null || echo /usr/bin/python3)"
-"$PY" - "$VER_JSON" "$MAC_JSON" "$VERSION" "$ZIP" "$SHA" "$EDITION" <<'PY'
+"$PY" - "$SITE/version.json" "$SITE/macos-version.json" "$VERSION" "$ZIP" "$SHA" <<'PY'
 import json, sys
-path, mac_path, ver, zip_name, sha, edition = sys.argv[1:7]
+path, mac_path, ver, zip_name, sha = sys.argv[1:6]
 payload = {
     "latest": ver.lstrip("v"),
-    "product": "cs.AI " + edition,
-    "edition": edition,
+    "product": "chopsticksAI",
     "releases": {"stable": {"zip": zip_name, "sha256": sha}},
 }
 for p in (path, mac_path):

@@ -5,9 +5,11 @@
   var API = '/api/chopsticks-ai';
   var CFG_URL = '/chopsticks-ai/supabase-public.json';
   var SESSION_KEY = 'chq.ai.auth';
+  var OAUTH_VERIFIER_KEY = 'chq.ai.oauth.pkce';
   var cfg = null;
   var session = null;
   var listeners = [];
+  var oauthError = '';
 
   function emit() {
     listeners.forEach(function (fn) {
@@ -173,6 +175,69 @@
     }
   }
 
+  function b64url(buf) {
+    var bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+    var bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  }
+
+  async function makePkce() {
+    var raw = new Uint8Array(32);
+    crypto.getRandomValues(raw);
+    var verifier = b64url(raw);
+    var digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+    return { verifier: verifier, challenge: b64url(digest) };
+  }
+
+  function oauthRedirectTo() {
+    return location.origin + location.pathname;
+  }
+
+  function stripOAuthParams() {
+    try {
+      var u = new URL(location.href);
+      if (!u.searchParams.has('code') && !u.searchParams.has('error')) return;
+      ['code', 'error', 'error_description', 'state'].forEach(function (k) {
+        u.searchParams.delete(k);
+      });
+      var q = u.searchParams.toString();
+      history.replaceState({}, '', u.pathname + (q ? '?' + q : '') + u.hash);
+    } catch (e) {}
+  }
+
+  async function finishOAuthFromUrl() {
+    var params;
+    try { params = new URLSearchParams(location.search); } catch (e) { return null; }
+    var err = params.get('error');
+    if (err) {
+      try { var st = storage(); if (st) st.removeItem(OAUTH_VERIFIER_KEY); } catch (e2) {}
+      stripOAuthParams();
+      throw new Error(params.get('error_description') || err);
+    }
+    var code = params.get('code');
+    if (!code) return null;
+    var verifier = null;
+    try {
+      var store = storage();
+      verifier = store && store.getItem(OAUTH_VERIFIER_KEY);
+      if (store) store.removeItem(OAUTH_VERIFIER_KEY);
+    } catch (e) {}
+    stripOAuthParams();
+    if (!verifier) throw new Error('Google sign-in expired. Try Continue with Google again.');
+    var body = await apiPost({
+      action: 'authOAuthExchange',
+      auth_code: code,
+      code_verifier: verifier
+    });
+    session = normalizeSession(body);
+    if (!session) throw new Error((body && body.error) || 'Google sign-in failed.');
+    saveLocalSession(session);
+    await validateSession();
+    emit();
+    return session;
+  }
+
   function normalizeSession(body) {
     if (!body || !body.access_token || !body.user || !body.user.id) return null;
     return {
@@ -218,15 +283,24 @@
       return Boolean(session && session.modelPicker);
     },
     getAppVersion: function () {
-      var baked = '4.1h';
+      var baked = '4.1n';
       var remote = (session && session.appVersion) || '';
       if (!remote) return baked;
       return verNewer(remote, baked) ? remote : baked;
     },
 
+    lastOAuthError: function () { return oauthError; },
+
     init: async function () {
       await ensureConfig();
       try { global.localStorage.removeItem(SESSION_KEY); } catch (e) {}
+      oauthError = '';
+      try {
+        var oauth = await finishOAuthFromUrl();
+        if (oauth) return oauth;
+      } catch (e) {
+        oauthError = (e && e.message) || 'Google sign-in failed.';
+      }
       session = loadLocalSession();
       if (session) await refreshIfNeeded();
       else {
@@ -234,6 +308,23 @@
         emit();
       }
       return session;
+    },
+
+    signInWithGoogle: async function () {
+      oauthError = '';
+      var pkce = await makePkce();
+      try {
+        var store = storage();
+        if (store) store.setItem(OAUTH_VERIFIER_KEY, pkce.verifier);
+      } catch (e) {}
+      var start = await apiPost({
+        action: 'authOAuthStart',
+        provider: 'google',
+        redirectTo: oauthRedirectTo(),
+        codeChallenge: pkce.challenge
+      });
+      if (!start || !start.url) throw new Error('Could not start Google sign-in.');
+      location.assign(start.url);
     },
 
     sendSignupCode: async function (email, password, username) {

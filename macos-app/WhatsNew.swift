@@ -27,10 +27,6 @@ enum WhatsNew {
         Task { await fetchAndShow(force: true) }
     }
 
-    static func markSeen() {
-        UserDefaults.standard.set(AppAutoUpdate.shared.currentVersion, forKey: seenKey)
-    }
-
     private static func checkAndPresent() async {
         await fetchAndShow(force: false)
     }
@@ -48,23 +44,19 @@ enum WhatsNew {
             let payload = try JSONDecoder().decode(Payload.self, from: data)
             guard let entries = payload.entries, !entries.isEmpty else { return }
 
-            let want = normalize(payload.latest ?? current)
+            let cv = normalize(current)
             let match = entries.first { e in
-                normalize(e.version) == want
+                let ev = normalize(e.version)
+                return ev == cv || cv.hasPrefix(ev) || ev.hasPrefix(cv) || cv.contains(ev) || ev.contains(cv)
             } ?? entries.first
             guard let entry = match else { return }
 
             await MainActor.run {
-                if force {
-                    showAlert(entry: entry, product: payload.product ?? "cs.AI")
-                    markSeen()
-                } else {
-                    let title = entry.title ?? "What’s new"
-                    AppStore.shared.whatsNewBanner =
-                        "\(entry.version) — \(title). Replace this app in Applications if you still get a Keychain prompt."
-                }
+                showAlert(entry: entry, product: payload.product ?? "cs.AI")
+                UserDefaults.standard.set(current, forKey: seenKey)
             }
         } catch {
+            
         }
     }
 

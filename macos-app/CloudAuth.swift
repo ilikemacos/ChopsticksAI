@@ -67,59 +67,42 @@ final class AuthStore: ObservableObject {
     }
 
     func restore() {
-        let data = KeychainStore.read(account: CloudPublic.sessionKey)
-            ?? UserDefaults.standard.data(forKey: CloudPublic.sessionKey)
-        guard let data,
+        guard let data = UserDefaults.standard.data(forKey: CloudPublic.sessionKey),
               let s = try? JSONDecoder().decode(CloudAuthSession.self, from: data)
         else { return }
         session = s
         userId = s.user.id
-        persist()
     }
 
     private func persist() {
         if let session, let data = try? JSONEncoder().encode(session) {
-            KeychainStore.write(account: CloudPublic.sessionKey, data: data)
             UserDefaults.standard.set(data, forKey: CloudPublic.sessionKey)
         } else {
-            KeychainStore.delete(account: CloudPublic.sessionKey)
             UserDefaults.standard.removeObject(forKey: CloudPublic.sessionKey)
         }
     }
 
-    func sendSignupCode(email: String, password: String, username: String = "") async throws -> String {
-        try await signUp(email: email, password: password, username: username)
-        return ""
-    }
-
-    func signUp(email: String, password: String, username: String, code: String? = nil, signupToken: String? = nil) async throws {
+    func signUp(email: String, password: String) async throws {
         busy = true
         defer { busy = false }
         if session != nil { await signOut() }
-        let obj = try await apiRequest(action: "signupSendCode", body: [
+        let obj = try await apiRequest(action: "authSignUp", body: [
             "email": email,
             "password": password,
-            "username": username,
         ])
         if let access = obj["access_token"] as? String {
             try applyTokenResponse(obj, access: access)
             statusMessage = "Account created."
-            UserDefaults.standard.removeObject(forKey: "chopsticksAI.pendingSignupToken")
-            UserDefaults.standard.removeObject(forKey: "chopsticksAI.pendingSignupEmail")
             return
         }
         if (obj["needsSignIn"] as? Bool) == true {
             statusMessage = obj["message"] as? String ?? "Account created. Sign in."
             return
         }
-        throw NSError(
-            domain: "cs.AIAuth",
-            code: 400,
-            userInfo: [NSLocalizedDescriptionKey: obj["error"] as? String ?? "Could not create account."]
-        )
+        throw URLError(.userAuthenticationRequired)
     }
 
-    func signIn(email: String, password: String, code: String? = nil, loginToken: String? = nil) async throws {
+    func signIn(email: String, password: String) async throws {
         busy = true
         defer { busy = false }
         let obj = try await apiRequest(action: "authSignIn", body: [
@@ -131,7 +114,6 @@ final class AuthStore: ObservableObject {
         }
         try applyTokenResponse(obj, access: access)
         statusMessage = "Signed in."
-        UserDefaults.standard.removeObject(forKey: "chopsticksAI.pendingLoginToken")
     }
 
     func signOut() async {
@@ -242,7 +224,7 @@ enum ChatCloud {
         if let title { body["title"] = title }
         if let tier { body["tier"] = tier }
         _ = try await rest(
-            "chats?id=eq.\(Self.eq(id))",
+            "chats?id=eq.\(id)",
             method: "PATCH",
             token: token,
             body: body
@@ -251,12 +233,12 @@ enum ChatCloud {
 
     static func deleteChat(id: String) async throws {
         let token = try await AuthStore.shared.ensureFreshToken()
-        _ = try await rest("chats?id=eq.\(Self.eq(id))", method: "DELETE", token: token)
+        _ = try await rest("chats?id=eq.\(id)", method: "DELETE", token: token)
     }
 
     static func loadMessages(chatId: String) async throws -> [CloudMessage] {
         let token = try await AuthStore.shared.ensureFreshToken()
-        let path = "chat_messages?chat_id=eq.\(Self.eq(chatId))&select=role,content,sources,seq&order=seq.asc"
+        let path = "chat_messages?chat_id=eq.\(chatId)&select=role,content,sources,seq&order=seq.asc"
         let data = try await rest(path, method: "GET", token: token)
         guard let arr = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] else { return [] }
         return arr.compactMap { row in
@@ -281,7 +263,7 @@ enum ChatCloud {
     static func saveMessages(chatId: String, title: String, tier: String?, lines: [ChatLine]) async throws {
         let token = try await AuthStore.shared.ensureFreshToken()
         try await updateChat(id: chatId, title: title, tier: tier)
-        _ = try await rest("chat_messages?chat_id=eq.\(Self.eq(chatId))", method: "DELETE", token: token)
+        _ = try await rest("chat_messages?chat_id=eq.\(chatId)", method: "DELETE", token: token)
         let rows: [[String: Any]] = lines.enumerated().map { idx, line in
             let sources: [[String: String]] = line.sources.map { s in
                 var d = ["title": s.title]
@@ -309,12 +291,6 @@ enum ChatCloud {
                 prefer: "return=minimal"
             )
         }
-    }
-
-    private static func eq(_ value: String) -> String {
-        var allowed = CharacterSet.alphanumerics
-        allowed.insert(charactersIn: "-_.")
-        return value.addingPercentEncoding(withAllowedCharacters: allowed) ?? value
     }
 
     private static func isoNow() -> String {

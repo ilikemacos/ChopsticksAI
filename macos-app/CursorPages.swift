@@ -155,10 +155,10 @@ struct SettingsToggleRow: View {
         HStack(alignment: .top, spacing: 16) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(Cursor.text)
                 Text(subtitle)
-                    .font(.system(size: 15))
+                    .font(.system(size: 12))
                     .foregroundStyle(Cursor.muted)
             }
             Spacer()
@@ -405,9 +405,7 @@ struct AccountView: View {
     @ObservedObject var store: AppStore
     var onSignedIn: (() -> Void)?
     @State private var email = ""
-    @State private var username = ""
     @State private var password = ""
-    @State private var showPassword = false
     @State private var error = ""
 
     var body: some View {
@@ -438,36 +436,17 @@ struct AccountView: View {
                             }
                         }
                     } else {
-                        SettingsCard(title: "Sign in or create account", subtitle: "Email, username, and password. No email code.") {
+                        SettingsCard(title: "Sign in or create account", subtitle: "Email + password.") {
                             TextField("Email", text: $email)
                                 .textFieldStyle(.plain)
                                 .foregroundStyle(Cursor.text)
                                 .padding(10)
                                 .background(RoundedRectangle(cornerRadius: 8).fill(Cursor.hover))
-                            TextField("Username", text: $username)
+                            SecureField("Password", text: $password)
                                 .textFieldStyle(.plain)
                                 .foregroundStyle(Cursor.text)
                                 .padding(10)
                                 .background(RoundedRectangle(cornerRadius: 8).fill(Cursor.hover))
-                            if showPassword {
-                                TextField("Password (min 6)", text: $password)
-                                    .textFieldStyle(.plain)
-                                    .foregroundStyle(Cursor.text)
-                                    .padding(10)
-                                    .background(RoundedRectangle(cornerRadius: 8).fill(Cursor.hover))
-                            } else {
-                                SecureField("Password (min 6)", text: $password)
-                                    .textFieldStyle(.plain)
-                                    .foregroundStyle(Cursor.text)
-                                    .padding(10)
-                                    .background(RoundedRectangle(cornerRadius: 8).fill(Cursor.hover))
-                            }
-                            Toggle("Show password", isOn: $showPassword)
-                                .toggleStyle(.checkbox)
-                                .foregroundStyle(Cursor.muted)
-                            Link("Forgot password? Email chopstickshq@lam.ws", destination: URL(string: "mailto:chopstickshq@lam.ws?subject=Forgot%20cs.AI%20password")!)
-                                .font(.system(size: 12))
-                                .foregroundStyle(Cursor.blue)
                             if !error.isEmpty {
                                 Text(error)
                                     .font(.system(size: 12))
@@ -509,9 +488,8 @@ struct AccountView: View {
     private func signIn() async {
         error = ""
         do {
-            let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
-            try await auth.signIn(email: trimmed, password: password)
-            if auth.isSignedIn { onSignedIn?() }
+            try await auth.signIn(email: email.trimmingCharacters(in: .whitespacesAndNewlines), password: password)
+            onSignedIn?()
         } catch {
             self.error = error.localizedDescription
         }
@@ -519,14 +497,8 @@ struct AccountView: View {
 
     private func signUp() async {
         error = ""
-        let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        let handle = username.trimmingCharacters(in: .whitespacesAndNewlines)
-        if handle.isEmpty {
-            error = "Choose a username."
-            return
-        }
         do {
-            try await auth.signUp(email: trimmed, password: password, username: handle)
+            try await auth.signUp(email: email.trimmingCharacters(in: .whitespacesAndNewlines), password: password)
             if auth.isSignedIn { onSignedIn?() }
         } catch {
             self.error = error.localizedDescription
@@ -536,7 +508,6 @@ struct AccountView: View {
 
 struct UsageView: View {
     @ObservedObject var store: AppStore
-    @ObservedObject private var network = NetworkStatus.shared
     @State private var redeemError: String?
     @State private var cooldownEndsAt: Date?
 
@@ -562,7 +533,6 @@ struct UsageView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     usageCard
-                    uptimeCard
                     upgradesCard
                     redeemCard
                     keysCard
@@ -577,10 +547,7 @@ struct UsageView: View {
             .background(Cursor.bg)
         }
         .background(Cursor.bg)
-        .task {
-            await store.refreshUsage()
-            await NetworkStatus.shared.pingApi()
-        }
+        .task { await store.refreshUsage() }
         .onChange(of: store.usage.blocked) { _, blocked in
             if blocked, store.usage.retryInMs > 0 {
                 cooldownEndsAt = Date().addingTimeInterval(Double(store.usage.retryInMs) / 1000)
@@ -591,25 +558,6 @@ struct UsageView: View {
         .onChange(of: store.usage.retryInMs) { _, ms in
             if store.usage.blocked, ms > 0 {
                 cooldownEndsAt = Date().addingTimeInterval(Double(ms) / 1000)
-            }
-        }
-    }
-
-    private var uptimeCard: some View {
-        SettingsCard(title: "Uptime", subtitle: "Live ping of chopstickshq.com") {
-            HStack {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(network.apiUptimeLabel)
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(network.apiUp == false ? Color.red.opacity(0.85) : Cursor.text)
-                    Text(network.statusLabel)
-                        .font(.system(size: 12))
-                        .foregroundStyle(network.isOnline ? Cursor.green : Cursor.soft)
-                }
-                Spacer()
-                GhostButton(title: "Refresh") {
-                    Task { await network.pingApi() }
-                }
             }
         }
     }
@@ -782,45 +730,183 @@ struct UsageView: View {
     }
 }
 
+struct MozillaSearchHit: Identifiable, Equatable {
+    let id = UUID()
+    let title: String
+    let url: String
+    let snippet: String
+    let via: String
+}
 
-struct LabsView: View {
-    @ObservedObject var store: AppStore
+struct MozillaSearchView: View {
+    @State private var query = ""
+    @State private var busy = false
+    @State private var status = "Same Chromium engine cs.AI uses before every answer."
+    @State private var results: [MozillaSearchHit] = []
+    @FocusState private var focused: Bool
+
+    private let apiURL = URL(string: "https://chopstickshq.com/api/chopsticks-ai")!
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Labs", subtitle: "Preview rooms. They are not the product yet.")
+            PageHeader(
+                title: "Search",
+                subtitle: "Chromium engine · Google · DuckDuckGo",
+                trailing: AnyView(
+                    GhostButton(title: busy ? "Searching…" : "Search", icon: "magnifyingglass") {
+                        Task { await runSearch() }
+                    }
+                )
+            )
+
             ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
-                    labRow("Cloud Agents", "Remote runs (preview)") { store.nav = .cloudAgents }
-                    labRow("Automations", "Schedules and triggers (preview)") { store.nav = .automations }
-                    labRow("Repositories", "Local folders for the Agents chip") { store.nav = .repos }
-                    labRow("Marketplace", "Plugins (preview)") { store.nav = .marketplace }
-                    labRow("More models", "Groq, OpenRouter, Claude keys") { store.nav = .moreModels }
+                VStack(alignment: .leading, spacing: 16) {
+                    searchCard
+                    resultsCard
                 }
                 .padding(22)
-                .frame(maxWidth: 640, alignment: .leading)
+                .frame(maxWidth: 820, alignment: .leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .background(Cursor.bg)
         }
+        .background(Cursor.bg)
+        .onAppear { focused = true }
     }
 
-    private func labRow(_ title: String, _ subtitle: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.system(size: 14, weight: .semibold))
+    private var searchCard: some View {
+        SettingsCard(title: "Chromium engine", subtitle: "No API key. Results from Google and DuckDuckGo; chopsticks queries prioritize chopstickshq.com.") {
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(Cursor.mozilla)
+                TextField("Search the web…", text: $query)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 14))
                     .foregroundStyle(Cursor.text)
-                Text(subtitle)
-                    .font(.system(size: 12.5))
-                    .foregroundStyle(Cursor.muted)
+                    .focused($focused)
+                    .onSubmit { Task { await runSearch() } }
+                Button {
+                    Task { await runSearch() }
+                } label: {
+                    Text(busy ? "…" : "Search")
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .foregroundStyle(Color.black.opacity(0.88))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 7)
+                        .background(Capsule().fill(Cursor.mozilla))
+                }
+                .buttonStyle(.plain)
+                .disabled(busy || query.trimmingCharacters(in: .whitespacesAndNewlines).count < 3)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14)
-            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Cursor.panel))
-            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Cursor.border))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Cursor.composer))
+            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Cursor.border))
+
+            Text(status)
+                .font(.system(size: 11.5, design: .monospaced))
+                .foregroundStyle(Cursor.muted)
         }
-        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private var resultsCard: some View {
+        if results.isEmpty {
+            EmptyView()
+        } else {
+            SettingsCard(title: "Results", subtitle: "\(results.count) hit\(results.count == 1 ? "" : "s")") {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(results) { hit in
+                        Button {
+                            if let url = URL(string: hit.url), !hit.url.isEmpty {
+                                NSWorkspace.shared.open(url)
+                            }
+                        } label: {
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                    Text(hit.title)
+                                        .font(.system(size: 13.5, weight: .semibold))
+                                        .foregroundStyle(Cursor.blue)
+                                        .multilineTextAlignment(.leading)
+                                    Text(hit.via)
+                                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                                        .foregroundStyle(Cursor.mozilla)
+                                }
+                                if !hit.url.isEmpty {
+                                    Text(hit.url)
+                                        .font(.system(size: 10.5, design: .monospaced))
+                                        .foregroundStyle(Cursor.muted)
+                                        .lineLimit(1)
+                                }
+                                if !hit.snippet.isEmpty {
+                                    Text(hit.snippet)
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(Cursor.soft)
+                                        .multilineTextAlignment(.leading)
+                                }
+                            }
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .buttonStyle(.plain)
+                        if hit.id != results.last?.id {
+                            Divider().overlay(Cursor.hairline)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func runSearch() async {
+        let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard q.count >= 3 else {
+            status = "Enter at least 3 characters."
+            return
+        }
+        busy = true
+        status = "Searching Chromium engine…"
+        defer { busy = false }
+
+        var req = URLRequest(url: apiURL)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.timeoutInterval = 20
+        req.httpBody = try? JSONSerialization.data(withJSONObject: [
+            "action": "search",
+            "q": q,
+            "max": 8,
+        ])
+
+        do {
+            let (data, resp) = try await URLSession.shared.data(for: req)
+            guard let http = resp as? HTTPURLResponse, http.statusCode == 200,
+                  let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+            else {
+                status = "Search failed — try again shortly."
+                results = []
+                return
+            }
+            let raw = obj["sources"] as? [[String: Any]] ?? []
+            results = raw.map { row in
+                MozillaSearchHit(
+                    title: row["title"] as? String ?? q,
+                    url: row["url"] as? String ?? "",
+                    snippet: row["snippet"] as? String ?? "",
+                    via: row["via"] as? String ?? "Mozilla"
+                )
+            }
+            if results.isEmpty {
+                status = "No results for “\(q)”."
+            } else {
+                let engine = obj["engine"] as? String ?? "mozilla"
+                status = "\(results.count) result\(results.count == 1 ? "" : "s") · \(engine)"
+            }
+        } catch {
+            status = "Network error — check your connection."
+            results = []
+        }
     }
 }
 
@@ -843,15 +929,12 @@ struct CloudAgentsView: View {
 }
 
 struct MarketplaceView: View {
-    @ObservedObject var store = AppStore.shared
-
     var body: some View {
         VStack(spacing: 0) {
             PageHeader(title: "Marketplace", subtitle: "Plugins and extensions for agents.")
             ScrollView {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    pluginCard(name: "Browser", desc: "Built-in WebKit view + search — Browser rail.", installed: true)
-                    kajiCard
+                    pluginCard(name: "Chromium Browser", desc: "Built-in web browser + Google search — Browser rail.", installed: true)
                     pluginCard(name: "Product KB", desc: "Offline Chopsticks HQ knowledge base.", installed: true)
                     pluginCard(name: "MCP Bridge", desc: "Connect Model Context Protocol servers.", installed: false)
                     pluginCard(name: "GitHub", desc: "Repos, PRs, and issues context.", installed: false)
@@ -886,38 +969,6 @@ struct MarketplaceView: View {
         .frame(maxWidth: .infinity, minHeight: 140, alignment: .topLeading)
         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Cursor.panel))
         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Cursor.hairline))
-    }
-
-    @ViewBuilder
-    private var kajiCard: some View {
-        if CSAIEdition.current.isOffline {
-            EmptyView()
-        } else {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Text("Kaji")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Cursor.text)
-                    Spacer()
-                    Text("App")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Cursor.chromium)
-                }
-                Text("Kaji uses the browser, your folders, and a headless Alpine command sandbox. Pro. Alpha — check writes and commands.")
-                    .font(.system(size: 12.5))
-                    .foregroundStyle(Cursor.muted)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
-                GhostButton(title: "Open") {
-                    store.nav = .kaji
-                    store.setTier("kaji")
-                }
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity, minHeight: 140, alignment: .topLeading)
-            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Cursor.panel))
-            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Cursor.hairline))
-        }
     }
 }
 
@@ -985,7 +1036,7 @@ struct SettingsView: View {
                             isOn: Binding(
                                 get: { store.sidebarExpanded },
                                 set: { on in
-                                    withAnimation(Cursor.motionPanel) {
+                                    withAnimation(.spring(response: 0.38, dampingFraction: 0.86)) {
                                         store.setSidebarExpanded(on)
                                     }
                                 }
@@ -1043,9 +1094,7 @@ struct SettingsView: View {
                     }
 
                 case .chat:
-                    SettingsCard(title: "Chat mode", subtitle: CSAIEdition.current.isOffline
-                                ? "cs.AI Offline — on-device knowledge base only."
-                                : "cs.AI Online — live models. Does not use the local KB.") {
+                    SettingsCard(title: "Chat mode", subtitle: "Online mode is the default — cs.AI uses the live model whenever your Mac has a network connection.") {
                         HStack {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text("Connection")
@@ -1060,24 +1109,17 @@ struct SettingsView: View {
                                 .foregroundStyle(network.isOnline ? Cursor.green : Cursor.soft)
                         }
                         Divider().overlay(Cursor.hairline)
-                        HStack {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text("cs.AI uptime")
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundStyle(Cursor.text)
-                                Text(network.apiUptimeLabel)
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(network.apiUp == false ? Color.red.opacity(0.85) : Cursor.green)
-                            }
-                            Spacer()
-                            GhostButton(title: "Check") {
-                                Task { await network.pingApi() }
-                            }
-                        }
+                        SettingsToggleRow(
+                            title: "Offline mode",
+                            subtitle: "Local product KB only — no cloud API. Turn off for online mode (default).",
+                            isOn: Binding(get: { store.offlineChatMode }, set: { store.setOfflineChatMode($0) })
+                        )
                         Divider().overlay(Cursor.hairline)
-                        Text(CSAIEdition.current.isOffline
-                             ? "This is cs.AI Offline. Answers come only from the on-device knowledge base."
-                             : "This is cs.AI Online. Live models via chopstickshq.com — it does not fall back to the local KB.")
+                        Text(store.offlineChatMode
+                             ? "Offline mode is on. Answers come from the on-device knowledge base."
+                             : (network.isOnline
+                                ? "Online mode — live model via chopstickshq.com on \(network.connection.label)."
+                                : "Online mode is selected but no network is detected. Connect to Wi‑Fi or enable Offline mode."))
                             .font(.system(size: 13))
                             .foregroundStyle(Cursor.soft)
                     }
@@ -1099,7 +1141,7 @@ struct SettingsView: View {
                         Divider().overlay(Cursor.hairline)
                         SettingsToggleRow(
                             title: "Max mode",
-                            subtitle: "Think harder. Each Max request uses 1,000 tokens from your allowance.",
+                            subtitle: "Prefer higher effort for complex tasks.",
                             isOn: Binding(get: { store.maxMode }, set: { store.setMaxMode($0) })
                         )
                         Divider().overlay(Cursor.hairline)
@@ -1111,52 +1153,35 @@ struct SettingsView: View {
                         Divider().overlay(Cursor.hairline)
                         SettingsToggleRow(
                             title: "Web search",
-                            subtitle: "Automatic web lookup on each question. Off = faster model-only replies; `/search …` still forces lookup.",
+                            subtitle: "Automatic Chromium lookup on each question. Off = faster model-only replies; `/search …` still forces lookup.",
                             isOn: Binding(get: { store.webSearchEnabled }, set: { store.setWebSearchEnabled($0) })
                         )
                     }
 
                 case .models:
-                    SettingsCard(title: "Name mode", subtitle: "Sushi is Rice / Tamago / Wagyu. Sky is cs.AI 3.1, 3.3-Fast, 3.5-Air, cs.AI-4.0-Air, csCode-Pro.") {
-                        SettingsToggleRow(
-                            title: "Sky mode",
-                            subtitle: store.skyPlates
-                                ? "On — cs.AI 3.1, 3.3-Fast, 3.3-Thinking, PRO (cs.AI-4.0-Air, csCode-Pro), Air II–VI, 3.5-Air."
-                                : "Off — Sushi names (Rice, Tamago, Hibachi, Wagyu).",
-                            isOn: Binding(get: { store.skyPlates }, set: { store.setSkyPlates($0) })
-                        )
-                    }
-                    SettingsCard(title: "Plate", subtitle: "PRO is cs.AI-4.0-Air and csCode-Pro (10 Fathom Pro keys or Founder). Then Air/Wagyu, then Apps. Kaji is alpha (5 keys).") {
-                        Group {
-                            Text(store.skyPlates ? "cs.AI" : "Everyday").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
-                            plateSetting("csai4flash")
-                            plateSetting("rice")
-                            plateSetting("tamago")
-                            plateSetting("hibachi")
-                            Divider().overlay(Cursor.hairline)
-                            Text("PRO").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
-                            plateSetting("csai4air")
-                            plateSetting("chopcode")
-                            Divider().overlay(Cursor.hairline)
-                            Text(store.skyPlates ? "Air" : "Wagyu").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
-                            plateSetting("wagyua1")
-                            plateSetting("wagyua2")
-                            plateSetting("wagyua3")
-                            plateSetting("wagyua4")
-                            plateSetting("wagyua5")
-                            Divider().overlay(Cursor.hairline)
-                            Text("Apps").font(.system(size: 11, weight: .semibold)).foregroundStyle(Cursor.muted)
-                            plateSetting("kaji")
-                            plateSetting("max")
-                            plateSetting("stickercoderplus")
-                        }
-                    }
-                    SettingsCard(title: "More models") {
-                        Text("Bring your Groq, OpenRouter, or Claude API key and pick from their full catalogs.")
-                            .font(.system(size: 13))
-                            .foregroundStyle(Cursor.soft)
-                        GhostButton(title: "Open More models") {
-                            store.nav = .moreModels
+                    SettingsCard(title: "Effort", subtitle: "Maps to ChopsticksAI generation tiers. ChopCode and StickerCoder+ are for coding.") {
+                        ForEach([
+                            ("low", "Low"), ("medium", "Medium"), ("high", "High"),
+                            ("xhigh", "Xhigh"), ("xhighplus", "Xhigh+"), ("insane", "Insane"),
+                            ("chopsticks", "Chopsticks"), ("chopcode", "ChopCode"),
+                            ("stickercoderplus", "StickerCoder+"),
+                        ], id: \.0) { id, label in
+                            Button {
+                                store.setTier(id)
+                            } label: {
+                                HStack {
+                                    Text(label)
+                                        .foregroundStyle(Cursor.text)
+                                    Spacer()
+                                    if store.tier == id {
+                                        Image(systemName: "checkmark")
+                                            .foregroundStyle(Cursor.blue)
+                                    }
+                                }
+                                .padding(.vertical, 6)
+                            }
+                            .buttonStyle(.plain)
+                            if id != "stickercoderplus" { Divider().overlay(Cursor.hairline) }
                         }
                     }
 
@@ -1278,7 +1303,7 @@ struct SettingsView: View {
                     SettingsCard(title: "Network") {
                         SettingsToggleRow(
                             title: "Web search",
-                            subtitle: "In-app WebKit view (not Google Chrome).",
+                            subtitle: "Chromium engine (Google, DuckDuckGo). Turn off to skip lookups and save time.",
                             isOn: Binding(get: { store.webSearchEnabled }, set: { store.setWebSearchEnabled($0) })
                         )
                         Divider().overlay(Cursor.hairline)
@@ -1312,17 +1337,11 @@ struct SettingsView: View {
 
                 case .privacy:
                     SettingsCard(title: "Privacy Mode") {
-                        if CSAIEdition.current.isOffline {
-                            SettingsToggleRow(
-                                title: "Privacy Mode",
-                                subtitle: "Skip cloud API calls and chat sync; answers come from the local product KB only.",
-                                isOn: Binding(get: { store.privacyMode }, set: { store.setPrivacyMode($0) })
-                            )
-                        } else {
-                            Text("Privacy Mode is Offline-only. Online always uses live models (signed in).")
-                                .font(.system(size: 12.5))
-                                .foregroundStyle(Cursor.muted)
-                        }
+                        SettingsToggleRow(
+                            title: "Privacy Mode",
+                            subtitle: "Skip cloud API calls and chat sync; answers come from the local product KB only.",
+                            isOn: Binding(get: { store.privacyMode }, set: { store.setPrivacyMode($0) })
+                        )
                         Divider().overlay(Cursor.hairline)
                         Link("Privacy policy", destination: URL(string: "https://chopstickshq.com/chopsticks-ai/privacy.html")!)
                             .font(.system(size: 13))
@@ -1351,33 +1370,6 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(Cursor.bg)
-    }
-
-    @ViewBuilder
-    private func plateSetting(_ id: String) -> some View {
-        let locked = PlateCatalog.isHqPro(id) && !store.hqProUnlocked
-        Button {
-            if locked { return }
-            store.setTier(id)
-        } label: {
-            HStack {
-                Text(PlateCatalog.label(id, sky: store.skyPlates))
-                    .foregroundStyle(Cursor.text)
-                Spacer()
-                if locked {
-                    Text("10 keys")
-                        .font(.system(size: 11))
-                        .foregroundStyle(Cursor.muted)
-                    Image(systemName: "lock.fill")
-                        .foregroundStyle(Cursor.muted)
-                } else if store.tier == id {
-                    Image(systemName: "checkmark")
-                        .foregroundStyle(Cursor.blue)
-                }
-            }
-            .padding(.vertical, 6)
-        }
-        .buttonStyle(.plain)
     }
 }
 

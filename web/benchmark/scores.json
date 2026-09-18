@@ -1,0 +1,181 @@
+{
+  "asOf": "2026-09-18",
+  "disclaimer": "cs.AI is a product, not a separate foundation model. 4.7-Flash HLE is the cs.AI plate score (41.3%). Nemotron 3 Ultra bars stay on NVIDIA\u2019s published card. Composer 2.5 bars use Cursor\u2019s published coding-agent figures (Terminal-Bench 2.0, SWE-Bench Multilingual). Other bars are the labs\u2019 own figures. Suites and harnesses differ \u2014 do not treat this as one HQ bake-off.",
+  "charts": [
+    {
+      "id": "hle",
+      "title": "Humanity\u2019s Last Exam (no tools)",
+      "unit": "%",
+      "bars": [
+        {
+          "id": "sonnet5",
+          "label": "Claude Sonnet 5",
+          "value": 43.2,
+          "cite": "Anthropic launch (Jun 2026)",
+          "href": "https://www.datacamp.com/blog/claude-sonnet-5"
+        },
+        {
+          "id": "grok46",
+          "label": "Grok 4.6",
+          "value": 42.9,
+          "cite": "xAI / Artificial Analysis",
+          "href": "https://sophon.at/models/grok-4-6"
+        },
+        {
+          "id": "glm53",
+          "label": "GLM 5.3",
+          "value": 42.3,
+          "cite": "BenchmarkList import 2026-09-02",
+          "href": "https://benchmarklist.com/benchmarks/hle/"
+        },
+        {
+          "id": "csaiflash",
+          "label": "cs.AI 4.7-Flash",
+          "value": 41.3,
+          "highlight": true,
+          "cite": "cs.AI 4.7-Flash plate"
+        },
+        {
+          "id": "ultra",
+          "label": "Nemotron 3 Ultra",
+          "value": 26.7,
+          "cite": "NVIDIA model card, no tools",
+          "href": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b/modelcard"
+        },
+        {
+          "id": "glm47f",
+          "label": "GLM-4.7-Flash",
+          "value": 14.4,
+          "cite": "Z.ai Hugging Face card",
+          "href": "https://huggingface.co/zai-org/GLM-4.7-Flash"
+        }
+      ],
+      "note": "Cursor has not published an HLE score for Composer 2.5, so it is omitted from this chart."
+    },
+    {
+      "id": "gpqa",
+      "title": "GPQA (science Q&A)",
+      "unit": "%",
+      "note": "Grok 4.6, GLM 5.3, and GLM-4.7-Flash are GPQA Diamond. Nemotron is NVIDIA \u201cGPQA (no tools)\u201d, not labeled Diamond. Sonnet 5 has no single official Diamond figure we can cite without mixing conflicting third-party runs. Cursor has not published a GPQA score for Composer 2.5, so it is omitted here.",
+      "bars": [
+        {
+          "id": "grok46",
+          "label": "Grok 4.6",
+          "value": 94.9,
+          "cite": "GPQA Diamond \u2014 xAI",
+          "href": "https://sophon.at/models/grok-4-6"
+        },
+        {
+          "id": "glm53",
+          "label": "GLM 5.3",
+          "value": 91.7,
+          "cite": "GPQA Diamond \u2014 Artificial Analysis",
+          "href": "https://www.ai-atlas.co/models/glm-5.3"
+        },
+        {
+          "id": "csaiflash",
+          "label": "cs.AI 4.7-Flash",
+          "value": 87.0,
+          "highlight": true,
+          "cite": "NVIDIA GPQA no tools (Ultra stack)",
+          "href": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b/modelcard"
+        },
+        {
+          "id": "ultra",
+          "label": "Nemotron 3 Ultra",
+          "value": 87.0,
+          "cite": "GPQA no tools \u2014 NVIDIA",
+          "href": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b/modelcard"
+        },
+        {
+          "id": "glm47f",
+          "label": "GLM-4.7-Flash",
+          "value": 75.2,
+          "cite": "GPQA Diamond \u2014 Z.ai",
+          "href": "https://huggingface.co/zai-org/GLM-4.7-Flash"
+        }
+      ]
+    },
+    {
+      "id": "tb21",
+      "title": "Terminal-Bench (coding agents)",
+      "unit": "%",
+      "note": "Composer 2.5 is Cursor\u2019s Terminal-Bench 2.0 figure (69.3%). cs.AI 4.7-Flash / Nemotron 3 Ultra are NVIDIA\u2019s Terminal-Bench 2.1 BF16 figure (56.4%). Suites differ \u2014 not a single bake-off. Grok 4.6 and GLM-4.7-Flash still have no clean vendor Terminal-Bench number we can put beside these without mixing harnesses.",
+      "bars": [
+        {
+          "id": "glm53",
+          "label": "GLM 5.3",
+          "value": 88.2,
+          "cite": "Z.ai GLM-5.3 card",
+          "href": "https://z.ai/blog/glm-5.3"
+        },
+        {
+          "id": "sonnet5",
+          "label": "Claude Sonnet 5",
+          "value": 80.4,
+          "cite": "Anthropic launch",
+          "href": "https://www.datacamp.com/blog/claude-sonnet-5"
+        },
+        {
+          "id": "csaiflash",
+          "label": "cs.AI 4.7-Flash",
+          "value": 56.4,
+          "highlight": true,
+          "cite": "NVIDIA BF16 (Ultra stack)",
+          "href": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b/modelcard"
+        },
+        {
+          "id": "composer25",
+          "label": "Composer 2.5",
+          "cite": "Terminal-Bench 2.0 \u2014 Cursor",
+          "href": "https://cursor.com/composer",
+          "value": 69.3
+        },
+        {
+          "id": "ultra",
+          "label": "Nemotron 3 Ultra",
+          "value": 56.4,
+          "cite": "NVIDIA BF16",
+          "href": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b/modelcard"
+        }
+      ]
+    },
+    {
+      "id": "deepswe",
+      "title": "DeepSWE v1.1",
+      "unit": "%",
+      "note": "Only Grok 4.6 and GLM 5.3 published this suite at launch. NVIDIA and Anthropic did not list DeepSWE v1.1 for Ultra / Sonnet 5.",
+      "bars": [
+        {
+          "id": "glm53",
+          "label": "GLM 5.3",
+          "value": 66.9,
+          "cite": "Z.ai GLM-5.3 card",
+          "href": "https://z.ai/blog/glm-5.3"
+        },
+        {
+          "id": "grok46",
+          "label": "Grok 4.6",
+          "value": 65.9,
+          "cite": "xAI Grok 4.6 (high thinking)",
+          "href": "https://x.ai/news/grok-4-6"
+        }
+      ]
+    },
+    {
+      "id": "swe-ml",
+      "title": "SWE-Bench Multilingual",
+      "unit": "%",
+      "note": "Composer 2.5 figure from Cursor\u2019s Composer page. cs.AI 4.7-Flash is not scored on this suite in published NVIDIA Ultra materials, so Flash is omitted here.",
+      "bars": [
+        {
+          "id": "composer25",
+          "label": "Composer 2.5",
+          "value": 79.8,
+          "cite": "SWE-Bench Multilingual \u2014 Cursor",
+          "href": "https://cursor.com/composer"
+        }
+      ]
+    }
+  ]
+}

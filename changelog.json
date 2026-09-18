@@ -1,7 +1,66 @@
 {
   "product": "cs.AI",
-  "latest": "4.1h",
+  "latest": "4.1n",
   "entries": [
+    {
+      "version": "4.1n",
+      "date": "2026-09-16",
+      "title": "Lite on Groq 20B",
+      "changes": [
+        "cs.AI-4.6-Lite is a tighter 20B pass than Swift",
+        "Ship 4.1n"
+      ]
+    },
+    {
+      "version": "4.1m",
+      "date": "2026-09-15",
+      "title": "Four-model lineup",
+      "changes": [
+        "cs.AI-4.7-Flash is the flagship; cs.AI-4.6-Core is the recommended everyday model",
+        "cs.AI-4.6-Swift and cs.AI-4.6-Lite are the fast and lightweight plates",
+        "There is no cs.AI-4.7-Core, 4.7-Swift, or 4.7-Lite",
+        "Ship 4.1m"
+      ]
+    },
+    {
+      "version": "4.1l",
+      "date": "2026-09-15",
+      "title": "Chat matches the web: grid prefix, quieter chrome",
+      "changes": [
+        "Assistant replies keep the 3×3 mark beside the first line; thinking fades into the answer",
+        "Plate name sits under the first user bubble; code blocks use a sharp hairline inset",
+        "Ship 4.1l"
+      ]
+    },
+    {
+      "version": "4.1k",
+      "date": "2026-09-15",
+      "title": "Air is 120B free on a faster stack",
+      "changes": [
+        "cs.AI-4.0-Air uses openai/gpt-oss-120b:free only — LPU race against OpenRouter :free, then a 120B critic on hard questions",
+        "DeepSeek / Gemma / GLM team are off Air",
+        "Ship 4.1k"
+      ]
+    },
+    {
+      "version": "4.1j",
+      "date": "2026-09-15",
+      "title": "Thinking mark matches the web app",
+      "changes": [
+        "Mac chat and Kaji use the small 3×3 thinking grid (slow scramble) instead of Thinking…",
+        "cs.AI-4.0-Air is openai/gpt-oss-120b:free on a dual-runtime 120B stack (LPU race + critic pass)",
+        "Ship 4.1j"
+      ]
+    },
+    {
+      "version": "4.1i",
+      "date": "2026-09-14",
+      "title": "Flash races Grok 4.1 Fast and Nemotron 3.5 Lightning",
+      "changes": [
+        "cs.AI-4-Flash (default, no account) races x-ai/grok-4.1-fast:free and nvidia/nemotron-3.5-lightning:free on OpenRouter",
+        "HQ chat uses the Netlify OPENROUTER_API_KEY"
+      ]
+    },
     {
       "version": "4.1h",
       "date": "2026-09-14",
@@ -33,8 +92,8 @@
       "date": "2026-09-14",
       "title": "Chat is the product",
       "changes": [
-        "Web and Mac empty state match Grok/ChatGPT — What’s on your mind?",
-        "Ship 4.1e — stack is cs.AI-4"
+        "Web and Mac empty state match Grok/ChatGPT \u2014 What\u2019s on your mind?",
+        "Ship 4.1e \u2014 stack is cs.AI-4"
       ]
     },
     {
@@ -43,7 +102,7 @@
       "title": "Air OpenRouter pair",
       "changes": [
         "cs.AI-4.0-Air uses openai/gpt-oss-120b:free and deepseek/deepseek-v4-flash:free",
-        "Ship 4.1d — stack is cs.AI-4"
+        "Ship 4.1d \u2014 stack is cs.AI-4"
       ]
     },
     {
@@ -52,7 +111,7 @@
       "title": "Air is GPT-OSS 120B",
       "changes": [
         "cs.AI-4.0-Air uses only openai/gpt-oss-120b:free on OpenRouter",
-        "Ship 4.1c — stack is cs.AI-4"
+        "Ship 4.1c \u2014 stack is cs.AI-4"
       ]
     },
     {
@@ -60,8 +119,8 @@
       "date": "2026-09-14",
       "title": "Air is Ofox Flash",
       "changes": [
-        "cs.AI-4.0-Air uses only GLM 4.7 Flash free via Ofox — no other models",
-        "Ship 4.1b — stack is cs.AI-4"
+        "cs.AI-4.0-Air uses only GLM 4.7 Flash free via Ofox \u2014 no other models",
+        "Ship 4.1b \u2014 stack is cs.AI-4"
       ]
     },
     {
@@ -69,8 +128,8 @@
       "date": "2026-09-14",
       "title": "Air is 5.2 and Gemma 4",
       "changes": [
-        "cs.AI-4.0-Air uses GLM 5.2 free and Gemma 4 free only — no GLM 4.7 Flash",
-        "Ship 4.1a — stack is cs.AI-4"
+        "cs.AI-4.0-Air uses GLM 5.2 free and Gemma 4 free only \u2014 no GLM 4.7 Flash",
+        "Ship 4.1a \u2014 stack is cs.AI-4"
       ]
     },
     {
@@ -80,7 +139,7 @@
       "changes": [
         "cs.AI-4.0-Air uses only GLM 4.7 Flash free",
         "Air does not call any other models",
-        "Ship 4.1.0 — stack is cs.AI-4"
+        "Ship 4.1.0 \u2014 stack is cs.AI-4"
       ]
     },
     {
@@ -90,7 +149,7 @@
       "changes": [
         "Public uptime page at /chopsticks-ai/uptime/ pings the live API",
         "Web and Mac show whether chopstickshq.com is up",
-        "Ship 4.0.8 — stack is cs.AI-4"
+        "Ship 4.0.8 \u2014 stack is cs.AI-4"
       ]
     },
     {
@@ -98,9 +157,9 @@
       "date": "2026-09-13",
       "title": "Accounts and live replies",
       "changes": [
-        "Create account is email, username, and password — no 6-digit email code",
+        "Create account is email, username, and password \u2014 no 6-digit email code",
         "Live turns retry and race fallbacks so a dropped model almost never ends the reply",
-        "Ship 4.0.7 — stack is cs.AI-4"
+        "Ship 4.0.7 \u2014 stack is cs.AI-4"
       ]
     },
     {
@@ -108,9 +167,9 @@
       "date": "2026-09-13",
       "title": "cs.AI-4-Flash",
       "changes": [
-        "New plate cs.AI-4-Flash — fast replies only",
+        "New plate cs.AI-4-Flash \u2014 fast replies only",
         "Every model call is dated 13 September 2026",
-        "Ship 4.0.6 — stack is cs.AI-4"
+        "Ship 4.0.6 \u2014 stack is cs.AI-4"
       ]
     },
     {
@@ -119,7 +178,7 @@
       "title": "Image input",
       "changes": [
         "Attached images are read as pictures; image output is unavailable",
-        "Ship 4.0.4 — stack is cs.AI-4"
+        "Ship 4.0.4 \u2014 stack is cs.AI-4"
       ]
     },
     {
@@ -128,7 +187,7 @@
       "title": "Sources bar",
       "changes": [
         "Search sources sit in a collapsed expandable bar instead of an open list",
-        "Ship 4.0.3 — stack is cs.AI-4"
+        "Ship 4.0.3 \u2014 stack is cs.AI-4"
       ]
     },
     {
@@ -136,8 +195,8 @@
       "date": "2026-09-13",
       "title": "PRO plates",
       "changes": [
-        "PRO column: cs.AI-4.0-Air (best) and csCode-Pro — 10 Fathom Pro keys or Founder",
-        "Ship 4.0.2 — stack is cs.AI-4"
+        "PRO column: cs.AI-4.0-Air (best) and csCode-Pro \u2014 10 Fathom Pro keys or Founder",
+        "Ship 4.0.2 \u2014 stack is cs.AI-4"
       ]
     },
     {
@@ -146,7 +205,7 @@
       "title": "cs.AI-4.0-Air plate",
       "changes": [
         "cs.AI-4.0-Air is a selectable plate in the Mac app and web (Air / Wagyu group), not only an API alias",
-        "Ship 4.0.1 — stack is cs.AI-4"
+        "Ship 4.0.1 \u2014 stack is cs.AI-4"
       ]
     },
     {
@@ -156,8 +215,8 @@
       "changes": [
         "cs.AI-4 Air is the coordinated multi-model plate; other plates run GLM 5.2 free and Nemotron 3 Ultra free with more tokens and context as you go up",
         "Account create works when the HMAC and Resend extras are missing, as long as Supabase URL and anon key are set",
-        "Agents UI tracks Cursor’s rail, colors, and type",
-        "Ship 4.0.0 — stack is cs.AI-4"
+        "Agents UI tracks Cursor\u2019s rail, colors, and type",
+        "Ship 4.0.0 \u2014 stack is cs.AI-4"
       ]
     },
     {
@@ -166,7 +225,7 @@
       "title": "cs.AI mark",
       "changes": [
         "Mac app and web use a chopsticks mark instead of the old circle and sparkle",
-        "Ship 3.9.3 — stack is still cs.AI-3.7"
+        "Ship 3.9.3 \u2014 stack is still cs.AI-3.7"
       ]
     },
     {
@@ -175,7 +234,7 @@
       "title": "Max team only",
       "changes": [
         "The coordinated free-model draft, review, verify, and synthesize path runs only on Max",
-        "Ship 3.9.2 — stack is still cs.AI-3.7"
+        "Ship 3.9.2 \u2014 stack is still cs.AI-3.7"
       ]
     },
     {
@@ -184,18 +243,18 @@
       "title": "Online team answers",
       "changes": [
         "Substantial Online chats draft, review in parallel, verify, then synthesize into one reply",
-        "Ship 3.9.1 — stack is still cs.AI-3.7"
+        "Ship 3.9.1 \u2014 stack is still cs.AI-3.7"
       ]
     },
     {
       "version": "3.9.0",
       "date": "2026-09-10",
-      "title": "Live models again · 10 MB images",
+      "title": "Live models again \u00b7 10 MB images",
       "changes": [
         "Guest chat on Sky plates works without a forced sign-in",
-        "HQ live stack uses OpenRouter’s free pool when a :free slug goes paid",
+        "HQ live stack uses OpenRouter\u2019s free pool when a :free slug goes paid",
         "Images attach up to 10 MB each (other files stay 500 MB per batch)",
-        "Ship 3.9.0 — stack is still cs.AI-3.7"
+        "Ship 3.9.0 \u2014 stack is still cs.AI-3.7"
       ]
     },
     {
@@ -204,7 +263,7 @@
       "title": "Max in Apps",
       "changes": [
         "Max is an Apps plate next to Kaji and csCode-Pro; it still thinks harder at 1,000 tokens per request",
-        "Ship 3.8.7 — stack is still cs.AI-3.7"
+        "Ship 3.8.7 \u2014 stack is still cs.AI-3.7"
       ]
     },
     {
@@ -213,7 +272,7 @@
       "title": "Max mode",
       "changes": [
         "Max mode thinks harder and uses 1,000 tokens per request",
-        "Ship 3.8.6 — stack is still cs.AI-3.7"
+        "Ship 3.8.6 \u2014 stack is still cs.AI-3.7"
       ]
     },
     {
@@ -222,7 +281,7 @@
       "title": "Brazil region notice in the Mac app",
       "changes": [
         "When cs.AI is unavailable in Brazil, the Mac app shows the compliance sentence and stops sending",
-        "Ship 3.8.5 — stack is still cs.AI-3.7"
+        "Ship 3.8.5 \u2014 stack is still cs.AI-3.7"
       ]
     },
     {
@@ -231,7 +290,7 @@
       "title": "Kaji rail stays put",
       "changes": [
         "Leaving Kaji for Search, Labs, Usage, or Account no longer snaps you back to Kaji",
-        "Ship 3.8.4 — stack is still cs.AI-3.7"
+        "Ship 3.8.4 \u2014 stack is still cs.AI-3.7"
       ]
     },
     {
@@ -241,7 +300,7 @@
       "changes": [
         "Plans say 5 Fathom keys unlock csCode-Pro and Kaji; Free lists Sky plates and no key",
         "Upgrades Create account uses the 6-digit email code",
-        "Ship 3.8.3 — stack is still cs.AI-3.7"
+        "Ship 3.8.3 \u2014 stack is still cs.AI-3.7"
       ]
     },
     {
@@ -251,7 +310,7 @@
       "changes": [
         "Create account emails a 6-digit code (10 minutes) from chopstickshq@lam.ws to your address",
         "Sign in stays email and password",
-        "Ship 3.8.2 — stack is still cs.AI-3.7"
+        "Ship 3.8.2 \u2014 stack is still cs.AI-3.7"
       ]
     },
     {
@@ -259,10 +318,10 @@
       "date": "2026-08-30",
       "title": "Kaji confirm in the command bar",
       "changes": [
-        "Run / Don’t run for Alpine commands lives on the Kaji Commands strip — no modal",
+        "Run / Don\u2019t run for Alpine commands lives on the Kaji Commands strip \u2014 no modal",
         "Last command output is one truncated line; scratch path opens in Finder",
         "Online page uses Sky plate names by default; Sushi names stay in Settings",
-        "Ship 3.8.1 — stack is still cs.AI-3.7"
+        "Ship 3.8.1 \u2014 stack is still cs.AI-3.7"
       ]
     },
     {
@@ -273,7 +332,7 @@
         "New installs default to Sky plate names (Sushi stays a toggle)",
         "Kaji header shows last command, confirm state, and ~/Downloads/Kaji-scratch",
         "Kaji no longer lists underlying model names in its system prompt",
-        "Ship 3.8.0 — stack is still cs.AI-3.7"
+        "Ship 3.8.0 \u2014 stack is still cs.AI-3.7"
       ]
     },
     {
@@ -281,20 +340,20 @@
       "date": "2026-08-30",
       "title": "Smoother motion",
       "changes": [
-        "Rail, sidebar, plates, and chat use slower, more damped springs — less snap, less bounce",
+        "Rail, sidebar, plates, and chat use slower, more damped springs \u2014 less snap, less bounce",
         "Web Agents and Kaji fades and hovers match that curve",
-        "This is 3.7.8b — stack is still cs.AI-3.7"
+        "This is 3.7.8b \u2014 stack is still cs.AI-3.7"
       ]
     },
     {
       "version": "3.7.8",
       "date": "2026-08-30",
-      "title": "Sushi or Sky plates · Kaji Alpine sandbox",
+      "title": "Sushi or Sky plates \u00b7 Kaji Alpine sandbox",
       "changes": [
         "Settings: Sushi names (Rice, Tamago, Wagyu) or Sky names (cs.AI 3.1, 3.3-Fast, 3.3-Thinking, 3.5-Air, Air II / III / VI / V, csCode-Pro)",
         "Kaji on Mac can run confirmed commands in a headless Alpine guest (no network, not a Linux desktop). Web computer stays WebKit",
         "15pt type in Agents, Kaji, Settings, and the web app",
-        "Ship 3.7.8 — stack is still cs.AI-3.7"
+        "Ship 3.7.8 \u2014 stack is still cs.AI-3.7"
       ]
     },
     {
@@ -316,7 +375,7 @@
       "changes": [
         "Shorter rail: Agents, Kaji, Browser, Labs, Usage, Account, Settings",
         "Kaji keeps the chat list, file attach, write confirm, and tool lines in the transcript",
-        "Agents stay in chat when a page opens; What’s New is a banner, not a launch alert",
+        "Agents stay in chat when a page opens; What\u2019s New is a banner, not a launch alert",
         "Replace the app in Applications to pick this up"
       ]
     },
@@ -325,7 +384,7 @@
       "date": "2026-08-28",
       "title": "Kaji is an agent",
       "changes": [
-        "Kaji is an agent: web computer plus Mac files (Home, Desktop, Documents, Downloads). No Keychain — keys stay in app defaults. Replace the app in Applications to pick this up."
+        "Kaji is an agent: web computer plus Mac files (Home, Desktop, Documents, Downloads). No Keychain \u2014 keys stay in app defaults. Replace the app in Applications to pick this up."
       ]
     },
     {
@@ -333,13 +392,13 @@
       "date": "2026-08-28",
       "title": "No Keychain prompt",
       "changes": [
-        "macOS app stores sign-in and More models keys in app defaults — it no longer asks for Keychain access"
+        "macOS app stores sign-in and More models keys in app defaults \u2014 it no longer asks for Keychain access"
       ]
     },
     {
       "version": "3.7.5",
       "date": "2026-08-28",
-      "title": "Intelligence stack — route, evidence, verify",
+      "title": "Intelligence stack \u2014 route, evidence, verify",
       "changes": [
         "Request analyzer and compute budget: trivial asks stay cheap; hard questions get more search and a critic",
         "Hybrid HQ retrieval (keyword + BM25 + entities) and ranked web evidence with source-quality scores",
@@ -373,20 +432,20 @@
     {
       "version": "3.7.1",
       "date": "2026-08-28",
-      "title": "Smarter, faster plates — Kaji is alpha",
+      "title": "Smarter, faster plates \u2014 Kaji is alpha",
       "changes": [
         "Every plate is prompted to lead with the answer, check numbers against research, and skip filler",
         "Faster model chains (nano / grok-4-fast / Groq first where they help)",
-        "Kaji is alpha and prone to wrong answers — that warning is on the app, web, and in Kaji’s own instructions"
+        "Kaji is alpha and prone to wrong answers \u2014 that warning is on the app, web, and in Kaji\u2019s own instructions"
       ]
     },
     {
       "version": "3.7.0",
       "date": "2026-08-28",
-      "title": "Kaji — Think different. Ask Kaji.",
+      "title": "Kaji \u2014 Think different. Ask Kaji.",
       "changes": [
         "Kaji is a first-class cs.AI Online app: Grok-style chat, Chopsticks HQ knowledge, web computer (no VM)",
-        "Pro only — same path as ChopCode (5 Fathom keys or founder)",
+        "Pro only \u2014 same path as ChopCode (5 Fathom keys or founder)",
         "Web: chopstickshq.com/chopsticks-ai/web/kaji/"
       ]
     },
@@ -404,7 +463,7 @@
       "date": "2026-08-24",
       "title": "Online and Offline are separate apps",
       "changes": [
-        "cs.AI Online is locked to live models — it no longer falls back to the local knowledge base",
+        "cs.AI Online is locked to live models \u2014 it no longer falls back to the local knowledge base",
         "cs.AI Offline is a separate Mac app and web app that only uses the on-device KB",
         "Code and build requests no longer get Chopsticks HQ knowledge-base answers when the live model misses"
       ]
@@ -414,14 +473,14 @@
       "date": "2026-08-19",
       "title": "Go deeper actually goes deeper",
       "changes": [
-        "Follow-ups like “go deeper” and “give me names” search the earlier question instead of echoing your last line",
-        "If the live model drops, you get names and sources from the research pass — not a prompt to switch to Rice"
+        "Follow-ups like \u201cgo deeper\u201d and \u201cgive me names\u201d search the earlier question instead of echoing your last line",
+        "If the live model drops, you get names and sources from the research pass \u2014 not a prompt to switch to Rice"
       ]
     },
     {
       "version": "3.6.7",
       "date": "2026-08-18",
-      "title": "More models — bring your own key",
+      "title": "More models \u2014 bring your own key",
       "changes": [
         "New More models tab: paste Groq, OpenRouter, or Claude keys and pick from their full catalogs",
         "OpenRouter lists every public model; Groq and Claude list every model your key can access",
@@ -444,7 +503,7 @@
       "title": "Never a blank live miss",
       "changes": [
         "A fast model starts in parallel so ChopCode and Tamago still return an answer if the big models stall",
-        "The API no longer returns “the live model didn’t return an answer” — you get a live reply, product help, or a real next step",
+        "The API no longer returns \u201cthe live model didn\u2019t return an answer\u201d \u2014 you get a live reply, product help, or a real next step",
         "macOS retries Tamago then Rice without tools, then local help, instead of showing that error"
       ]
     },
@@ -455,7 +514,7 @@
       "changes": [
         "ChopCode no longer burns the whole Netlify window on 10 models, so a live fallback can still answer",
         "The Mac app waits 90s for ChopCode instead of 22s (that cutoff was the empty-answer error)",
-        "Agent 1–10 talk in the room immediately while Lead finishes"
+        "Agent 1\u201310 talk in the room immediately while Lead finishes"
       ]
     },
     {
@@ -464,7 +523,7 @@
       "title": "ChopCode finishes before the clock",
       "changes": [
         "ChopCode skips the extra discussion round so the room fits the live API window",
-        "Agent conversation appears immediately (Agent 1–10 then Lead) while the answer is still coming in"
+        "Agent conversation appears immediately (Agent 1\u201310 then Lead) while the answer is still coming in"
       ]
     },
     {
@@ -472,7 +531,7 @@
       "date": "2026-08-17",
       "title": "Agent room as a conversation",
       "changes": [
-        "ChopCode specialists show as Agent 1–10 and Lead, talking in a chat thread — no model names",
+        "ChopCode specialists show as Agent 1\u201310 and Lead, talking in a chat thread \u2014 no model names",
         "Welcome to cs.AI (version) is back on new chats and the empty Agents screen"
       ]
     },
@@ -481,7 +540,7 @@
       "date": "2026-08-17",
       "title": "Live answers and expandable thinking",
       "changes": [
-        "Online is the default again — Offline mode and privacy were turning every reply into keyword KB answers",
+        "Online is the default again \u2014 Offline mode and privacy were turning every reply into keyword KB answers",
         "Live chat no longer falls back to the product knowledge base when the model misses",
         "ChopCode thinking panel expands on click (Grok-style) instead of a stuck disclosure row"
       ]
@@ -491,8 +550,8 @@
       "date": "2026-08-17",
       "title": "Plates, chats, and a bigger ChopCode room",
       "changes": [
-        "macOS plate picker is Rice, Tamago, Hibachi, Wagyu A1–A5, ChopCode, and StickerCoder+ again",
-        "Chats stay on this Mac and in the cloud — signing in no longer wipes the sidebar",
+        "macOS plate picker is Rice, Tamago, Hibachi, Wagyu A1\u2013A5, ChopCode, and StickerCoder+ again",
+        "Chats stay on this Mac and in the cloud \u2014 signing in no longer wipes the sidebar",
         "ChopCode adds Gemma 4 26B and Gemma 4 31B; unlock with 5 Fathom Pro keys or founder rank"
       ]
     },
@@ -502,7 +561,7 @@
       "title": "Multi-agent room",
       "changes": [
         "ChopCode specialists draft, discuss with each other, then Lead merges the final answer",
-        "Grok-style expandable agent conversation in macOS app and web — tap to read the full room thread",
+        "Grok-style expandable agent conversation in macOS app and web \u2014 tap to read the full room thread",
         "Each agent shows drafts, cross-talk replies, and synthesis status in one timeline"
       ]
     },
@@ -521,7 +580,7 @@
       "date": "2026-08-16",
       "title": "Live chat no longer dead-ends",
       "changes": [
-        "Stopped showing “the live model is still responding” when the cloud call actually failed",
+        "Stopped showing \u201cthe live model is still responding\u201d when the cloud call actually failed",
         "If the live model misses, you get a real answer or local product help instead of a stuck retry loop",
         "ChopCode coding plate uses a live 70B coding pass plus 2026 web research (APIs, SDKs, language versions)"
       ]
@@ -531,7 +590,7 @@
       "date": "2026-08-16",
       "title": "Email sign-in only",
       "changes": [
-        "Google and GitHub sign-in and connect are gone — email and password only",
+        "Google and GitHub sign-in and connect are gone \u2014 email and password only",
         "cs.browser is no longer listed on the public site"
       ]
     },
@@ -549,7 +608,7 @@
       "date": "2026-08-15",
       "title": "Chat sync",
       "changes": [
-        "Signing in no longer wipes the chat you were in — it uploads to your account",
+        "Signing in no longer wipes the chat you were in \u2014 it uploads to your account",
         "Google and GitHub accounts sync even when the provider hides your email",
         "macOS uses the same cloud API as the web app, so chats actually show up on both"
       ]
@@ -559,7 +618,7 @@
       "date": "2026-08-15",
       "title": "Google and GitHub sign-in",
       "changes": [
-        "Sign in with Google or GitHub on web, macOS, and the CLI — email still works",
+        "Sign in with Google or GitHub on web, macOS, and the CLI \u2014 email still works",
         "When you are already signed in, connect or disconnect Google and GitHub on the Account screen",
         "CLI: csai login google|github and csai connect google|github"
       ]
@@ -577,7 +636,7 @@
     {
       "version": "3.3.6",
       "date": "2026-08-15",
-      "title": "Wagyu A1–A5",
+      "title": "Wagyu A1\u2013A5",
       "changes": [
         "Wagyu is now five grades: A1 through A5, with A5 the highest",
         "Higher grades get more context and longer replies; all Wagyu grades still need sign-in",
@@ -608,7 +667,7 @@
       "date": "2026-08-15",
       "title": "ChopCode as a plate",
       "changes": [
-        "ChopCode is a fifth plate in the same Agents chat — attach files in the composer",
+        "ChopCode is a fifth plate in the same Agents chat \u2014 attach files in the composer",
         "Old ChopCode page redirects to the web app; coding replies no longer stall on a missing model id",
         "macOS: ChopCode lives with the other plates instead of a separate two-pane window",
         "ChopCode runs two coding models together: one drafts, one reviews",
@@ -620,7 +679,7 @@
       "date": "2026-08-14",
       "title": "Bottom bar stays on screen",
       "changes": [
-        "Composer and ChopCode Run bar stay pinned — empty-state tiles no longer clip the bottom",
+        "Composer and ChopCode Run bar stay pinned \u2014 empty-state tiles no longer clip the bottom",
         "ChopCode page layout fills the window without cutting off the action bar"
       ]
     },
@@ -638,7 +697,7 @@
       "date": "2026-08-14",
       "title": "ChopCode",
       "changes": [
-        "ChopCode — coding assistant for signed-in Pro accounts (5 Fathom Pro keys)",
+        "ChopCode \u2014 coding assistant for signed-in Pro accounts (5 Fathom Pro keys)",
         "Prompt plus optional code context, streaming replies, 384k input / 956k total cap",
         "Web at /chopsticks-ai/chopcode/ and ChopCode in the macOS activity bar"
       ]
@@ -648,9 +707,9 @@
       "date": "2026-08-14",
       "title": "cs.AI-3",
       "changes": [
-        "Rebrand to cs.AI-3 — four plates with their own colors: rice-paper, yolk, ember, and wagyu red",
+        "Rebrand to cs.AI-3 \u2014 four plates with their own colors: rice-paper, yolk, ember, and wagyu red",
         "Composer chip and empty-state tiles carry the plate color; version lives in the top bar only",
-        "Rice / Tamago / Hibachi / Wagyu with 16k → 128k context; Wagyu is sign-in only"
+        "Rice / Tamago / Hibachi / Wagyu with 16k \u2192 128k context; Wagyu is sign-in only"
       ]
     },
     {
@@ -668,8 +727,8 @@
       "date": "2026-08-14",
       "title": "Rice, Tamago, Hibachi, Wagyu",
       "changes": [
-        "Four plates replace Fast / Standard / Pro / Code — each one stronger than the last",
-        "Rice 16k context · Tamago 48k · Hibachi 96k · Wagyu 128k, with matching reply length",
+        "Four plates replace Fast / Standard / Pro / Code \u2014 each one stronger than the last",
+        "Rice 16k context \u00b7 Tamago 48k \u00b7 Hibachi 96k \u00b7 Wagyu 128k, with matching reply length",
         "Wagyu is sign-in only and runs a three-model pass; Tamago is the default"
       ]
     },
@@ -697,7 +756,7 @@
       "date": "2026-08-14",
       "title": "2.5.7",
       "changes": [
-        "Version bump — macOS zip, web app, and updater manifest all 2.5.7"
+        "Version bump \u2014 macOS zip, web app, and updater manifest all 2.5.7"
       ]
     },
     {
@@ -705,7 +764,7 @@
       "date": "2026-08-14",
       "title": "Cursor-style UI",
       "changes": [
-        "Web app redesigned — activity bar, persistent Agents sidebar, Cursor-style composer",
+        "Web app redesigned \u2014 activity bar, persistent Agents sidebar, Cursor-style composer",
         "macOS app: Cursor-style 48px activity bar, Agents label, square send button",
         "Updater uses the zip filename version so a restart after update does not re-prompt",
         "Dark #161616 palette, status bar, Plan/search/build placeholder",
@@ -715,10 +774,10 @@
     {
       "version": "cs.AI 2.5.5c",
       "date": "2026-08-14",
-      "title": "Streamlined — four modes",
+      "title": "Streamlined \u2014 four modes",
       "changes": [
         "Four modes everywhere: Fast, Standard, Pro, Code (legacy tiers still work via API)",
-        "Web UI trimmed — slimmer rail, compact usage bar, sign-in only top bar",
+        "Web UI trimmed \u2014 slimmer rail, compact usage bar, sign-in only top bar",
         "Browser panel and export moved to History drawer / Account modal"
       ]
     },
@@ -727,7 +786,7 @@
       "date": "2026-08-13",
       "title": "Pro tier, Groq, and open-source",
       "changes": [
-        "Pro effort tier — Groq GPT-OSS 120B via server GROQ_API_KEY (sign-in required)",
+        "Pro effort tier \u2014 Groq GPT-OSS 120B via server GROQ_API_KEY (sign-in required)",
         "Groq models in effort tiers and model picker; MIT license + Contributor Covenant for Netlify OSS",
         "Grok-style web UI rail/drawer fixes; side panel layout polish"
       ]
@@ -740,7 +799,7 @@
         "First-run onboarding sheet on macOS (3 steps: app, allowance, sign-in)",
         "Usage tab and chat bar show when the 5-hour allowance resets",
         "Product Hunt and AlternativeTo links point to cs.AI listings",
-        "Cloud session stored in app preferences — no Keychain prompt"
+        "Cloud session stored in app preferences \u2014 no Keychain prompt"
       ]
     },
     {
@@ -770,7 +829,7 @@
       "date": "2026-08-11",
       "title": "Cursor-style web UI",
       "changes": [
-        "Web app redesigned — icon rail, Agents sidebar, Cursor-style composer",
+        "Web app redesigned \u2014 icon rail, Agents sidebar, Cursor-style composer",
         "Allowance resets every 5 hours (app + web + API)",
         "Usage tab copy updated on macOS"
       ]
@@ -781,7 +840,7 @@
       "title": "5-hour allowance reset",
       "changes": [
         "Free allowance resets every 5 hours (was 3h cooldown)",
-        "Partial usage clears on the 5h window — you do not need to hit the limit first",
+        "Partial usage clears on the 5h window \u2014 you do not need to hit the limit first",
         "Hitting the limit still triggers a 5h cooldown until the next reset"
       ]
     },
@@ -790,7 +849,7 @@
       "date": "2026-08-10",
       "title": "cs.AI web app",
       "changes": [
-        "New web app at chopstickshq.com/chopsticks-ai/web/ — full agent in the browser",
+        "New web app at chopstickshq.com/chopsticks-ai/web/ \u2014 full agent in the browser",
         "Chromium browser rail, Fathom Pro key redemption, cloud sync with macOS",
         "Short URL /csai/ redirects to the web app"
       ]
@@ -809,7 +868,7 @@
       "date": "2026-08-10",
       "title": "Chromium browser",
       "changes": [
-        "Browser rail replaces Mozilla search — full in-app Chromium browser (Google, back/forward, URL bar)",
+        "Browser rail replaces Mozilla search \u2014 full in-app Chromium browser (Google, back/forward, URL bar)",
         "Chromium search engine for chat grounding (Google web + DuckDuckGo, Chrome UA)",
         "Search toggle and /search still work; macOS app opens pages inside the app"
       ]
@@ -819,7 +878,7 @@
       "date": "2026-08-10",
       "title": "Terminal CLI + shift-click organize",
       "changes": [
-        "New csai terminal CLI — full-screen UI like Grok Build (type csai in Terminal)",
+        "New csai terminal CLI \u2014 full-screen UI like Grok Build (type csai in Terminal)",
         "Install: curl -fsSL https://chopstickshq.com/chopsticks-ai/install-csai-cli.sh | bash",
         "Commands: csai ask, csai login, csai update, csai version",
         "Shift-click chats in the sidebar to select a range",
@@ -854,9 +913,9 @@
       "title": "Stop KB hijacking live chat",
       "changes": [
         "Fixed general questions (e.g. Minecraft SMP servers) returning chopstickshq.com portfolio KB snippets while Online",
-        "Server no longer substitutes offline KB answers when the live model fails — online clients get a retry prompt instead",
-        "KB grounding only applies on strong product matches, not bare keywords like “minecraft”",
-        "Search toggle in the macOS app is respected again — Search on runs Mozilla lookup on each question",
+        "Server no longer substitutes offline KB answers when the live model fails \u2014 online clients get a retry prompt instead",
+        "KB grounding only applies on strong product matches, not bare keywords like \u201cminecraft\u201d",
+        "Search toggle in the macOS app is respected again \u2014 Search on runs Mozilla lookup on each question",
         "Widget and Lab send onlineMode so the API knows not to fall back to local KB"
       ]
     },
@@ -865,10 +924,10 @@
       "date": "2026-08-10",
       "title": "Online means live",
       "changes": [
-        "Fixed Online badge showing while answers came from the offline KB — online mode never uses local KB now",
+        "Fixed Online badge showing while answers came from the offline KB \u2014 online mode never uses local KB now",
         "macOS and site widget always call the live model when Online; KB only when Offline mode is on or there is no network",
-        "Live requests skip automatic web search by default (use /search … to force lookup) so replies finish reliably",
-        "Retries with a lighter tier before asking you to send again — no more silent KB fallback while connected"
+        "Live requests skip automatic web search by default (use /search \u2026 to force lookup) so replies finish reliably",
+        "Retries with a lighter tier before asking you to send again \u2014 no more silent KB fallback while connected"
       ]
     },
     {
@@ -876,19 +935,19 @@
       "date": "2026-08-10",
       "title": "Many bug fixes",
       "changes": [
-        "Fixed website widget AI — no more false “model unreachable” when chopstickshq.com was up",
+        "Fixed website widget AI \u2014 no more false \u201cmodel unreachable\u201d when chopstickshq.com was up",
         "Widget skips automatic web search by default so replies finish before the server timeout",
-        "API fast path for the site widget — lighter search, no refine pass, faster replies",
+        "API fast path for the site widget \u2014 lighter search, no refine pass, faster replies",
         "macOS app retries without search when the live model fails, then local KB instead of a dead-end error",
-        "Removed harsh “Check your connection to chopstickshq.com” — graceful fallback while the model catches up",
-        "Online mode hardened: live model whenever Wi‑Fi/network is connected; Offline mode is opt-in in Settings → Chat",
-        "Settings → Chat tab — connection status (Wi‑Fi / Cellular / Offline) and Online/Offline toggle",
-        "Updater fix: patch builds (2.3.6a → 2.3.6b) and v-prefix manifest versions compare correctly",
-        "Fixed false “update available” when already on the latest build",
-        "Web and Lab show server replies instead of “unreachable” when the API returns an answer",
-        "Flat usage billing per reply — higher effort tiers no longer burn allowance faster",
+        "Removed harsh \u201cCheck your connection to chopstickshq.com\u201d \u2014 graceful fallback while the model catches up",
+        "Online mode hardened: live model whenever Wi\u2011Fi/network is connected; Offline mode is opt-in in Settings \u2192 Chat",
+        "Settings \u2192 Chat tab \u2014 connection status (Wi\u2011Fi / Cellular / Offline) and Online/Offline toggle",
+        "Updater fix: patch builds (2.3.6a \u2192 2.3.6b) and v-prefix manifest versions compare correctly",
+        "Fixed false \u201cupdate available\u201d when already on the latest build",
+        "Web and Lab show server replies instead of \u201cunreachable\u201d when the API returns an answer",
+        "Flat usage billing per reply \u2014 higher effort tiers no longer burn allowance faster",
         "Context window limits apply correctly per tier (contextFor bug fix)",
-        "Six-language replies: English, 中文, Español, Deutsch, 한국어, 日本語"
+        "Six-language replies: English, \u4e2d\u6587, Espa\u00f1ol, Deutsch, \ud55c\uad6d\uc5b4, \u65e5\u672c\u8a9e"
       ]
     },
     {
@@ -896,7 +955,7 @@
       "date": "2026-08-10",
       "title": "2.3.6a",
       "changes": [
-        "Patch release — version bump and updater fix for 2.3.6 → 2.3.6a"
+        "Patch release \u2014 version bump and updater fix for 2.3.6 \u2192 2.3.6a"
       ]
     },
     {
@@ -904,9 +963,9 @@
       "date": "2026-08-10",
       "title": "Hardened online mode",
       "changes": [
-        "Online mode is always on by default — live model whenever Wi‑Fi or network is connected",
+        "Online mode is always on by default \u2014 live model whenever Wi\u2011Fi or network is connected",
         "No automatic KB fallback while online; API errors show a retry message instead",
-        "New Settings → Chat tab with connection status and Offline mode toggle (opt-in local KB)",
+        "New Settings \u2192 Chat tab with connection status and Offline mode toggle (opt-in local KB)",
         "Lab and site widget match: Online/Offline toggle, no silent fallback when connected"
       ]
     },
@@ -915,10 +974,10 @@
       "date": "2026-08-10",
       "title": "Fixes + six languages",
       "changes": [
-        "Fixed false “update available” when already on the latest build",
-        "Web and macOS show server replies instead of “model unreachable” when the API returns an answer",
-        "Flat usage billing per reply — higher effort tiers no longer burn allowance faster",
-        "Reply language: English, 中文, Español, Deutsch, 한국어, 日本語"
+        "Fixed false \u201cupdate available\u201d when already on the latest build",
+        "Web and macOS show server replies instead of \u201cmodel unreachable\u201d when the API returns an answer",
+        "Flat usage billing per reply \u2014 higher effort tiers no longer burn allowance faster",
+        "Reply language: English, \u4e2d\u6587, Espa\u00f1ol, Deutsch, \ud55c\uad6d\uc5b4, \u65e5\u672c\u8a9e"
       ]
     },
     {
@@ -926,9 +985,9 @@
       "date": "2026-08-09",
       "title": "Email + password only",
       "changes": [
-        "Removed 6-digit verification email — create account with email and password only",
+        "Removed 6-digit verification email \u2014 create account with email and password only",
         "Sign-in still runs on chopstickshq.com, not Supabase Auth in the client",
-        "Offline KB fallback only when the device has no network — not when the live model fails while online"
+        "Offline KB fallback only when the device has no network \u2014 not when the live model fails while online"
       ]
     },
     {
@@ -936,7 +995,7 @@
       "date": "2026-08-09",
       "title": "Email sign-in (no Supabase Auth in app)",
       "changes": [
-        "Email/password sign-in restored — auth runs on chopstickshq.com, not Supabase Auth in the client",
+        "Email/password sign-in restored \u2014 auth runs on chopstickshq.com, not Supabase Auth in the client",
         "New accounts: 6-digit verification code emailed from cs.AI",
         "Signed-in chats sync across Lab and macOS; premium tiers require sign-in or Fathom Pro keys"
       ]
@@ -946,9 +1005,9 @@
       "date": "2026-08-09",
       "title": "No Supabase Auth",
       "changes": [
-        "Removed email/password sign-in and Supabase Auth — no cloud account required",
+        "Removed email/password sign-in and Supabase Auth \u2014 no cloud account required",
         "Chats stay local on this Mac and in Lab; attachments read locally only",
-        "Premium tiers (ChopCode, StickerCoder+, Insane, etc.) work with Fathom Pro keys only — no sign-in gate"
+        "Premium tiers (ChopCode, StickerCoder+, Insane, etc.) work with Fathom Pro keys only \u2014 no sign-in gate"
       ]
     },
     {
@@ -956,9 +1015,9 @@
       "date": "2026-08-09",
       "title": "No Keychain prompt",
       "changes": [
-        "Sessions and unlock keys stored in app preferences — no macOS login keychain password dialog",
+        "Sessions and unlock keys stored in app preferences \u2014 no macOS login keychain password dialog",
         "Ad-hoc installs no longer trigger Keychain access on launch",
-        "Retrieval still uses keyword intent scoring and Mozilla search — not vector embeddings"
+        "Retrieval still uses keyword intent scoring and Mozilla search \u2014 not vector embeddings"
       ]
     },
     {
@@ -966,8 +1025,8 @@
       "date": "2026-08-09",
       "title": "No vector embeddings",
       "changes": [
-        "Retrieval uses keyword intent scoring and Mozilla web search — not vector embeddings",
-        "Removed “couldn't reach its model” dead-end; KB fallback and extra rescue instead",
+        "Retrieval uses keyword intent scoring and Mozilla web search \u2014 not vector embeddings",
+        "Removed \u201ccouldn't reach its model\u201d dead-end; KB fallback and extra rescue instead",
         "Signup verification via Supabase Auth email (not Resend)",
         "Privacy stance: no embedding index, no semantic vector store"
       ]
@@ -977,10 +1036,10 @@
       "date": "2026-08-09",
       "title": "Security update",
       "changes": [
-        "All messages are encrypted end-to-end — chats protected in transit and at rest",
+        "All messages are encrypted end-to-end \u2014 chats protected in transit and at rest",
         "HMAC-SHA256 unlock keys; vault password verified server-side only",
         "Sessions and unlock keys stored in macOS Keychain",
-        "Per-account chat isolation — sign in or out resets local state cleanly",
+        "Per-account chat isolation \u2014 sign in or out resets local state cleanly",
         "API rate limits, tier gating, and restricted CORS on the edge",
         "Privacy mode skips cloud API and sync entirely"
       ]
@@ -991,9 +1050,9 @@
       "title": "Final",
       "changes": [
         "Toggle web search off in Settings or from the composer Search chip",
-        "Dynamic usage meters — context and allowance progress bars update live",
+        "Dynamic usage meters \u2014 context and allowance progress bars update live",
         "Web search off badge, placeholder, and header update when search is disabled",
-        "`/search …` still forces a one-off Mozilla lookup when search is off",
+        "`/search \u2026` still forces a one-off Mozilla lookup when search is off",
         "Lab matches macOS: Search toggle and centered progress bars in the composer"
       ]
     },
@@ -1030,7 +1089,7 @@
       "date": "2026-08-08",
       "title": "Harder fix for model reachability",
       "changes": [
-        "Reserved rescue model attempt so busy free models can’t burn the whole request",
+        "Reserved rescue model attempt so busy free models can\u2019t burn the whole request",
         "write_file tools only when coding / file requests (not every chat turn)",
         "StickerCoder+/ChopCode skip web search unless you use /search"
       ]
@@ -1040,7 +1099,7 @@
       "date": "2026-08-08",
       "title": "Fix model timeouts / sticky Offline",
       "changes": [
-        "Model deadline no longer includes web-search time — stops “couldn't reach its model” on normal questions",
+        "Model deadline no longer includes web-search time \u2014 stops \u201ccouldn't reach its model\u201d on normal questions",
         "Coding tiers fall back to another model when the primary is busy; short rescue completion as last resort",
         "macOS Offline badge only sticks when the host is actually offline (not on transient errors)"
       ]
@@ -1050,24 +1109,24 @@
       "date": "2026-08-08",
       "title": "StickerCoder+",
       "changes": [
-        "New StickerCoder+ effort — coding specialist mode in Lab and the macOS app",
+        "New StickerCoder+ effort \u2014 coding specialist mode in Lab and the macOS app",
         "Pick StickerCoder+ alongside ChopCode for agentic coding and file creation"
       ]
     },
     {
       "version": "cs.AI 2.0.5",
       "date": "2026-08-08",
-      "title": "Tool-call files · labeled sidebar · more settings",
+      "title": "Tool-call files \u00b7 labeled sidebar \u00b7 more settings",
       "changes": [
         "Agent can create files via write_file tool-calls (Lab + macOS); replies include downloadable file cards",
-        "macOS nav rail shows text labels (toggle in Settings → General)",
+        "macOS nav rail shows text labels (toggle in Settings \u2192 General)",
         "More settings: Tools (write_file, confirm save, default folder), Agents (file tools), Beta (file previews)"
       ]
     },
     {
       "version": "cs.AI 2.0.4",
       "date": "2026-08-08",
-      "title": "Expandable sidebar · 500 MB uploads",
+      "title": "Expandable sidebar \u00b7 500 MB uploads",
       "changes": [
         "macOS Agents Window: animated expand/collapse for the secondary sidebar (rail toggle)",
         "Attachment limit set to 500 MB per batch (Lab + macOS)"
@@ -1087,7 +1146,7 @@
       "date": "2026-08-08",
       "title": "ChopCode mode",
       "changes": [
-        "New ChopCode effort — coding specialist mode in Lab and the macOS app",
+        "New ChopCode effort \u2014 coding specialist mode in Lab and the macOS app",
         "SEO keywords for cs.AI / ChopCode on HQ homepage and product page"
       ]
     },
@@ -1096,20 +1155,20 @@
       "date": "2026-08-08",
       "title": "Mozilla Search in the macOS app",
       "changes": [
-        "New Search rail in the Agents Window — same Mozilla engine as the website (MDN, Wikipedia, DuckDuckGo)",
+        "New Search rail in the Agents Window \u2014 same Mozilla engine as the website (MDN, Wikipedia, DuckDuckGo)",
         "Results open in your browser; no API key required"
       ]
     },
     {
       "version": "cs.AI 2.0",
       "date": "2026-08-08",
-      "title": "Mozilla engine, profile plans, What’s New",
+      "title": "Mozilla engine, profile plans, What\u2019s New",
       "changes": [
         "Branding: chopsticksAI is now cs.AI 2.0",
-        "Mozilla search engine on /chopsticks-ai/#search (MDN, Wikipedia, DuckDuckGo) — same path the AI uses first",
-        "Account plans read from Supabase profiles (token_budget / context_limit / plan_label) — no hard-coded emails",
+        "Mozilla search engine on /chopsticks-ai/#search (MDN, Wikipedia, DuckDuckGo) \u2014 same path the AI uses first",
+        "Account plans read from Supabase profiles (token_budget / context_limit / plan_label) \u2014 no hard-coded emails",
         "Usage soft warning at 80% allowance + live cooldown countdown",
-        "macOS app shows What’s New from changelog.json after an update"
+        "macOS app shows What\u2019s New from changelog.json after an update"
       ]
     },
     {
@@ -1118,9 +1177,9 @@
       "title": "Accounts, Usage, and Cursor-style Agents",
       "changes": [
         "Cursor-style Agents Window UI (Agents, Automations, Repos, Marketplace, Usage, Account, Settings)",
-        "Optional Supabase accounts — sign in to sync chats across Lab and the macOS app",
+        "Optional Supabase accounts \u2014 sign in to sync chats across Lab and the macOS app",
         "Usage tab with Fathom Pro oi-pl credit upgrades (not OpenRouter keys)",
-        "Credit tiers: 2 keys → 800k / 64k context; 5 → 900k / 96k; 10 → 1m / 128k",
+        "Credit tiers: 2 keys \u2192 800k / 64k context; 5 \u2192 900k / 96k; 10 \u2192 1m / 128k",
         "Homepage scavenger mint cooldown: 10 minutes",
         "Auto-update crash fix (NSAlert on main thread) and safer install staging"
       ]

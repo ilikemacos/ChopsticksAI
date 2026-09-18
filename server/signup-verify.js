@@ -62,7 +62,7 @@ function mapSignupError(body, status) {
     return "That email already has an account. Sign in instead.";
   }
   if (/password/i.test(low)) {
-    return "Use a stronger password (at least 8 characters).";
+    return "Could not set that password.";
   }
   if (/invalid.*email|email.*invalid/i.test(low)) {
     return "Enter a valid email address.";
@@ -82,8 +82,7 @@ async function isEmailBlacklisted(email) {
   if (!url || !key) return false;
   const e = normalizeEmail(email);
   if (!e.includes("@")) return false;
-  const domain = "@" + e.split("@").pop();
-  const filter = `or=(email.eq.${encodeURIComponent(e)},email.eq.${encodeURIComponent(domain)})`;
+  const filter = `email=eq.${encodeURIComponent(e)}`;
   try {
     const res = await fetch(`${url}/rest/v1/email_blacklist?${filter}&select=email`, {
       headers: {
@@ -310,17 +309,14 @@ async function handleSignupSendCode(event, payload, rateLimited) {
   if (!validEmail(email)) {
     return json(400, { error: "Enter a valid email address." });
   }
-  if (password.length < 6) {
-    return json(400, { error: "Password must be at least 6 characters." });
+  if (!password) {
+    return json(400, { error: "Enter a password." });
   }
   if (typed && !username) {
     return json(400, { error: "Username must be 3–24 characters, start with a letter, and use only letters, numbers, or _." });
   }
   if (!username) {
     return json(400, { error: "Choose a username (3–24 letters, numbers, or _)." });
-  }
-  if (await isEmailBlacklisted(email)) {
-    return json(403, { error: GENERIC_AUTH });
   }
   return completeSignup(email, password, username);
 }
@@ -438,7 +434,7 @@ async function handleAuthSignIn(event, payload, rateLimited) {
 
   const email = normalizeEmail(payload.email);
   const password = String(payload.password || "");
-  if (!validEmail(email) || password.length < 6) {
+  if (!validEmail(email) || !password) {
     return json(401, { error: GENERIC_SIGNIN });
   }
   if (await isEmailBlacklisted(email)) {
@@ -607,6 +603,9 @@ async function handleAuthOAuthStart(event, payload, rateLimited) {
   auth.searchParams.set("redirect_to", redirectTo);
   auth.searchParams.set("code_challenge", challenge);
   auth.searchParams.set("code_challenge_method", "S256");
+  if (provider === "google") {
+    auth.searchParams.set("prompt", "select_account");
+  }
   return json(200, {
     mode: "authOAuthStart",
     ok: true,

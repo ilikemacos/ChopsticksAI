@@ -245,6 +245,46 @@
   }
   .dots::after { content: ''; animation: dots 1.2s steps(4, end) infinite; }
   @keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+  .turn.bot .bubble.think {
+    display: flex; align-items: center; min-height: 18px; padding: 2px 0;
+    white-space: normal; background: none; border: 0;
+  }
+  .think-grid {
+    --think-s: 3.5px; --think-g: 1.5px;
+    display: grid; grid-template-columns: repeat(3, var(--think-s));
+    grid-auto-rows: var(--think-s); gap: var(--think-g);
+    width: calc(3 * var(--think-s) + 2 * var(--think-g));
+    height: calc(3 * var(--think-s) + 2 * var(--think-g));
+    color: var(--text, currentColor);
+  }
+  .think-grid i {
+    display: block; width: var(--think-s); height: var(--think-s);
+    border-radius: 0.4px; background: currentColor;
+    opacity: var(--o, 0.18); transform: scale(var(--s, 0.65));
+    transform-origin: center;
+    animation: thinkCell 2.1s cubic-bezier(0.45, 0.05, 0.2, 1) infinite;
+  }
+  .think-grid i:nth-child(1) { animation-delay: 0.00s; animation-duration: 1.85s; }
+  .think-grid i:nth-child(2) { animation-delay: 0.28s; animation-duration: 2.15s; }
+  .think-grid i:nth-child(3) { animation-delay: 0.18s; animation-duration: 1.72s; }
+  .think-grid i:nth-child(4) { animation-delay: 0.48s; animation-duration: 2.45s; }
+  .think-grid i:nth-child(5) { animation-delay: 0.10s; animation-duration: 1.95s; }
+  .think-grid i:nth-child(6) { animation-delay: 0.58s; animation-duration: 2.20s; }
+  .think-grid i:nth-child(7) { animation-delay: 0.32s; animation-duration: 1.65s; }
+  .think-grid i:nth-child(8) { animation-delay: 0.70s; animation-duration: 2.35s; }
+  .think-grid i:nth-child(9) { animation-delay: 0.22s; animation-duration: 2.05s; }
+  @keyframes thinkCell {
+    0%, 100% { opacity: 0.08; transform: scale(0.45); }
+    14% { opacity: 1; transform: scale(1); }
+    28% { opacity: 0.18; transform: scale(0.6); }
+    46% { opacity: 0.82; transform: scale(0.92); }
+    61% { opacity: 0.12; transform: scale(0.5); }
+    78% { opacity: 0.55; transform: scale(0.8); }
+  }
+  .think-grid.think-live i { animation: none; transition: opacity 180ms linear, transform 180ms linear; }
+  @media (prefers-reduced-motion: reduce) {
+    .think-grid i { animation: none; opacity: 0.55; transform: scale(0.9); }
+  }
 
   .nbtn.primary { background: var(--soft); color: var(--bg); border-color: transparent; }
   .nbtn.primary:hover { opacity: .9; background: var(--soft); }
@@ -312,11 +352,13 @@
 <div class="auth-modal" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
   <div class="auth-card">
     <h2 id="auth-title">ChopsticksAI account</h2>
-    <p>Sign in with email and password.</p>
+    <p>Sign in with email and password. Create account with a username too.</p>
     <label for="auth-email">Email</label>
-    <input id="auth-email" type="email" autocomplete="username" placeholder="you@example.com">
+    <input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com">
+    <label for="auth-username">Username</label>
+    <input id="auth-username" type="text" autocomplete="username" placeholder="yourname" maxlength="24">
     <label for="auth-password">Password</label>
-    <input id="auth-password" type="password" autocomplete="current-password" placeholder="••••••••" minlength="6">
+    <input id="auth-password" type="password" autocomplete="current-password" placeholder="Password">
 <div class="auth-err" id="auth-err"></div>
     <div class="auth-ok" id="auth-ok"></div>
     <div class="auth-actions">
@@ -1091,6 +1133,34 @@
     return d;
   }
 
+  function thinkBubble() {
+    var d = document.createElement('div');
+    d.className = 'bubble think';
+    d.setAttribute('role', 'status');
+    d.setAttribute('aria-label', 'Working');
+    var g = document.createElement('span');
+    g.className = 'think-grid think-live';
+    g.setAttribute('aria-hidden', 'true');
+    for (var i = 0; i < 9; i++) g.appendChild(document.createElement('i'));
+    d.appendChild(g);
+    var n = 0;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduce) {
+      var tick = setInterval(function () {
+        if (!g.isConnected) { clearInterval(tick); return; }
+        n += 1;
+        for (var j = 0; j < 9; j++) {
+          var snake = ((n * 2 + j * 4) % 9) === (n % 9);
+          var rnd = Math.random();
+          var on = snake || (j === 4 && n % 3 === 0) || rnd > 0.58;
+          g.children[j].style.setProperty('--o', on ? String(0.42 + rnd * 0.58) : String(0.05 + rnd * 0.12));
+          g.children[j].style.setProperty('--s', on ? String(0.72 + rnd * 0.32) : String(0.42 + rnd * 0.18));
+        }
+      }, 160);
+    }
+    return d;
+  }
+
   function isDeviceOffline() {
     return typeof navigator !== 'undefined' && navigator.onLine === false;
   }
@@ -1192,7 +1262,7 @@
 
     busy = true;
     send.disabled = true;
-    var thinking = addTurn('bot', plain('Working', 'dots'));
+    var thinking = addTurn('bot', thinkBubble());
 
     if (offlineChatModeOn()) {
       var localMsg = offline(text || 'Please review the attached files.');
@@ -1340,6 +1410,7 @@
     var err = document.getElementById('auth-err');
     var ok = document.getElementById('auth-ok');
     var email = document.getElementById('auth-email');
+    var user = document.getElementById('auth-username');
     var pass = document.getElementById('auth-password');
     function open() {
       if (!modal) return;
@@ -1377,7 +1448,7 @@
     document.getElementById('auth-signup').addEventListener('click', function () {
       err.textContent = '';
       ok.textContent = '';
-      Cloud.signUp(email.value.trim(), pass.value)
+      Cloud.signUp(email.value.trim(), pass.value, user ? user.value.trim() : '')
         .then(function (r) {
           if (r && r.needsConfirm) {
             ok.textContent = r.message || 'Account created. Sign in.';
