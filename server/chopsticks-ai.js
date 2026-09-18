@@ -254,30 +254,32 @@ TIERS.csaiauto = {
 TIERS.csai47flash = {
   label: "Flash",
   flash47: true,
-  models: [NEMO_ULTRA, GPT_OSS_120B_GROQ],
-  longModels: [NEMO_ULTRA, GPT_OSS_120B_GROQ],
-  refine: false,
-  refineModels: [],
-  context: 128000,
-  maxReply: 3500,
-  grounding: 8,
-  searchMax: 8,
-  timeoutMs: 28000,
-  temperature: 0.2,
-};
-TIERS.csai46core = {
-  label: "Core",
-  groqOnly: true,
-  models: [GPT_OSS_120B_GROQ],
-  longModels: [GPT_OSS_120B_GROQ],
+  reasoningFocus: true,
+  models: [NEMO_ULTRA, GPT_OSS_120B_FREE, GPT_OSS_120B_GROQ, GROK41_FAST_FREE],
+  longModels: [NEMO_ULTRA, GPT_OSS_120B_FREE, GPT_OSS_120B_GROQ, GROK41_FAST_FREE],
   refine: false,
   refineModels: [],
   context: 128000,
   maxReply: 4096,
-  grounding: 6,
-  searchMax: 6,
-  timeoutMs: 26000,
-  temperature: 0.15,
+  grounding: 8,
+  searchMax: 8,
+  timeoutMs: 28000,
+  temperature: 0.18,
+};
+TIERS.csai46core = {
+  label: "Core",
+  groqOnly: true,
+  codingFocus: true,
+  models: [GPT_OSS_120B_GROQ, GPT_OSS_20B_GROQ],
+  longModels: [GPT_OSS_120B_GROQ, GPT_OSS_20B_GROQ],
+  refine: false,
+  refineModels: [],
+  context: 128000,
+  maxReply: 4096,
+  grounding: 8,
+  searchMax: 8,
+  timeoutMs: 28000,
+  temperature: 0.12,
 };
 TIERS.csai46swift = {
   label: "Swift",
@@ -1718,9 +1720,10 @@ function clientWantsLiveOnly(payload) {
 
 function isCodingTask(text) {
   const ask = String(text || "");
-  if (/\b(write|create|generate|make|build|scaffold|implement|export|download|fix|debug|refactor)\b[\s\S]{0,120}\b(file|files|script|code|program|function|class|module|component|page|app|html|css|python|javascript|swift|json|zip)\b/i.test(ask)) return true;
-  if (/\b(python|javascript|typescript|html|css|swift|react)\b/i.test(ask)) return true;
-  if (/\.\w{1,8}\b|```|write_file/i.test(ask)) return true;
+  if (/\b(write|create|generate|make|build|scaffold|implement|export|download|fix|debug|refactor|review|optimize|port|migrate)\b[\s\S]{0,120}\b(file|files|script|code|program|function|class|module|component|page|app|html|css|python|javascript|swift|json|zip|api|endpoint|query|schema)\b/i.test(ask)) return true;
+  if (/\b(python|javascript|typescript|html|css|swift|react|rust|golang|go|java|kotlin|sql|docker|kubernetes|npm|yarn|pnpm|cargo|pytest|jest|vitest|next\.js|vue|svelte)\b/i.test(ask)) return true;
+  if (/\b(traceback|stack trace|syntax error|null pointer|segmentation fault|typeerror|referenceerror|cannot read prop|undefined is not|failed to compile|lint error)\b/i.test(ask)) return true;
+  if (/\.\w{1,8}\b|```|write_file|\bdef\s+\w+\(|\bfunction\s+\w+\(|\bclass\s+\w+/i.test(ask)) return true;
   return false;
 }
 
@@ -2396,8 +2399,10 @@ function selfFacts(tier, appVersion) {
   ].filter(Boolean).join("\n");
 }
 
-function systemPrompt(grounding, mode, web, tier, language, appVersion, maxMode) {
+function systemPrompt(grounding, mode, web, tier, language, appVersion, maxMode, focusTier, intel) {
   const ver = appVersion || APP_VERSION;
+  const focus = focusTier || tier;
+  const i = intel || {};
   const agent = mode === "agent" || tier.chopCode ? [
     "\n\nYou are running as the ChopsticksAI agent",
     tier.stickerCoder
@@ -2516,6 +2521,21 @@ function systemPrompt(grounding, mode, web, tier, language, appVersion, maxMode)
     "- Follow the user's requested format exactly. If they want a letter, a number, JSON, or a single word, that is the whole answer.\n",
     "- For math and logic: compute carefully, then state the final result clearly. Recheck arithmetic before sending.\n",
     "- For code: complete runnable files in fenced blocks with a language tag and filename. Include imports. Do not leave TODOs or ellipses.\n",
+    (focus.codingFocus || i.category === "CODING" || i.category === "DEBUGGING") ? [
+      "\n\nCODING QUALITY (this turn):\n",
+      "- Read the full problem and any error output before answering.\n",
+      "- For bugs: name the root cause first, then give the smallest correct fix.\n",
+      "- Match the user's language, framework, and style. Use current stable APIs.\n",
+      "- Prefer complete functions/files over fragments. Include imports, types, and one edge case when relevant.\n",
+      "- If the fix needs multiple files, separate each file in its own fenced block with a filename.\n",
+    ].join("") : "",
+    (focus.reasoningFocus || focus.flash47 || i.decompose) && !(focus.codingFocus || i.category === "CODING") ? [
+      "\n\nREASONING QUALITY (this turn):\n",
+      "- Work through hard questions stepwise internally, then answer in one clear pass.\n",
+      "- State assumptions, conclusions, and remaining uncertainty explicitly.\n",
+      "- For comparisons and research: structure the answer; do not flatten trade-offs.\n",
+    ].join("") : "",
+    i.decompose ? DECOMPOSE_HINT : "",
     "- Do not refuse ordinary knowledge, coding, or analysis questions. Stay on the task.\n",
     "- Image output is unavailable. Never claim you created, edited, or attached an image. Describe attached photos in text only.\n",
     "- Never add a Sources section. Never list citations, URLs, or search titles at the end of the reply. Use research silently.\n",
@@ -2960,6 +2980,7 @@ async function fetchOpenPage(url) {
 }
 
 function plateTemperature(tier, intel) {
+  if (intel && (intel.category === "CODING" || intel.category === "DEBUGGING")) return 0.1;
   if (intel && intel.category === "CREATIVE") return 0.35;
   if (tier && tier.kaji) return 0.18;
   return (tier && tier.temperature) || 0.2;
@@ -3296,10 +3317,11 @@ async function callChatModel(opts) {
 
 const DURABLE_FALLBACKS = (tier) => {
   if (tier && tier.auto) return [GROK41_FAST_FREE];
-  if (tier && tier.flash47) return [NEMO_ULTRA, GROK41_FAST_FREE];
+  if (tier && tier.flash47) return [NEMO_ULTRA, GPT_OSS_120B_FREE, GROK41_FAST_FREE];
+  if (tier && (tier.codingFocus || tier.groqOnly)) return [GPT_OSS_120B_GROQ, GPT_OSS_20B_GROQ, GROK41_FAST_FREE];
   if (tier && tier.flash4) return [GROK41_FAST_FREE];
   if (tier && (tier.air4 || tier.team)) return [DEEPSEEK_V4_FLASH_FREE, GPT_OSS_120B_FREE, GROK41_FAST_FREE];
-  return [GROK41_FAST_FREE, GEMMA4, GLM_FLASH];
+  return [GROK41_FAST_FREE, GPT_OSS_120B_FREE, GEMMA4];
 };
 
 async function firstOkChat(calls) {
@@ -4120,7 +4142,7 @@ async function handler(event, context) {
     role: "system",
     content: systemPrompt(
       kbFacts(routeTier.grounding || GROUNDING_INTENTS),
-      payload.mode, webSection, displayTier, language, appVer, maxModeOn
+      payload.mode, webSection, displayTier, language, appVer, maxModeOn, routeTier, intel
     ),
   };
   const messages = fitContext(system, modelTurns, contextFor(routeTier, plan));
@@ -4227,7 +4249,7 @@ async function handler(event, context) {
         role: "system",
         content: systemPrompt(
           kbFacts(2),
-          payload.mode, "", displayTier, language, appVer, maxModeOn
+          payload.mode, "", displayTier, language, appVer, maxModeOn, routeTier, intel
         ),
       },
       modelTurns,
@@ -4277,7 +4299,9 @@ async function handler(event, context) {
           displayTier,
           language,
           appVer,
-          maxModeOn
+          maxModeOn,
+          routeTier,
+          intel
         ),
       };
       const slimMessages = fitContext(slimSystem, modelTurns, 12000);
@@ -4511,7 +4535,7 @@ async function handler(event, context) {
             role: "system",
             content: systemPrompt(
               kbFacts(2),
-              payload.mode, "", displayTier, language, appVer, maxModeOn
+              payload.mode, "", displayTier, language, appVer, maxModeOn, routeTier, intel
             ),
           },
           modelTurns,
