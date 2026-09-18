@@ -37,8 +37,11 @@ function analyzeRequest(text, opts) {
   const kaji = Boolean(opts && opts.kaji);
   const chopCode = Boolean(opts && opts.chopCode);
 
+  const codeLike = /\b(function|class|const |let |var |def |import |#include|SELECT |INSERT |docker|kubectl|git |npm |cargo |pytest|jest|typescript|tsx|jsx|javascript|python|rust|sql|api endpoint|stack trace|traceback|undefined is not|cannot read propert|typeerror|referenceerror|segmentation fault|null pointer|syntax error|refactor|unit test|regex)\b/i.test(ask)
+    || /```[\s\S]*```/.test(ask)
+    || /\bat\s+\w+\(\w*:\[\w,\s]+\)/.test(ask);
   let category = "GENERAL";
-  if (coding || chopCode) category = /debug|error|fix|traceback|stack/i.test(ask) ? "DEBUGGING" : "CODING";
+  if (coding || chopCode || codeLike) category = /debug|error|fix|traceback|stack|exception|failed to compile|doesn't work|does not work/i.test(ask) ? "DEBUGGING" : "CODING";
   else if (/\b(compare|vs\.?|versus|difference between)\b/i.test(ask)) category = "COMPARISON";
   else if (/\b(summarize|summarise|tldr|tl;dr)\b/i.test(ask)) category = "SUMMARIZATION";
   else if (/\b(plan|roadmap|steps to|how should i)\b/i.test(ask)) category = "PLANNING";
@@ -132,8 +135,8 @@ function computeBudget(intel, tier, opts) {
     searchMax,
     critics,
     evidenceCap,
-    skipFastRace: c >= 0.55,
-    useLongModels: c >= 0.55 || intel.category === "CODING" || intel.category === "DEBUGGING",
+    skipFastRace: c >= 0.55 || intel.category === "CODING" || intel.category === "DEBUGGING",
+    useLongModels: c >= 0.55 || intel.category === "CODING" || intel.category === "DEBUGGING" || intel.decompose,
     skipHqDump: intel.category === "CODING" || intel.category === "DEBUGGING" || intel.category === "MATHEMATICS",
     skipTools: false,
   };
@@ -314,19 +317,37 @@ function classifyAutoRoute(intel, opts) {
   const o = opts || {};
   const len = Number(o.textLen) || 0;
   if (o.hasImage) return "csai46core";
-  if (o.coding || intel.category === "CODING" || intel.category === "DEBUGGING") return "csai46core";
+  if (
+    o.coding
+    || intel.category === "CODING"
+    || intel.category === "DEBUGGING"
+    || intel.toolsRequired
+  ) return "csai46core";
+  if (
+    intel.decompose
+    || (intel.verificationRequired && intel.complexity >= 0.45)
+    || intel.category === "MATHEMATICS"
+    || intel.category === "PLANNING"
+  ) return "csai47flash";
+  if (intel.category === "ANALYSIS" && intel.complexity >= 0.35) return "csai47flash";
   if (intel.category === "CREATIVE" || len > 700) return "csai47flash";
   if (
-    intel.complexity >= 0.55
+    intel.complexity >= 0.5
     || intel.category === "RESEARCH"
     || intel.category === "COMPARISON"
     || intel.category === "CURRENT_INFORMATION"
+    || intel.category === "SUMMARIZATION"
   ) return "csai47flash";
-  if (intel.category === "PLANNING" || intel.category === "ANALYSIS" || intel.category === "MATHEMATICS") {
-    return "csai46core";
-  }
   if (intel.trivial || (len < 80 && intel.category === "GENERAL")) return "csaifast";
-  if (intel.category === "GENERAL" && len >= 80 && len < 550) return "csai46lite";
+  if (
+    intel.category === "GENERAL"
+    && len >= 80
+    && len < 220
+    && intel.complexity < 0.32
+    && !intel.decompose
+    && !intel.verificationRequired
+  ) return "csai46lite";
+  if (len >= 280 || intel.complexity >= 0.32) return "csai47flash";
   return "csaifast";
 }
 
@@ -338,7 +359,9 @@ function routeModels({ intel, tier, groqKey, customModel, pickedModel, longRun }
   if (tier && tier.flash47) {
     return [
       "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "openai/gpt-oss-120b:free",
       "groq/openai/gpt-oss-120b",
+      "x-ai/grok-4.1-fast:free",
     ];
   }
   if (tier && (tier.air4 || tier.team)) {
