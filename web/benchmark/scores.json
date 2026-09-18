@@ -1,7 +1,58 @@
 {
   "asOf": "2026-09-18",
-  "disclaimer": "cs.AI is a product, not a separate foundation model. 4.7-Flash HLE is the cs.AI plate score (41.3%). Nemotron 3 Ultra bars stay on NVIDIA\u2019s published card. Composer 2.5 bars use Cursor\u2019s published coding-agent figures (Terminal-Bench 2.0, SWE-Bench Multilingual). Other bars are the labs\u2019 own figures. Suites and harnesses differ \u2014 do not treat this as one HQ bake-off.",
+  "disclaimer": "cs.AI is a product, not a separate foundation model. 4.7-Flash HLE is the cs.AI plate score (41.3%). The Coding agents tab highlights cs.AI 4.7-Flash beside published coding-agent figures. Nemotron 3 Ultra bars stay on NVIDIA\u2019s published card. Composer 2.5 bars use Cursor\u2019s published coding-agent figures (Terminal-Bench 2.0, SWE-Bench Multilingual). Other bars are the labs\u2019 own figures. Suites and harnesses differ \u2014 do not treat this as one HQ bake-off.",
   "charts": [
+    {
+      "id": "coding",
+      "title": "Coding agents",
+      "unit": "%",
+      "note": "Mixed coding suites for orientation only. cs.AI 4.7-Flash and Nemotron 3 Ultra use NVIDIA Terminal-Bench 2.1 BF16 (56.4%). Composer 2.5 uses Cursor Terminal-Bench 2.0 (69.3%) and SWE-Bench Multilingual (79.8%). Claude Sonnet 5 and GLM 5.3 Terminal-Bench figures are from their lab cards as already listed on this page. Suites and harnesses differ \u2014 not one bake-off.",
+      "bars": [
+        {
+          "id": "glm53",
+          "label": "GLM 5.3 (Terminal-Bench)",
+          "value": 88.2,
+          "cite": "Z.ai GLM-5.3 card",
+          "href": "https://z.ai/blog/glm-5.3"
+        },
+        {
+          "id": "sonnet5",
+          "label": "Claude Sonnet 5 (Terminal-Bench)",
+          "value": 80.4,
+          "cite": "Anthropic launch",
+          "href": "https://www.datacamp.com/blog/claude-sonnet-5"
+        },
+        {
+          "id": "composer25-swe",
+          "label": "Composer 2.5 (SWE-Bench Multilingual)",
+          "value": 79.8,
+          "cite": "Cursor Composer page",
+          "href": "https://cursor.com/composer"
+        },
+        {
+          "id": "composer25-tb",
+          "label": "Composer 2.5 (Terminal-Bench 2.0)",
+          "value": 69.3,
+          "cite": "Cursor Composer page",
+          "href": "https://cursor.com/composer"
+        },
+        {
+          "id": "csaiflash",
+          "label": "cs.AI 4.7-Flash (Terminal-Bench 2.1)",
+          "value": 56.4,
+          "highlight": true,
+          "cite": "NVIDIA BF16 (Ultra stack)",
+          "href": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b/modelcard"
+        },
+        {
+          "id": "ultra",
+          "label": "Nemotron 3 Ultra (Terminal-Bench 2.1)",
+          "value": 56.4,
+          "cite": "NVIDIA BF16",
+          "href": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b/modelcard"
+        }
+      ]
+    },
     {
       "id": "hle",
       "title": "Humanity\u2019s Last Exam (no tools)",

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<script>
+(function(){try{var t=localStorage.getItem('chq.theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);else if(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches)document.documentElement.setAttribute('data-theme','light');}catch(e){}})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>chopsticksAI White Paper — Chopsticks HQ</title>
+<meta name="description" content="White paper on chopsticksAI / cs.AI: plates, Auto routing, Mac/web/CLI surfaces, open source, and the Coding agents benchmark tab with cs.AI 4.7-Flash.">
+<link rel="canonical" href="https://chopstickshq.com/chopsticks-ai/whitepaper/">
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/chopsticks-ai/product.css">
+<style>
+.paper { max-width: 46rem; }
+.paper h1 { font-size: 2rem; margin-bottom: .5rem; }
+.paper h2 { margin-top: 2rem; }
+.paper h3 { margin-top: 1.25rem; }
+.paper .table-wrap { overflow-x: auto; margin: 1rem 0; }
+.paper table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.paper th, .paper td { border-bottom: 1px solid color-mix(in srgb, currentColor 18%, transparent); padding: .45rem .35rem; text-align: left; vertical-align: top; }
+.paper pre { overflow-x: auto; padding: 1rem; border-radius: 12px; background: color-mix(in srgb, currentColor 6%, transparent); }
+.paper hr { border: 0; border-top: 1px solid color-mix(in srgb, currentColor 16%, transparent); margin: 1.75rem 0; }
+.paper ul { padding-left: 1.2rem; }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav>
+    <a class="nav-logo" href="/">Chopsticks HQ <span>· cs.AI</span></a>
+    <div class="nav-mid">
+      <a class="nav-link" href="/chopsticks-ai/">Home</a>
+      <a class="nav-link" href="/chopsticks-ai/web/">Chat</a>
+      <a class="nav-link" href="/chopsticks-ai/benchmark/">Benchmark</a>
+      <a class="nav-link" href="/chopsticks-ai/whitepaper/">White paper</a>
+      <a class="nav-link" href="/chopsticks-ai/online/">Online</a>
+    </div>
+    <button type="button" class="theme-toggle" data-theme-toggle>Theme</button>
+  </nav>
+  <main>
+    <div class="wrap wrap-wide paper">
+      <p class="kicker">chopsticksAI · technical note</p>
+      <h1>chopsticksAI (cs.AI) White Paper</h1>
+<p><strong>Chopsticks HQ</strong> · September 2026 <strong>Product:</strong> chopsticksAI / cs.AI · <strong>Site:</strong> <a href="https://chopstickshq.com/chopsticks-ai/">chopstickshq.com/chopsticks-ai</a> · <strong>Source:</strong> <a href="https://github.com/ilikemacos/ChopsticksAI">github.com/ilikemacos/ChopsticksAI</a> (MIT)</p>
+<hr>
+<h2>Abstract</h2>
+<p>chopsticksAI (branded <strong>cs.AI</strong>) is Chopsticks HQ’s free multi-surface AI assistant: a full-page web chat, a macOS Agents app, and a Terminal CLI (<code>csai</code>). Live inference is hosted by Chopsticks HQ so users do not paste provider API keys. Capability is exposed as <strong>plates</strong>—named product modes such as Fast, Auto, Flash, Core, Swift, Lite, and gated Pro plates—rather than as a single foundation model trained by Chopsticks.</p>
+<p>This paper describes the product problem, surfaces, plate system (including intent-aware Auto routing), online versus offline modes, access and donor gates, open-source posture, and published benchmark orientation. Benchmark figures cited here are taken only from the public <a href="https://chopstickshq.com/chopsticks-ai/benchmark/">cs.AI benchmark page</a>; suites and harnesses differ and must not be read as one bake-off. cs.AI is a <strong>product and routing layer</strong>, not a claim that Chopsticks trains a frontier base model from scratch.</p>
+<hr>
+<h2>1. Problem</h2>
+<p>People who want a capable coding-and-chat agent usually face one of three frictions:</p>
+<p>1. <strong>Key friction</strong> — every serious model behind a personal OpenRouter, OpenAI, Anthropic, or cloud key. 2. <strong>Surface friction</strong> — web-only chat, or a desktop IDE agent, or a CLI, but rarely the same product across all three with one account story. 3. <strong>Mode friction</strong> — “one model does everything,” which either burns latency on trivial turns or underperforms on debugging and long planning.</p>
+<p>cs.AI targets that gap: HQ-hosted live models, consistent web / Mac / CLI entry points, and explicit plates so Fast stays quick, Flash/Core carry heavier work, and Auto can classify intent instead of gambling on a random free backend at reply time.</p>
+<hr>
+<h2>2. Product overview</h2>
+<h3>2.1 Surfaces</h3>
+<div class="table-wrap"><table>
+<tr><th>Surface</th><th>Role</th></tr>
+<tr><td><strong>Web chat</strong></td><td>Primary interface at <code>/chopsticks-ai/web/</code> — plates, search, files, account sync.</td></tr>
+<tr><td><strong>macOS app</strong></td><td>Desktop Agents window with Chromium rail; Online builds talk to the same HQ API.</td></tr>
+<tr><td><strong>Terminal (<code>csai</code>)</strong></td><td>CLI install from the site; same Online path for live turns.</td></tr>
+<tr><td><strong>Offline KB</strong></td><td>Separate on-device knowledge product for Chopsticks lab docs (MacBar, Fathom, CSR, etc.) — no live model.</td></tr>
+</table></div>
+<p>Latest Online packaging is advertised as <strong>cs.AI Online 4.1h</strong>; Offline remains on its own version line (3.6.10 in the open README at time of writing).</p>
+<h3>2.2 What users do not bring</h3>
+<p>Live chat is billed and keyed on the HQ side. The product promise is: open the web app or Mac Online build and talk—without pasting an OpenRouter or OpenAI key into the client. Self-hosting the open API tree still requires the operator’s own datastore, mail, and inference credentials; those secrets are not in the public git mirror.</p>
+<h3>2.3 Enterprise</h3>
+<p>Large deployments (custom capacity, admin, invoice) are handled through the <a href="https://chopstickshq.com/chopsticks-ai/enterprise/">Enterprise</a> page and <code>chopstickshq@lam.ws</code>.</p>
+<hr>
+<h2>3. Architecture (high level)</h2>
+<pre><code>User (Web / Mac / csai)
+        │
+        ▼
+Chopsticks HQ API  (Netlify functions + shared lib)
+        │
+        ├─ Auth / signup / usage limits
+        ├─ Plate resolve + aliases + gates
+        ├─ Auto intent classify → concrete plate chain
+        ├─ Fallbacks / live-miss rescue → Fast
+        └─ Vision path (images as input; image generation not offered)
+        │
+        ▼
+HQ-hosted model backends (not named in customer UI)</code></pre>
+<p><strong>Design rules for the public product:</strong></p>
+<ul><li>Customer-facing plate names stay <strong>Fast, Auto, Flash, Core, Core-Pro, Pro, Swift, Lite</strong> (plus gated ChopCode / Kaji / Max / Wagyu where enabled).</li>
+<li>Provider brand names are not used in the hero or plate picker labels.</li>
+<li><strong>Fast</strong> is the everyday default (<code>DEFAULT_TIER</code>).</li>
+<li>Unsigned attempts at donor plates fall back to Fast; durable live-miss rescue also returns to Fast.</li></ul>
+<h3>3.1 Intent-aware Auto</h3>
+<p>Auto is not “pick any free model at call time.” Before a model call, the server classifies the turn (code/debug, vision, long reasoning/planning, light chat, trivial) and routes to an existing plate chain while keeping the <strong>Auto</strong> label in the UI. Coding and stack-trace heavy turns prefer <strong>Core</strong>; multi-step planning and hard analysis prefer <strong>Flash</strong>; short or trivial turns stay on <strong>Fast</strong> / <strong>Lite</strong> as appropriate. Prompt and sampling knobs (for example lower temperature on coding turns) are tuned per path.</p>
+<h3>3.2 Online vs Offline</h3>
+<ul><li><strong>Online</strong> — live plates through HQ; knowledge freshness and tool behaviour follow the live stack.</li>
+<li><strong>Offline</strong> — packaged documentation KB for Chopsticks products; useful without network model calls; not a substitute for Online coding chat.</li></ul>
+<hr>
+<h2>4. Plates and access</h2>
+<h3>4.1 Everyday plates (everyone)</h3>
+<div class="table-wrap"><table>
+<tr><th>Plate</th><th>Intent</th></tr>
+<tr><td><strong>Fast</strong></td><td>Default everyday chat; also fallback.</td></tr>
+<tr><td><strong>Auto</strong></td><td>Intent router over existing chains.</td></tr>
+<tr><td><strong>Flash</strong> (4.7-Flash)</td><td>Flagship open plate for harder chat / reasoning paths.</td></tr>
+<tr><td><strong>Core</strong></td><td>Strong coding / grounded path.</td></tr>
+<tr><td><strong>Swift / Lite</strong></td><td>Lighter / faster everyday variants.</td></tr>
+</table></div>
+<h3>4.2 Donor and Pro gates</h3>
+<ul><li><strong>Core-Pro</strong> and <strong>4.7-Pro</strong> — Ko-fi supporters (same login email) and founder-style grants; sign-in required where configured; locked requests return a clear donor/Pro error instead of silently upgrading.</li>
+<li>Historical Pro paths (for example Air / ChopCode keyed by Fathom Pro keys or Founder) remain part of the product family as documented on the site and changelog.</li></ul>
+<p>Exact rate budgets and tip windows can change; the product UI and Usage surfaces are authoritative for a given account.</p>
+<hr>
+<h2>5. Safety, privacy, and operations (product level)</h2>
+<ul><li><strong>Accounts</strong> — email / username / password signup is supported; Google OAuth exists on web where enabled.</li>
+<li><strong>Vision</strong> — attached images can be read; the product does not advertise image generation.</li>
+<li><strong>Search</strong> — citations are presented in a collapsed expandable bar rather than a permanent open list.</li>
+<li><strong>Uptime</strong> — a public uptime ping helps Mac and web show whether the live API is reachable.</li>
+<li><strong>Deploy habit</strong> — site updates are drafted on Netlify and promoted deliberately; Mac app builds are shipped separately from the static site.</li></ul>
+<p>This paper does not describe internal admin tools, secret material, or provider account layout.</p>
+<hr>
+<h2>6. Open source</h2>
+<p>The <a href="https://github.com/ilikemacos/ChopsticksAI">ChopsticksAI</a> repository is <strong>MIT</strong>-licensed and includes:</p>
+<ul><li><code>macos-app/</code> — SwiftUI Agents app  </li>
+<li><code>cli/</code> — <code>csai</code>  </li>
+<li><code>server/</code> — API handler sources mirrored for layout completeness  </li>
+<li><code>web/</code> — web chat assets  </li>
+<li><code>engine/</code> — offline KB engine pieces  </li></ul>
+<p>The live production function is deployed from the Chopsticks HQ site tree. Running a private clone still needs operator-owned infrastructure and keys.</p>
+<hr>
+<h2>7. Benchmarks (published orientation only)</h2>
+<p>cs.AI publishes a <a href="https://chopstickshq.com/chopsticks-ai/benchmark/">benchmark page</a> that charts <strong>vendor-published</strong> numbers next to <strong>cs.AI 4.7-Flash</strong> where a comparable citation exists. Important caveats:</p>
+<p>1. <strong>cs.AI is a plate</strong>, not a separately trained foundation model card. 2. Where Flash shares an Ultra stack citation, Flash and Nemotron 3 Ultra bars may match on purpose. 3. <strong>Suites differ</strong> (HLE vs GPQA Diamond vs Terminal-Bench 2.0 vs 2.1 vs SWE-Bench Multilingual).</p>
+<h3>7.1 Coding agents tab</h3>
+<p>The <strong>Coding agents</strong> tab highlights <strong>cs.AI 4.7-Flash</strong> among coding-oriented published figures (as of 18 Sep 2026 on the site):</p>
+<div class="table-wrap"><table>
+<tr><th>Entry</th><th>Suite (as labeled on site)</th><th>Value</th></tr>
+<tr><td>GLM 5.3</td><td>Terminal-Bench (lab card)</td><td>88.2%</td></tr>
+<tr><td>Claude Sonnet 5</td><td>Terminal-Bench (lab card)</td><td>80.4%</td></tr>
+<tr><td>Composer 2.5</td><td>SWE-Bench Multilingual (Cursor)</td><td>79.8%</td></tr>
+<tr><td>Composer 2.5</td><td>Terminal-Bench 2.0 (Cursor)</td><td>69.3%</td></tr>
+<tr><td><strong>cs.AI 4.7-Flash</strong></td><td><strong>Terminal-Bench 2.1 BF16 (Ultra stack)</strong></td><td><strong>56.4%</strong></td></tr>
+<tr><td>Nemotron 3 Ultra</td><td>Terminal-Bench 2.1 BF16</td><td>56.4%</td></tr>
+</table></div>
+<p>Flash is highlighted on this tab. Composer 2.5’s higher Terminal-Bench number is a <strong>2.0</strong> figure; Flash’s is <strong>2.1</strong> BF16—do not treat them as identical harnesses.</p>
+<h3>7.2 Other published Flash anchors</h3>
+<p>From the same scores file (not exhaustive of every peer bar):</p>
+<ul><li><strong>HLE (no tools):</strong> cs.AI 4.7-Flash <strong>41.3%</strong> (plate score on the chart).  </li>
+<li><strong>GPQA:</strong> cs.AI 4.7-Flash <strong>87.0%</strong> cited via the Ultra “GPQA no tools” stack (not labeled Diamond on that citation).  </li></ul>
+<p>Cursor has not published HLE or GPQA for Composer 2.5 on this page, so those Composer bars are omitted from those charts.</p>
+<hr>
+<h2>8. Limitations</h2>
+<ul><li><strong>Not a base-model lab.</strong> Chopsticks routes and products; published Ultra-linked scores are not a claim of Chopsticks-trained weights.  </li>
+<li><strong>Benchmark mixing.</strong> The Coding tab exists for orientation; it is explicitly not a single bake-off.  </li>
+<li><strong>Capacity and free backends.</strong> Free plates depend on HQ capacity and upstream availability; fallbacks exist but quality can vary under load.  </li>
+<li><strong>README drift.</strong> Open-source README plate tables can lag the live picker (Fast / Auto / Flash / Core naming). The live web/Mac UI is authoritative.  </li>
+<li><strong>Offline ≠ Online.</strong> Offline KB does not provide the Online coding agent experience.</li></ul>
+<hr>
+<h2>9. Future work</h2>
+<p>Directions consistent with the current product:</p>
+<p>1. Keep Auto’s intent map honest with eval samples (code vs planning vs chat). 2. Narrow harness gaps on the public Coding tab only when Flash has a clean citation on the same suite. 3. Keep Mac and web plate catalogues in lockstep after server edits. 4. Expand enterprise admin and capacity without breaking the free everyday path.</p>
+<hr>
+<h2>10. Conclusion</h2>
+<p>chopsticksAI / cs.AI is Chopsticks HQ’s attempt to make a serious multi-surface assistant <strong>usable without personal model keys</strong>, while still exposing clear modes—Fast for everyday, Flash and Core for harder work, Auto for intent routing, and donor Pro plates for supporters. The white paper’s benchmark section points at the public Coding agents tab where <strong>cs.AI 4.7-Flash</strong> sits beside peer lab and Composer figures with harness labels intact.</p>
+<p>For the live product: <a href="https://chopstickshq.com/chopsticks-ai/">chopstickshq.com/chopsticks-ai</a> · chat: <a href="https://chopstickshq.com/chopsticks-ai/web/">/chopsticks-ai/web/</a> · benchmarks: <a href="https://chopstickshq.com/chopsticks-ai/benchmark/">/chopsticks-ai/benchmark/</a> · source: <a href="https://github.com/ilikemacos/ChopsticksAI">github.com/ilikemacos/ChopsticksAI</a>.</p>
+<hr>
+<p>*Document version: 2026-09-18 · Chopsticks HQ*</p>
+      <p style="margin-top:2rem">
+        <a class="btn btn-primary" href="/chopsticks-ai/benchmark/">Open Coding agents benchmark</a>
+        <a class="btn btn-outline" href="/chopsticks-ai/web/">Open cs.AI chat</a>
+        <a class="btn btn-outline" href="/chopsticks-ai/whitepaper/WHITEPAPER.md">Download markdown</a>
+      </p>
+    </div>
+  </main>
+</div>
+<script src="/js/theme.js"></script>
+</body>
+</html>
