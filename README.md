@@ -20,30 +20,7 @@ chopsticksAI (cs.AI) is the free AI assistant from Chopsticks HQ. Use it in the 
 
 ---
 
-## What's new in 4.1h
 
-- **cs.AI-4-Flash** is the flagship default on Mac and web (no account). Uses `x-ai/grok-4.1-fast:free`.
-- **Chat UI** — Mac and web match Grok/ChatGPT: “What’s on your mind?”, rounded composer.
-
-## What's new in 4.1d
-
-- **cs.AI-4.0-Air** uses GPT-OSS 120B free and DeepSeek V4 Flash free on OpenRouter.
-
-## What's new in 4.1c
-
-- **cs.AI-4.0-Air** uses only GPT-OSS 120B free on OpenRouter.
-
-## What's new in 4.1b
-
-- **cs.AI-4.0-Air** uses only GLM 4.7 Flash free via Ofox.
-
-## What's new in 4.1a
-
-- **cs.AI-4.0-Air** uses GLM 5.2 free and Gemma 4 free only (no GLM 4.7 Flash).
-
-## What's new in 4.1.0
-
-- **cs.AI-4.0-Air** uses only GLM 4.7 Flash free.
 
 ## What's new in 4.0.8
 
