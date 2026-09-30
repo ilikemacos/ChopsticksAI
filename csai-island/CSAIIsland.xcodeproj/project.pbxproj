@@ -42,6 +42,10 @@
 		9055C6E194BFD4D866F5E958 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownView.swift; sourceTree = "<group>"; };
 		22953DDA5E277CC26E0549D7 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRootView.swift; sourceTree = "<group>"; };
 		402227BC915A17EAB07DEE5E = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Debounce.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5C = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlateOption.swift; sourceTree = "<group>"; };
+		B2C3D4E5F60718293A4B5C6D = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerStore.swift; sourceTree = "<group>"; };
+		C3D4E5F60718293A4B5C6D7E = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsMonitor.swift; sourceTree = "<group>"; };
+		D4E5F60718293A4B5C6D7E8F = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabbedExpandedView.swift; sourceTree = "<group>"; };
 		707A1B8AA6F495C9BF6658C2 = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0B8FE8C58B23D2288819C897 = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "cs.AI Island.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		70C9DAA1C48C0828CDA0292F = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -95,6 +99,10 @@
 		77C33E1A01BEA9E8E00BEF32 = {isa = PBXBuildFile; fileRef = 9055C6E194BFD4D866F5E958; };
 		709FC1891708AB1F80B20A19 = {isa = PBXBuildFile; fileRef = 22953DDA5E277CC26E0549D7; };
 		FB5FB64D27ADC6EA8FBB6441 = {isa = PBXBuildFile; fileRef = 402227BC915A17EAB07DEE5E; };
+		E5F60718293A4B5C6D7E8F90 = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C; };
+		F60718293A4B5C6D7E8F9012 = {isa = PBXBuildFile; fileRef = B2C3D4E5F60718293A4B5C6D; };
+		0718293A4B5C6D7E8F901234 = {isa = PBXBuildFile; fileRef = C3D4E5F60718293A4B5C6D7E; };
+		18293A4B5C6D7E8F90123456 = {isa = PBXBuildFile; fileRef = D4E5F60718293A4B5C6D7E8F; };
 		59A8BA2855B7F6B4424B5641 = {isa = PBXBuildFile; fileRef = 70C9DAA1C48C0828CDA0292F; };
 		3B22D1D0F6CAF680B0976163 = {isa = PBXBuildFile; fileRef = 01DD795933460842EABDB99D; };
 		3D8C58E94465231ED54A3D37 = {isa = PBXBuildFile; fileRef = 5CC428954E222EF12A5D94A7; };
@@ -164,6 +172,7 @@
 				18DE272844FDEA137EB0A5AF,
 				DC72AE03E17E71A29C980CF6,
 				0476FBF2300374BA5B803FA5,
+				A1B2C3D4E5F60718293A4B5C,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -189,6 +198,7 @@
 			children = (
 				03C26285476EB950ED6B54FB,
 				03E140699DEE2BB9DFCD8158,
+				B2C3D4E5F60718293A4B5C6D,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -206,6 +216,7 @@
 				4D67D982482E8564FECFD66F,
 				B3A0E5C6E54DB159617B24E2,
 				C6F23C0168412FA735EAC50D,
+				C3D4E5F60718293A4B5C6D7E,
 			);
 			path = SystemEvents;
 			sourceTree = "<group>";
@@ -219,6 +230,7 @@
 				880648945A7F38D782C6F611,
 				9055C6E194BFD4D866F5E958,
 				22953DDA5E277CC26E0549D7,
+				D4E5F60718293A4B5C6D7E8F,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -321,6 +333,10 @@
 				77C33E1A01BEA9E8E00BEF32,
 				709FC1891708AB1F80B20A19,
 				FB5FB64D27ADC6EA8FBB6441,
+				E5F60718293A4B5C6D7E8F90,
+				F60718293A4B5C6D7E8F9012,
+				0718293A4B5C6D7E8F901234,
+				18293A4B5C6D7E8F90123456,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

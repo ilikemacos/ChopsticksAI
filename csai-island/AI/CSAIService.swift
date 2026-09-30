@@ -43,7 +43,7 @@ final class CSAIService: AIService {
         }
         var payload: [String: Any] = [
             "messages": apiMessages,
-            "tier": settings.model,
+            "tier": settings.plate.tierId,
             "mode": "agent",
             "client": "macos-island",
             "disableSearch": true,

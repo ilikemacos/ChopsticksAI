@@ -39,9 +39,10 @@ final class AppSettings: ObservableObject {
     @Published var cornerRadius: Double
     @Published var animationStyle: AnimationStyle
 
+    @Published var hoverToExpand: Bool
     @Published var aiEnabled: Bool
     @Published var apiEndpoint: String
-    @Published var model: String
+    @Published var plate: PlateOption
     @Published var streaming: Bool
     @Published var keepHistory: Bool
     @Published var hotKeyEnabled: Bool
@@ -73,9 +74,16 @@ final class AppSettings: ObservableObject {
         blurIntensity = d.object(forKey: "island.blur") as? Double ?? 0.85
         cornerRadius = d.object(forKey: "island.radius") as? Double ?? 22
         animationStyle = AnimationStyle(rawValue: d.string(forKey: "island.anim") ?? "") ?? .spring
+        hoverToExpand = d.object(forKey: "island.hover") as? Bool ?? true
         aiEnabled = d.object(forKey: "ai.enabled") as? Bool ?? true
         apiEndpoint = d.string(forKey: "ai.endpoint") ?? "https://chopstickshq.com/api/chopsticks-ai"
-        model = d.string(forKey: "ai.model") ?? "csai4flash"
+        if let raw = d.string(forKey: "ai.plate"), let p = PlateOption(rawValue: raw) {
+            plate = p
+        } else if let legacy = d.string(forKey: "ai.model") {
+            plate = Self.plate(fromLegacyTier: legacy)
+        } else {
+            plate = .flash
+        }
         streaming = d.object(forKey: "ai.streaming") as? Bool ?? true
         keepHistory = d.object(forKey: "ai.history") as? Bool ?? true
         hotKeyEnabled = d.object(forKey: "ai.hotkey") as? Bool ?? true
@@ -116,9 +124,10 @@ final class AppSettings: ObservableObject {
         d.set(blurIntensity, forKey: "island.blur")
         d.set(cornerRadius, forKey: "island.radius")
         d.set(animationStyle.rawValue, forKey: "island.anim")
+        d.set(hoverToExpand, forKey: "island.hover")
         d.set(aiEnabled, forKey: "ai.enabled")
         d.set(apiEndpoint, forKey: "ai.endpoint")
-        d.set(model, forKey: "ai.model")
+        d.set(plate.rawValue, forKey: "ai.plate")
         d.set(streaming, forKey: "ai.streaming")
         d.set(keepHistory, forKey: "ai.history")
         d.set(hotKeyEnabled, forKey: "ai.hotkey")
@@ -168,6 +177,16 @@ final class AppSettings: ObservableObject {
         case .spring: return 0.78
         case .snappy: return 0.92
         case .gentle: return 0.88
+        }
+    }
+
+    /// Legacy tier string migration for installs that used `ai.model`.
+    static func plate(fromLegacyTier tier: String) -> PlateOption {
+        switch tier.lowercased() {
+        case "csaifast": return .fast
+        case "csaiauto": return .auto
+        case "csai46core", "csai4core": return .core
+        default: return .flash
         }
     }
 }

@@ -64,4 +64,6 @@ enum IslandPhase: Equatable {
     case idle
     case compact
     case expanded
+    /// Taller surface for cs.AI chat or rich tabs.
+    case extraExpanded
 }

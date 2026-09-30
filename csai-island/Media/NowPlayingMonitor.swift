@@ -92,18 +92,21 @@ enum MediaCommand {
     static let next: UInt32 = 2
 }
 
-final class NowPlayingMonitor {
+@MainActor
+final class NowPlayingMonitor: ObservableObject {
     static let shared = NowPlayingMonitor()
     private let remote = MediaRemoteBridge()
     private var lastTitle = ""
+    @Published private(set) var current: NowPlayingInfo?
 
     func start() {
         remote.start { [weak self] info in
             guard let self else { return }
             Task { @MainActor in
+                self.current = info.title.isEmpty ? nil : info
                 let mgr = IslandStateManager.shared
                 mgr.update(kind: .music, payload: .music(info))
-                if info.title != self.lastTitle {
+                if info.title != self.lastTitle, !info.title.isEmpty {
                     self.lastTitle = info.title
                     mgr.post(IslandEvent(kind: .music, sticky: info.isPlaying, ttl: info.isPlaying ? 8 : 3, payload: .music(info)))
                 }

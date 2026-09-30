@@ -14,14 +14,16 @@ final class NetworkMonitor {
         started = true
         path.pathUpdateHandler = { [weak self] p in
             let ok = p.status == .satisfied
+            let label = Self.interfaceLabel(p)
             Task { @MainActor in
+                NetworkStatusBridge.shared.update(online: ok, label: label)
                 IslandStateManager.shared.post(
                     IslandEvent(
                         kind: .network,
                         ttl: 2.8,
                         payload: .text(
                             title: ok ? "Online" : "Offline",
-                            detail: Self.interfaceLabel(p),
+                            detail: label,
                             symbol: ok ? "wifi" : "wifi.slash"
                         )
                     )

@@ -45,34 +45,52 @@ struct NotchGeometry {
     }
 
     func islandOrigin(size: CGSize, phase: IslandPhase) -> CGPoint {
-        let yOffset: CGFloat = hasNotch ? (phase == .idle ? 2 : 4) : 6
+        let yOffset: CGFloat = hasNotch ? (phase == .idle ? 2 : 5) : 6
         let x = centerX - size.width / 2
         let y = topY - size.height - yOffset
         return CGPoint(x: x, y: y)
     }
 
+    @MainActor
     func size(for kind: IslandKind, phase: IslandPhase, ai: Bool, settings: AppSettings) -> CGSize {
-        if ai || kind == .ai {
+        let mgr = IslandStateManager.shared
+        let tab = mgr.selectedTab
+
+        if phase == .extraExpanded {
+            return CGSize(width: 500, height: 430)
+        }
+
+        if ai || kind == .ai || mgr.isExpandedSurface {
             switch phase {
-            case .idle: return CGSize(width: 86, height: 32)
-            case .compact: return CGSize(width: 168, height: 36)
-            case .expanded: return CGSize(width: 420, height: 320)
+            case .idle: return CGSize(width: 92, height: 32)
+            case .compact: return CGSize(width: 176, height: 36)
+            case .expanded:
+                if tab == .ai { return CGSize(width: 460, height: 360) }
+                if tab == .media { return CGSize(width: 440, height: 200) }
+                if tab == .timers { return CGSize(width: 420, height: 240) }
+                return CGSize(width: 420, height: 220)
+            case .extraExpanded:
+                return CGSize(width: 500, height: 430)
             }
         }
+
         switch phase {
         case .idle:
-            return hasNotch ? CGSize(width: 28, height: 10) : CGSize(width: 36, height: 12)
+            return hasNotch ? CGSize(width: 30, height: 10) : CGSize(width: 36, height: 12)
         case .compact:
             switch kind {
-            case .music: return CGSize(width: 340, height: 40)
-            case .volume, .brightness: return CGSize(width: 220, height: 38)
-            default: return CGSize(width: 260, height: 38)
+            case .music: return CGSize(width: 360, height: 42)
+            case .volume, .brightness: return CGSize(width: 232, height: 38)
+            case .battery: return CGSize(width: 200, height: 38)
+            default: return CGSize(width: 268, height: 38)
             }
         case .expanded:
             switch kind {
             case .music: return CGSize(width: 420, height: 148)
             default: return CGSize(width: 360, height: 120)
             }
+        case .extraExpanded:
+            return CGSize(width: 500, height: 430)
         }
     }
 }
